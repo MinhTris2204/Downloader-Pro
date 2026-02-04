@@ -82,10 +82,6 @@ async function fetchYoutubeInfo(url) {
     downloadBtn.disabled = true;
     downloadBtn.innerHTML = 'Đang tải thông tin...';
 
-    // Hide summary box
-    document.getElementById('youtube-summary-box').style.display = 'none';
-    document.getElementById('youtube-summary-btn').style.display = 'none';
-
     // Show loading state
     const preview = document.getElementById('youtube-preview');
     preview.style.display = 'flex';
@@ -113,9 +109,6 @@ async function fetchYoutubeInfo(url) {
             document.getElementById('youtube-thumbnail').src = data.thumbnail || '';
             document.getElementById('youtube-title').textContent = data.title || 'Video YouTube';
             document.getElementById('youtube-author').textContent = data.author || '';
-            
-            // Show AI summary button
-            document.getElementById('youtube-summary-btn').style.display = 'inline-block';
         } else {
             document.getElementById('youtube-title').textContent = 'Sẵn sàng tải xuống';
             document.getElementById('youtube-author').textContent = 'Nhấn nút Tải Xuống để bắt đầu';
@@ -128,46 +121,7 @@ async function fetchYoutubeInfo(url) {
     // Re-enable download button
     downloadBtn.disabled = false;
     downloadBtn.innerHTML = 'Tải Xuống';
-}
 
-// ====== AI Summary Function ======
-async function getYoutubeSummary() {
-    const url = document.getElementById('youtube-url').value.trim();
-    const btn = document.getElementById('youtube-summary-btn');
-    const summaryBox = document.getElementById('youtube-summary-box');
-    const summaryText = document.getElementById('youtube-summary-text');
-    
-    if (!url) return;
-    
-    // Show loading
-    btn.disabled = true;
-    btn.innerHTML = '⏳ Đang tạo tóm tắt...';
-    summaryBox.style.display = 'none';
-    
-    try {
-        const response = await fetch('/api/youtube/summary', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            summaryText.textContent = data.summary;
-            summaryBox.style.display = 'block';
-            btn.innerHTML = '✅ Đã tạo tóm tắt';
-            showToast('Đã tạo tóm tắt nội dung!', 'success');
-        } else {
-            showToast(data.error || 'Không thể tạo tóm tắt', 'error');
-            btn.disabled = false;
-            btn.innerHTML = '🤖 AI Tóm tắt nội dung';
-        }
-    } catch (err) {
-        showToast('Lỗi khi tạo tóm tắt', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '🤖 AI Tóm tắt nội dung';
-    }
 }
 
 async function fetchTiktokInfo(url) {
