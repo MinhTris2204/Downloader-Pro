@@ -17,6 +17,15 @@ import functools
 app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Add security headers
+@app.after_request
+def add_security_headers(response):
+    # Force HTTPS for 1 year
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    # Prevent mixed content
+    response.headers['Content-Security-Policy'] = "upgrade-insecure-requests"
+    return response
 # Stats file path
 STATS_FILE = 'stats.json'
 
