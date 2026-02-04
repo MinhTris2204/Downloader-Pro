@@ -1497,6 +1497,19 @@ body {
     text-decoration: none;
 }
 
+.social-link.email-link {
+    width: auto;
+    padding: 0 16px;
+    border-radius: 20px;
+    gap: 8px;
+}
+
+.email-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
 .social-link:hover {
     background: var(--gradient-1);
     border-color: var(--primary);
@@ -1508,6 +1521,7 @@ body {
 .social-link svg {
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
 }
 
 [data-theme="light"] .social-link {
@@ -1553,6 +1567,13 @@ body {
     
     .footer-social {
         order: 2;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .social-link.email-link {
+        width: 100%;
+        justify-content: center;
     }
 }
 
