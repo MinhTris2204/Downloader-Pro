@@ -77,17 +77,38 @@ async function fetchYoutubeInfo(url) {
 
     if (url.length < 10) return;
 
-    // Just enable download button, skip preview due to YouTube bot detection
     const downloadBtn = document.getElementById('youtube-download-btn');
+    const preview = document.getElementById('youtube-preview');
+    
+    // Extract video ID
+    const videoId = extractYoutubeId(url);
+    if (!videoId) return;
+    
+    // Show preview with thumbnail immediately
+    preview.style.display = 'flex';
+    document.getElementById('youtube-thumbnail').src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    document.getElementById('youtube-title').textContent = 'Đang tải thông tin...';
+    document.getElementById('youtube-author').textContent = '';
+    
+    // Enable download button
     downloadBtn.disabled = false;
     downloadBtn.innerHTML = 'Tải Xuống';
     
-    // Show simple preview
-    const preview = document.getElementById('youtube-preview');
-    preview.style.display = 'flex';
-    document.getElementById('youtube-title').textContent = 'Video YouTube';
-    document.getElementById('youtube-author').textContent = 'Sẵn sàng tải xuống';
-    document.getElementById('youtube-thumbnail').src = 'https://img.youtube.com/vi/' + extractYoutubeId(url) + '/maxresdefault.jpg';
+    // Try to get title from oEmbed API (no auth needed)
+    try {
+        const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('youtube-title').textContent = data.title || 'Video YouTube';
+            document.getElementById('youtube-author').textContent = data.author_name || '';
+        } else {
+            document.getElementById('youtube-title').textContent = 'Video YouTube';
+            document.getElementById('youtube-author').textContent = 'Sẵn sàng tải xuống';
+        }
+    } catch (err) {
+        document.getElementById('youtube-title').textContent = 'Video YouTube';
+        document.getElementById('youtube-author').textContent = 'Sẵn sàng tải xuống';
+    }
 }
 
 function extractYoutubeId(url) {
