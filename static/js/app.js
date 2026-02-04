@@ -234,6 +234,17 @@ async function downloadYoutube() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
 
+    // Show ad container
+    const adContainer = document.getElementById('youtube-ad-container');
+    adContainer.style.display = 'block';
+    
+    // Initialize ad
+    try {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+        console.log('Ad error:', e);
+    }
+
     // Hide previous complete state
     document.getElementById('youtube-complete').style.display = 'none';
 
@@ -251,10 +262,12 @@ async function downloadYoutube() {
         } else {
             showToast(data.error || 'Có lỗi xảy ra', 'error');
             resetButton('youtube');
+            adContainer.style.display = 'none';
         }
     } catch (err) {
         showToast('Lỗi kết nối server', 'error');
         resetButton('youtube');
+        adContainer.style.display = 'none';
     }
 }
 
@@ -374,6 +387,17 @@ async function downloadTiktok() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
 
+    // Show ad container
+    const adContainer = document.getElementById('tiktok-ad-container');
+    adContainer.style.display = 'block';
+    
+    // Initialize ad
+    try {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+        console.log('Ad error:', e);
+    }
+
     // Hide previous complete state
     document.getElementById('tiktok-complete').style.display = 'none';
 
@@ -386,6 +410,7 @@ async function downloadTiktok() {
         if (selected.length === 0) {
             showToast('Vui lòng chọn ít nhất 1 ảnh!', 'error');
             resetButton('tiktok');
+            adContainer.style.display = 'none';
             return;
         }
         payload.selected_images = selected;
@@ -405,10 +430,12 @@ async function downloadTiktok() {
         } else {
             showToast(data.error || 'Có lỗi xảy ra', 'error');
             resetButton('tiktok');
+            adContainer.style.display = 'none';
         }
     } catch (err) {
         showToast('Lỗi kết nối server', 'error');
         resetButton('tiktok');
+        adContainer.style.display = 'none';
     }
 }
 
