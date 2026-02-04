@@ -13,6 +13,8 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 import functools
+import psycopg2
+from psycopg2 import pool
 
 app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
@@ -26,29 +28,136 @@ def add_security_headers(response):
     # Prevent mixed content
     response.headers['Content-Security-Policy'] = "upgrade-insecure-requests"
     return response
-# Stats file path
+
+# PostgreSQL Connection Pool
+db_pool = None
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+def init_db():
+    """Initialize database connection and create tables"""
+    global db_pool
+    
+    if not DATABASE_URL:
+        print("[WARNING] DATABASE_URL not found. Using fallback JSON stats.")
+        return False
+    
+    try:
+        # Create connection pool
+        db_pool = psycopg2.pool.SimpleConnectionPool(
+            1, 10,
+            DATABASE_URL
+        )
+        
+        # Create table if not exists
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS downloads (
+                id SERIAL PRIMARY KEY,
+                platform VARCHAR(20) NOT NULL,
+                format VARCHAR(10) NOT NULL,
+                quality VARCHAR(20),
+                download_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                success BOOLEAN DEFAULT TRUE
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stats (
+                id SERIAL PRIMARY KEY,
+                total_downloads INTEGER DEFAULT 0,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Initialize stats if empty
+        cursor.execute("SELECT COUNT(*) FROM stats")
+        if cursor.fetchone()[0] == 0:
+            cursor.execute("INSERT INTO stats (total_downloads) VALUES (1250)")
+        
+        conn.commit()
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        print("[SUCCESS] PostgreSQL connected and initialized!")
+        return True
+        
+    except Exception as e:
+        print(f"[ERROR] Database init failed: {e}")
+        return False
+
+# Stats file path (fallback)
 STATS_FILE = 'stats.json'
 
 def get_stats():
+    """Get total downloads from DB or fallback to JSON"""
+    if db_pool:
+        try:
+            conn = db_pool.getconn()
+            cursor = conn.cursor()
+            cursor.execute("SELECT total_downloads FROM stats LIMIT 1")
+            result = cursor.fetchone()
+            cursor.close()
+            db_pool.putconn(conn)
+            
+            if result:
+                return {"total_downloads": result[0]}
+        except Exception as e:
+            print(f"[ERROR] Get stats failed: {e}")
+    
+    # Fallback to JSON
     try:
         if os.path.exists(STATS_FILE):
             with open(STATS_FILE, 'r') as f:
                 return json.load(f)
-    except: pass
-    return {"total_downloads": 1250} # Default starting number
+    except: 
+        pass
+    
+    return {"total_downloads": 1250}
 
-def increment_stats():
+def increment_stats(platform='unknown', format_type='mp4', quality='best', success=True):
+    """Increment download counter in DB"""
+    if db_pool:
+        try:
+            conn = db_pool.getconn()
+            cursor = conn.cursor()
+            
+            # Insert download record
+            cursor.execute("""
+                INSERT INTO downloads (platform, format, quality, success)
+                VALUES (%s, %s, %s, %s)
+            """, (platform, format_type, quality, success))
+            
+            # Update total count
+            cursor.execute("""
+                UPDATE stats 
+                SET total_downloads = total_downloads + 1,
+                    last_updated = CURRENT_TIMESTAMP
+            """)
+            
+            conn.commit()
+            cursor.close()
+            db_pool.putconn(conn)
+            return
+        except Exception as e:
+            print(f"[ERROR] Increment stats failed: {e}")
+    
+    # Fallback to JSON
     try:
         stats = get_stats()
         stats['total_downloads'] = stats.get('total_downloads', 0) + 1
         with open(STATS_FILE, 'w') as f:
             json.dump(stats, f)
     except Exception as e:
-        print(f"Stats error: {e}")
+        print(f"[ERROR] Stats error: {e}")
 
 # Initialize ThreadPool for concurrent downloads. 
 # On Railway Free (512MB RAM), set MAX_WORKERS to 2 or 3 in environment variables.
 executor = ThreadPoolExecutor(max_workers=int(os.environ.get('MAX_WORKERS', 3)))
+
+# Initialize Database
+init_db()
 
 print(f"======== SERVER STARTED | WORKERS: {executor._max_workers} ========")
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max
@@ -273,7 +382,11 @@ def download_tiktok_photos(url, download_id, selected_indices=None):
             'filepath': final_path,
             'title': title,
             'mime_type': mime,
-            'ext': final_name.split('.')[-1]
+            'ext': final_name.split('.')[-1],
+            'timestamp': time.time(),
+            'platform': 'tiktok',
+            'format': 'image',
+            'quality': f'{len(downloaded_files)}photos'
         }
 
     except Exception as e:
@@ -382,7 +495,11 @@ def download_youtube_video(url, format_type, quality, download_id):
             'filepath': filepath,
             'title': title,
             'mime_type': mime_type,
-            'ext': final_filename.split('.')[-1]
+            'ext': final_filename.split('.')[-1],
+            'timestamp': time.time(),
+            'platform': 'youtube',
+            'format': format_type,
+            'quality': quality
         }
             
         download_progress[download_id]['status'] = 'completed'
@@ -548,7 +665,10 @@ def download_tiktok_video(url, format_type, download_id, quality='best'):
             'title': title,
             'mime_type': mime_type,
             'ext': final_filename.split('.')[-1],
-            'timestamp': time.time()
+            'timestamp': time.time(),
+            'platform': 'tiktok',
+            'format': format_type,
+            'quality': quality
         }
             
         download_progress[download_id]['status'] = 'completed'
@@ -645,7 +765,12 @@ def download_file(download_id):
     if 'video' in data['mime_type']:
         as_attachment = True # Force attachment for videos on iOS
     
-    increment_stats() # Increment on success
+    # Increment stats with metadata
+    platform = data.get('platform', 'unknown')
+    format_type = data.get('format', data['ext'])
+    quality = data.get('quality', 'best')
+    increment_stats(platform, format_type, quality, True)
+    
     return send_file(
         filepath,
         mimetype=data['mime_type'],
