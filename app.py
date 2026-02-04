@@ -745,6 +745,10 @@ def index():
 def robots():
     return app.send_static_file('robots.txt')
 
+@app.route('/ads.txt')
+def ads():
+    return app.send_static_file('ads.txt')
+
 @app.route('/sitemap.xml')
 def sitemap():
     return app.send_static_file('sitemap.xml')
