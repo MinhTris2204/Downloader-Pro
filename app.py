@@ -15,8 +15,6 @@ from concurrent.futures import ThreadPoolExecutor
 import functools
 import psycopg2
 from psycopg2 import pool
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound
 
 app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
@@ -240,30 +238,6 @@ def extract_video_id(url):
         if match:
             return match.group(1)
     return None
-
-def summarize_transcript(transcript_text, max_sentences=5):
-    """Simple extractive summarization"""
-    # Split into sentences
-    sentences = re.split(r'[.!?]+', transcript_text)
-    sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
-    
-    if len(sentences) <= max_sentences:
-        return ' '.join(sentences)
-    
-    # Simple scoring: prefer sentences with common keywords
-    keywords = ['video', 'hướng dẫn', 'cách', 'giới thiệu', 'chúng ta', 'bạn', 'này', 'sẽ']
-    
-    scored = []
-    for sent in sentences:
-        score = sum(1 for kw in keywords if kw.lower() in sent.lower())
-        score += len(sent.split()) / 10  # Prefer medium-length sentences
-        scored.append((score, sent))
-    
-    # Get top sentences
-    scored.sort(reverse=True)
-    top_sentences = [sent for _, sent in scored[:max_sentences]]
-    
-    return ' '.join(top_sentences)
 
 @app.before_request
 def force_https():
@@ -901,134 +875,6 @@ def youtube_info():
     except Exception as e:
         print(f"YouTube info error: {e}")
         return jsonify({'success': False, 'error': 'Không thể lấy thông tin video'}), 200
-
-@app.route('/api/youtube/summary', methods=['POST'])
-def youtube_summary():
-    """Get AI summary of YouTube video"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'success': False, 'error': 'No data'}), 400
-            
-        url = data.get('url', '').strip()
-        
-        if not url or not is_valid_youtube_url(url):
-            return jsonify({'success': False, 'error': 'URL không hợp lệ'}), 400
-        
-        # Extract video ID
-        video_id = extract_video_id(url)
-        if not video_id:
-            return jsonify({'success': False, 'error': 'Không thể trích xuất video ID'}), 400
-        
-        print(f"[AI Summary] Processing video: {video_id}")
-        
-        # Try to get transcript first
-        try:
-            # Get all available transcripts
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-            
-            transcript_data = None
-            language = 'unknown'
-            is_generated = False
-            
-            # Try to get transcript in order of preference
-            try:
-                # Try Vietnamese first
-                transcript = transcript_list.find_transcript(['vi'])
-                transcript_data = transcript.fetch()
-                language = 'vi'
-                is_generated = transcript.is_generated
-                print(f"[AI Summary] Found Vietnamese transcript")
-            except:
-                try:
-                    # Try English
-                    transcript = transcript_list.find_transcript(['en'])
-                    transcript_data = transcript.fetch()
-                    language = 'en'
-                    is_generated = transcript.is_generated
-                    print(f"[AI Summary] Found English transcript")
-                except:
-                    # Get any available transcript
-                    for transcript in transcript_list:
-                        try:
-                            transcript_data = transcript.fetch()
-                            language = transcript.language_code
-                            is_generated = transcript.is_generated
-                            print(f"[AI Summary] Found {language} transcript")
-                            break
-                        except:
-                            continue
-            
-            if transcript_data:
-                # Combine all text
-                full_text = ' '.join([item['text'] for item in transcript_data])
-                
-                if len(full_text) >= 50:
-                    # Summarize
-                    summary = summarize_transcript(full_text, max_sentences=5)
-                    
-                    print(f"[AI Summary] Generated summary from transcript: {len(summary)} chars")
-                    
-                    return jsonify({
-                        'success': True,
-                        'summary': summary,
-                        'language': language,
-                        'is_generated': is_generated,
-                        'source': 'transcript'
-                    })
-            
-        except Exception as e:
-            print(f"[AI Summary] Transcript error: {e}")
-        
-        # Fallback: Use video description
-        print(f"[AI Summary] No transcript found, using description")
-        
-        try:
-            import yt_dlp
-            
-            ydl_opts = {
-                'quiet': True,
-                'no_warnings': True,
-                'skip_download': True,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
-            }
-            
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                description = info.get('description', '')
-                
-                if description and len(description) > 50:
-                    # Take first 500 chars and summarize
-                    desc_text = description[:500]
-                    summary = summarize_transcript(desc_text, max_sentences=3)
-                    
-                    print(f"[AI Summary] Generated summary from description: {len(summary)} chars")
-                    
-                    return jsonify({
-                        'success': True,
-                        'summary': summary,
-                        'language': 'auto',
-                        'is_generated': True,
-                        'source': 'description'
-                    })
-        except Exception as e:
-            print(f"[AI Summary] Description error: {e}")
-        
-        # If all fails
-        return jsonify({
-            'success': False,
-            'error': 'Video này không có phụ đề hoặc mô tả'
-        }), 200
-        
-    except Exception as e:
-        print(f"[AI Summary] Error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': 'Không thể tạo tóm tắt. Vui lòng thử video khác.'
-        }), 200
 
 @app.route('/api/tiktok/info', methods=['POST'])
 def tiktok_info():

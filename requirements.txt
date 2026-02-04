@@ -1,6 +1,5 @@
-flask
-yt-dlp
-requests
-waitress
-psycopg2-binary
-youtube-transcript-api
+flask>=3.0.0
+yt-dlp>=2024.1.0
+requests>=2.31.0
+waitress>=3.0.0
+psycopg2-binary>=2.9.9
