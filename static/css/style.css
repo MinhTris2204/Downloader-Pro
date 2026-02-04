@@ -1189,6 +1189,42 @@ body {
 .footer p {
     color: var(--text-muted);
     font-size: 0.9rem;
+    margin: 0;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.contact-link:hover {
+    color: var(--primary);
+}
+
+.contact-link svg {
+    opacity: 0.8;
+}
+
+@media (max-width: 480px) {
+    .footer-content {
+        justify-content: center;
+        text-align: center;
+        flex-direction: column;
+        gap: 10px;
+    }
 }
 
 /* ====== Responsive ====== */
