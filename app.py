@@ -33,6 +33,11 @@ def add_security_headers(response):
 db_pool = None
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
+# Debug: Print DATABASE_URL format (hide password)
+if DATABASE_URL:
+    safe_url = DATABASE_URL.split('@')[0].split(':')[0:2]
+    print(f"[DEBUG] DATABASE_URL detected: {safe_url[0]}://user:***@...")
+
 def init_db():
     """Initialize database connection and create tables"""
     global db_pool
@@ -42,10 +47,23 @@ def init_db():
         return False
     
     try:
+        # Fix Railway URL format if needed
+        db_url = DATABASE_URL
+        
+        # Railway sometimes returns URL without proper format
+        # Convert to proper PostgreSQL URL if needed
+        if not db_url.startswith('postgresql://') and not db_url.startswith('postgres://'):
+            print(f"[ERROR] Invalid DATABASE_URL format: {db_url[:50]}...")
+            return False
+        
+        # psycopg2 prefers 'postgresql://' over 'postgres://'
+        if db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+        
         # Create connection pool
         db_pool = psycopg2.pool.SimpleConnectionPool(
             1, 10,
-            DATABASE_URL
+            db_url
         )
         
         # Create table if not exists
