@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 import re
 import uuid
@@ -14,6 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 import functools
 
 app = Flask(__name__)
+# Fix for Proxy (Railway SSL)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 # Stats file path
 STATS_FILE = 'stats.json'
 
@@ -89,10 +92,9 @@ def is_valid_tiktok_url(url):
 
 @app.before_request
 def force_https():
-    # Railway uses X-Forwarded-Proto header
-    if request.headers.get('X-Forwarded-Proto', 'http') == 'http':
-        # Don't redirect on local development
-        if 'localhost' not in request.url and '127.0.0.1' not in request.url:
+    # Only redirect if not secure and not on localhost/internal
+    if not request.is_secure:
+        if 'localhost' not in request.url and '127.0.0.1' not in request.url and '.railway.internal' not in request.url:
             url = request.url.replace('http://', 'https://', 1)
             return redirect(url, code=301)
 
