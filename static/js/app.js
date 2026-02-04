@@ -55,9 +55,27 @@ async function pasteUrl(inputId) {
     }
 }
 
+// Helper to validate URLs
+function isValidYouTubeUrl(url) {
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\/(watch\?v=|embed\/|v\/|.+\?v=)?([^&=%\?]{11})/;
+    return youtubeRegex.test(url);
+}
+
+function isValidTikTokUrl(url) {
+    const tiktokRegex = /^(https?:\/\/)?(www\.|vm\.|vt\.)?tiktok\.com\/.*$/;
+    return tiktokRegex.test(url);
+}
+
 // ====== Fetch Video Info and Show Preview ======
 async function fetchYoutubeInfo(url) {
-    if (!url || url.length < 10) return;
+    if (!url) return;
+
+    if (url.length > 5 && !isValidYouTubeUrl(url)) {
+        showToast('Link YouTube không đúng định dạng!', 'error');
+        return;
+    }
+
+    if (url.length < 10) return;
 
     // Disable download button while loading
     const downloadBtn = document.getElementById('youtube-download-btn');
@@ -106,6 +124,13 @@ async function fetchYoutubeInfo(url) {
 }
 
 async function fetchTiktokInfo(url) {
+    if (!url) return;
+
+    if (url.length > 5 && !isValidTikTokUrl(url)) {
+        showToast('Link TikTok không đúng định dạng!', 'error');
+        return;
+    }
+
     if (!url || url.length < 10) return;
 
     // Disable download button while loading
@@ -203,6 +228,11 @@ async function downloadYoutube() {
 
     if (!url) {
         showToast('Vui lòng nhập link YouTube', 'error');
+        return;
+    }
+
+    if (!isValidYouTubeUrl(url)) {
+        showToast('Link YouTube không đúng định dạng!', 'error');
         return;
     }
 
@@ -324,7 +354,15 @@ function updateDownloadButtonText() {
 // ====== TikTok Download ======
 async function downloadTiktok() {
     const url = document.getElementById('tiktok-url').value.trim();
-    if (!url) return;
+    if (!url) {
+        showToast('Vui lòng nhập link TikTok', 'error');
+        return;
+    }
+
+    if (!isValidTikTokUrl(url)) {
+        showToast('Link TikTok không đúng định dạng!', 'error');
+        return;
+    }
 
     // Get format & quality
     const formatEl = document.querySelector('input[name="tiktok-format"]:checked');
@@ -509,9 +547,7 @@ document.getElementById('youtube-url').addEventListener('input', (e) => {
     // Debounce to avoid too many requests
     clearTimeout(youtubeDebounce);
     youtubeDebounce = setTimeout(() => {
-        if (url.includes('youtube.com') || url.includes('youtu.be')) {
-            fetchYoutubeInfo(url);
-        }
+        fetchYoutubeInfo(url);
     }, 500);
 });
 
@@ -521,9 +557,7 @@ document.getElementById('tiktok-url').addEventListener('input', (e) => {
     // Debounce to avoid too many requests
     clearTimeout(tiktokDebounce);
     tiktokDebounce = setTimeout(() => {
-        if (url.includes('tiktok.com')) {
-            fetchTiktokInfo(url);
-        }
+        fetchTiktokInfo(url);
     }, 500);
 });
 
@@ -531,18 +565,14 @@ document.getElementById('tiktok-url').addEventListener('input', (e) => {
 document.getElementById('youtube-url').addEventListener('paste', (e) => {
     setTimeout(() => {
         const url = e.target.value.trim();
-        if (url.includes('youtube.com') || url.includes('youtu.be')) {
-            fetchYoutubeInfo(url);
-        }
+        fetchYoutubeInfo(url);
     }, 100);
 });
 
 document.getElementById('tiktok-url').addEventListener('paste', (e) => {
     setTimeout(() => {
         const url = e.target.value.trim();
-        if (url.includes('tiktok.com')) {
-            fetchTiktokInfo(url);
-        }
+        fetchTiktokInfo(url);
     }, 100);
 });
 
