@@ -1,8 +1,7 @@
 providers = ["python"]
 
 [phases.setup]
-nixPkgs = ["ffmpeg"]
-# FFmpeg required for audio/video conversion
+aptPkgs = ["ffmpeg"]
 
 [start]
 cmd = "python app.py"
