@@ -15,8 +15,8 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Update yt-dlp to latest version
-RUN pip install --no-cache-dir --upgrade yt-dlp
+# Update yt-dlp to latest version (critical for YouTube bypass)
+RUN pip install --no-cache-dir --upgrade --force-reinstall yt-dlp
 
 # Copy application code
 COPY . .

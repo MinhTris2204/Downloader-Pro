@@ -474,7 +474,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
         
-        # Common options to bypass bot detection - Use Android client with minimal options
+        # Common options to bypass bot detection - Use multiple strategies
         common_opts = {
             'quiet': True,
             'no_warnings': True,
@@ -482,9 +482,21 @@ def download_youtube_video(url, format_type, quality, download_id):
             'progress_hooks': [progress_hook],
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android'],
+                    'player_client': ['android', 'ios', 'mweb'],
+                    'skip': ['hls', 'dash'],
                 }
             },
+            # Add headers to mimic real browser
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            },
+            # Retry and timeout settings
+            'retries': 10,
+            'fragment_retries': 10,
+            'socket_timeout': 30,
         }
         
         if format_type == 'mp3':
@@ -545,8 +557,15 @@ def download_youtube_video(url, format_type, quality, download_id):
         download_progress[download_id]['title'] = title
         
     except Exception as e:
+        error_msg = str(e)
         download_progress[download_id]['status'] = 'error'
-        download_progress[download_id]['error'] = str(e)
+        
+        # Friendly error message for bot detection
+        if 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower():
+            download_progress[download_id]['error'] = 'YouTube đang chặn tải xuống. Vui lòng thử lại sau vài phút hoặc thử video khác.'
+        else:
+            download_progress[download_id]['error'] = error_msg
+            
         print(f"YouTube download error: {e}")
 
 def download_tiktok_video(url, format_type, download_id, quality='best'):
