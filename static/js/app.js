@@ -610,12 +610,17 @@ const sunIcon = document.querySelector('.sun-icon');
 const moonIcon = document.querySelector('.moon-icon');
 
 if (themeToggleBtn) {
-    // Check saved theme
-    const savedTheme = localStorage.getItem('theme');
+    // Check saved theme, default to light
+    const savedTheme = localStorage.getItem('theme') || 'light';
+
     if (savedTheme === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
         if (sunIcon) sunIcon.style.display = 'none';
         if (moonIcon) moonIcon.style.display = 'block';
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        if (sunIcon) sunIcon.style.display = 'block';
+        if (moonIcon) moonIcon.style.display = 'none';
     }
 
     themeToggleBtn.addEventListener('click', () => {
