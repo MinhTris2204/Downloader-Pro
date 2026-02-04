@@ -922,7 +922,7 @@ def youtube_summary():
         
         print(f"[AI Summary] Processing video: {video_id}")
         
-        # Get transcript
+        # Try to get transcript first
         try:
             # Get all available transcripts
             transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
@@ -959,46 +959,67 @@ def youtube_summary():
                         except:
                             continue
             
-            if not transcript_data:
-                return jsonify({
-                    'success': False,
-                    'error': 'Không tìm thấy phụ đề cho video này'
-                }), 200
+            if transcript_data:
+                # Combine all text
+                full_text = ' '.join([item['text'] for item in transcript_data])
+                
+                if len(full_text) >= 50:
+                    # Summarize
+                    summary = summarize_transcript(full_text, max_sentences=5)
+                    
+                    print(f"[AI Summary] Generated summary from transcript: {len(summary)} chars")
+                    
+                    return jsonify({
+                        'success': True,
+                        'summary': summary,
+                        'language': language,
+                        'is_generated': is_generated,
+                        'source': 'transcript'
+                    })
             
-            # Combine all text
-            full_text = ' '.join([item['text'] for item in transcript_data])
+        except Exception as e:
+            print(f"[AI Summary] Transcript error: {e}")
+        
+        # Fallback: Use video description
+        print(f"[AI Summary] No transcript found, using description")
+        
+        try:
+            import yt_dlp
             
-            if len(full_text) < 50:
-                return jsonify({
-                    'success': False,
-                    'error': 'Nội dung phụ đề quá ngắn để tóm tắt'
-                }), 200
+            ydl_opts = {
+                'quiet': True,
+                'no_warnings': True,
+                'skip_download': True,
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+            }
             
-            # Summarize
-            summary = summarize_transcript(full_text, max_sentences=5)
-            
-            print(f"[AI Summary] Generated summary: {len(summary)} chars")
-            
-            return jsonify({
-                'success': True,
-                'summary': summary,
-                'language': language,
-                'is_generated': is_generated
-            })
-            
-        except TranscriptsDisabled:
-            print(f"[AI Summary] Transcripts disabled for {video_id}")
-            return jsonify({
-                'success': False, 
-                'error': 'Video này đã tắt phụ đề'
-            }), 200
-            
-        except NoTranscriptFound:
-            print(f"[AI Summary] No transcript found for {video_id}")
-            return jsonify({
-                'success': False,
-                'error': 'Video này không có phụ đề'
-            }), 200
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                description = info.get('description', '')
+                
+                if description and len(description) > 50:
+                    # Take first 500 chars and summarize
+                    desc_text = description[:500]
+                    summary = summarize_transcript(desc_text, max_sentences=3)
+                    
+                    print(f"[AI Summary] Generated summary from description: {len(summary)} chars")
+                    
+                    return jsonify({
+                        'success': True,
+                        'summary': summary,
+                        'language': 'auto',
+                        'is_generated': True,
+                        'source': 'description'
+                    })
+        except Exception as e:
+            print(f"[AI Summary] Description error: {e}")
+        
+        # If all fails
+        return jsonify({
+            'success': False,
+            'error': 'Video này không có phụ đề hoặc mô tả'
+        }), 200
         
     except Exception as e:
         print(f"[AI Summary] Error: {e}")
