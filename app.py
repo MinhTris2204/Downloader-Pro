@@ -702,6 +702,14 @@ def download_tiktok_video(url, format_type, download_id, quality='best'):
 def index():
     return render_template('index.html')
 
+@app.route('/robots.txt')
+def robots():
+    return app.send_static_file('robots.txt')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    return app.send_static_file('sitemap.xml')
+
 @app.route('/api/youtube/download', methods=['POST'])
 def youtube_download():
     data = request.get_json()
