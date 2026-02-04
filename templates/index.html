@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tải video YouTube và TikTok miễn phí - Chuyển đổi sang MP4, MP3 nhanh chóng">
+    <title>Downloader Pro - Tải Video YouTube & TikTok</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="bg-animation">
+        <div class="bg-gradient"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <span class="logo-text">Downloader Pro</span>
+            </div>
+
+            <button class="theme-toggle" id="theme-toggle" aria-label="Switch Theme">
+                <span class="theme-text">Chế độ</span>
+                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+
+                <svg class="moon-icon" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="hero">
+                <h1 class="hero-title"><span class="gradient-text">Tải Video</span> Nhanh Chóng</h1>
+                <p class="hero-subtitle">Chuyển đổi video từ YouTube & TikTok sang MP4, MP3 miễn phí</p>
+            </section>
+
+            <div class="download-container">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="youtube">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                        </svg>
+                        YouTube
+                    </button>
+                    <button class="tab-btn" data-tab="tiktok">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                        </svg>
+                        TikTok
+                    </button>
+                </div>
+
+                <div class="tab-content active" id="youtube-tab">
+                    <div class="download-card glass-card">
+                        <div class="card-header">
+                            <div class="platform-badge youtube">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                                </svg>
+                            </div>
+                            <div class="card-title">
+                                <h2>Tải Video YouTube</h2>
+                                <p>Dán link video YouTube để tải xuống</p>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <input type="text" id="youtube-url" class="url-input"
+                                    placeholder="Dán link YouTube tại đây...">
+                                <button class="paste-btn" onclick="pasteUrl('youtube-url')">Dán</button>
+                            </div>
+                        </div>
+                        <div class="video-preview" id="youtube-preview" style="display:none;">
+                            <img id="youtube-thumbnail" src="" alt="Thumbnail">
+                            <div class="preview-info">
+                                <h3 id="youtube-title"></h3>
+                                <p id="youtube-author"></p>
+                            </div>
+                        </div>
+                        <div class="format-selector">
+                            <label class="format-label">Chọn định dạng:</label>
+                            <div class="format-options">
+                                <label class="format-option"><input type="radio" name="youtube-format" value="mp4"
+                                        checked>
+                                    <div class="format-card"><span>MP4</span><small>Video</small></div>
+                                </label>
+                                <label class="format-option"><input type="radio" name="youtube-format" value="mp3">
+                                    <div class="format-card"><span>Audio</span><small>Âm thanh</small></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="quality-selector" id="youtube-video-quality-selector">
+                            <label class="format-label">Chất lượng Video:</label>
+                            <select id="youtube-quality" class="quality-select">
+                                <option value="best">Cao nhất</option>
+                                <option value="1080">1080p (Full HD)</option>
+                                <option value="720" selected>720p (HD)</option>
+                                <option value="480">480p (SD)</option>
+                                <option value="360">360p (Thấp)</option>
+                            </select>
+                        </div>
+                        <div class="quality-selector" id="youtube-audio-quality-selector" style="display:none;">
+                            <label class="format-label">Chất lượng Audio:</label>
+                            <select id="youtube-audio-quality" class="quality-select">
+                                <option value="320">320kbps (Cao nhất)</option>
+                                <option value="192">192kbps (Khá)</option>
+                                <option value="128" selected>128kbps (Chuẩn)</option>
+                            </select>
+                        </div>
+                        <button class="download-btn" id="youtube-download-btn" onclick="downloadYoutube()">Tải
+                            Xuống</button>
+                        <div class="progress-container" id="youtube-progress" style="display:none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="youtube-progress-fill"></div>
+                            </div>
+                            <div class="progress-text"><span id="youtube-progress-status">Đang xử lý...</span><span
+                                    id="youtube-progress-percent">0%</span></div>
+                        </div>
+                        <div class="download-complete" id="youtube-complete" style="display:none;">
+                            <p>✅ Tải xuống hoàn tất! File đang được lưu...</p>
+                            <button class="save-btn" id="youtube-save-btn">Tải Lại</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tiktok-tab">
+                    <div class="download-card glass-card">
+                        <div class="card-header">
+                            <div class="platform-badge tiktok">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                                </svg>
+                            </div>
+                            <div class="card-title">
+                                <h2>Tải Video TikTok</h2>
+                                <p>Dán link video TikTok để tải xuống</p>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <input type="text" id="tiktok-url" class="url-input"
+                                    placeholder="Dán link TikTok tại đây...">
+                                <button class="paste-btn" onclick="pasteUrl('tiktok-url')">Dán</button>
+                            </div>
+                        </div>
+                        <div class="video-preview" id="tiktok-preview" style="display:none;">
+                            <img id="tiktok-thumbnail" src="" alt="Thumbnail">
+                            <div class="preview-info">
+                                <h3 id="tiktok-title"></h3>
+                                <p id="tiktok-author"></p>
+                            </div>
+                        </div>
+
+                        <!-- Video Options (Ẩn khi là Photo) -->
+                        <div class="format-selector" id="tiktok-video-options" style="display:none;">
+                            <label class="format-label">Chọn định dạng:</label>
+                            <div class="format-options">
+                                <label class="format-option"><input type="radio" name="tiktok-format" value="mp4"
+                                        checked>
+                                    <div class="format-card"><span>MP4</span><small>Video</small></div>
+                                </label>
+                                <label class="format-option"><input type="radio" name="tiktok-format" value="mp3">
+                                    <div class="format-card"><span>Audio</span><small>Âm thanh</small></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- TikTok Quality Options -->
+                        <div class="quality-selector" id="tiktok-quality-selector"
+                            style="display:none; margin-top: 10px;">
+                            <label class="format-label" id="tiktok-quality-label">Chất lượng:</label>
+                            <select id="tiktok-video-quality" class="quality-select">
+                                <option value="best">Gốc (Tốt nhất)</option>
+                                <option value="1080">1080p</option>
+                                <option value="720" selected>720p</option>
+                                <option value="480">480p</option>
+                                <option value="360">360p</option>
+                            </select>
+                            <select id="tiktok-audio-quality" class="quality-select" style="display:none;">
+                                <option value="320">320kbps</option>
+                                <option value="192">192kbps</option>
+                                <option value="128" selected>128kbps</option>
+                            </select>
+                        </div>
+
+
+
+                        <!-- Gallery Container (Đã có, giữ nguyên) -->
+                        <div id="tiktok-gallery" class="gallery-container" style="display:none;">
+                            <div class="gallery-header">
+                                <span>Chọn ảnh để tải:</span>
+                                <button class="select-all-btn" onclick="toggleSelectAll()">Chọn tất cả</button>
+                            </div>
+                            <div class="gallery-grid" id="gallery-grid">
+                                <!-- Images will be injected here -->
+                            </div>
+                        </div>
+
+                        <button class="download-btn tiktok-btn" id="tiktok-download-btn" onclick="downloadTiktok()">Tải
+                            Xuống</button>
+                        <div class="progress-container" id="tiktok-progress" style="display:none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="tiktok-progress-fill"></div>
+                            </div>
+                            <div class="progress-text"><span id="tiktok-progress-status">Đang xử lý...</span><span
+                                    id="tiktok-progress-percent">0%</span></div>
+                        </div>
+                        <div class="download-complete" id="tiktok-complete" style="display:none;">
+                            <p>✅ Tải xuống hoàn tất! File đang được lưu...</p>
+                            <button class="save-btn" id="tiktok-save-btn">Tải Lại</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <section class="info-section">
+                <h2 class="section-title">✨ Tính Năng Nổi Bật</h2>
+                <div class="features-grid">
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Siêu Nhanh</h3>
+                        <p>Tải xuống video chất lượng cao chỉ trong vài giây</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3>An Toàn</h3>
+                        <p>Không lưu trữ dữ liệu cá nhân của người dùng</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Đa Nền Tảng</h3>
+                        <p>Hoạt động mượt mà trên cả PC, Tablet và Mobile</p>
+                    </div>
+                    <div class="feature-card glass-card">
+                        <div class="feature-icon">💎</div>
+                        <h3>Miễn Phí</h3>
+                        <p>Không giới hạn lượt tải, hoàn toàn miễn phí</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Guide -->
+            <section class="info-section">
+                <h2 class="section-title">🚀 Hướng Dẫn Sử Dụng</h2>
+                <div class="steps-grid">
+                    <div class="step-card glass-card">
+                        <div class="step-number">1</div>
+                        <h3>Sao chép Link</h3>
+                        <p>Mở ứng dụng TikTok hoặc YouTube, chọn video bạn thích và sao chép liên kết chia sẻ.</p>
+                    </div>
+                    <div class="step-card glass-card">
+                        <div class="step-number">2</div>
+                        <h3>Dán vào Tool</h3>
+                        <p>Quay lại đây, dán liên kết vào ô nhập liệu ở trên và hệ thống sẽ tự động xử lý.</p>
+                    </div>
+                    <div class="step-card glass-card">
+                        <div class="step-number">3</div>
+                        <h3>Tải Xuống</h3>
+                        <p>Chọn định dạng (MP4/MP3) và chất lượng mong muốn, sau đó nhấn nút Tải Xuống.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FAQ -->
+            <section class="info-section">
+                <h2 class="section-title">❓ Câu Hỏi Thường Gặp</h2>
+                <div class="faq-grid">
+                    <div class="faq-item glass-card">
+                        <h4>Công cụ này có an toàn không?</h4>
+                        <p>Chúng tôi cam kết bảo mật thông tin người dùng và không cài đặt bất kỳ phần mềm độc hại nào.
+                        </p>
+                    </div>
+                    <div class="faq-item glass-card">
+                        <h4>Tại sao không tải được video?</h4>
+                        <p>Vui lòng kiểm tra lại liên kết (phải là công khai) hoặc thử lại sau vài phút nếu server đang
+                            bận.</p>
+                    </div>
+                    <div class="faq-item glass-card">
+                        <h4>Có hỗ trợ tải video TikTok không logo không?</h4>
+                        <p>Có, mặc định chúng tôi sẽ tải bản video gốc chất lượng cao nhất và không dính logo TikTok.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Downloader Pro. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="toast-container" id="toast-container"></div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>
