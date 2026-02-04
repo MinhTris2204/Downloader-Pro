@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 import os
 import re
 import uuid
@@ -86,6 +86,15 @@ def is_valid_tiktok_url(url):
     """Validate TikTok URL"""
     tiktok_regex = r'(https?://)?(www\.|vm\.|vt\.)?tiktok\.com/.*'
     return bool(re.match(tiktok_regex, url))
+
+@app.before_request
+def force_https():
+    # Railway uses X-Forwarded-Proto header
+    if request.headers.get('X-Forwarded-Proto', 'http') == 'http':
+        # Don't redirect on local development
+        if 'localhost' not in request.url and '127.0.0.1' not in request.url:
+            url = request.url.replace('http://', 'https://', 1)
+            return redirect(url, code=301)
 
 # Helper function to extract images (Shared logic)
 def extract_tiktok_images(url):
