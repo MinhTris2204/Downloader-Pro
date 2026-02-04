@@ -500,17 +500,30 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
         
+        # Common options to bypass bot detection
+        common_opts = {
+            'quiet': True,
+            'no_warnings': True,
+            'noprogress': False,
+            'progress_hooks': [progress_hook],
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            }
+        }
+        
         if format_type == 'mp3':
             # Default to 128k if not specified
             audio_bitrate = quality if quality in ['320', '192', '128'] else '128'
             
             ydl_opts = {
+                **common_opts,
                 'format': 'bestaudio/best',
                 'outtmpl': output_path, # No ext, postprocessor handles it
-                'progress_hooks': [progress_hook],
-                'quiet': True,
-                'no_warnings': True,
-                'noprogress': False,
                 'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'mp3',
@@ -522,12 +535,9 @@ def download_youtube_video(url, format_type, quality, download_id):
         else:
             # Video
             ydl_opts = {
+                **common_opts,
                 'format': 'best[ext=mp4]/best',
                 'outtmpl': output_path + '.mp4',
-                'progress_hooks': [progress_hook],
-                'quiet': True,
-                'no_warnings': True,
-                'noprogress': False,
             }
             
             if quality != 'best' and quality.isdigit():
@@ -866,6 +876,14 @@ def youtube_info():
             'no_warnings': True,
             'extract_flat': True,
             'socket_timeout': 10,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            }
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
