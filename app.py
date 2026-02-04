@@ -90,19 +90,10 @@ def is_valid_tiktok_url(url):
     tiktok_regex = r'(https?://)?(www\.|vm\.|vt\.)?tiktok\.com/.*'
     return bool(re.match(tiktok_regex, url))
 
-@app.before_request
-def force_https():
-    # Skip for local development
-    if 'localhost' in request.host or '127.0.0.1' in request.host or '.internal' in request.host:
-        return
-    
-    # Check both scheme and X-Forwarded-Proto to avoid redirect loops
-    forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
-    
-    # Only redirect if we're certain it's HTTP (not HTTPS)
-    if request.scheme == 'http' and forwarded_proto != 'https':
-        url = request.url.replace('http://', 'https://', 1)
-        return redirect(url, code=301)
+# Disabled force_https - Railway handles HTTPS automatically
+# @app.before_request
+# def force_https():
+#     pass
 
 # Helper function to extract images (Shared logic)
 def extract_tiktok_images(url):
