@@ -601,7 +601,22 @@ document.querySelectorAll('input[name="youtube-format"]').forEach(radio => {
 });
 
 // ====== Initialize ======
-console.log('VideoGet - Ready to download!');
+async function fetchStats() {
+    try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        if (data.total_downloads) {
+            const displayCount = data.total_downloads.toLocaleString();
+            document.getElementById('total-downloads').textContent = `${displayCount}+`;
+            document.getElementById('stats-badge').style.opacity = '1';
+        }
+    } catch (err) {
+        console.error('Failed to fetch stats');
+    }
+}
+
+console.log('Downloader Pro - Ready!');
+fetchStats();
 
 
 // ====== Theme Toggle ======

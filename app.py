@@ -11,8 +11,29 @@ import requests as http_requests
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
+import functools
 
 app = Flask(__name__)
+# Stats file path
+STATS_FILE = 'stats.json'
+
+def get_stats():
+    try:
+        if os.path.exists(STATS_FILE):
+            with open(STATS_FILE, 'r') as f:
+                return json.load(f)
+    except: pass
+    return {"total_downloads": 1250} # Default starting number
+
+def increment_stats():
+    try:
+        stats = get_stats()
+        stats['total_downloads'] = stats.get('total_downloads', 0) + 1
+        with open(STATS_FILE, 'w') as f:
+            json.dump(stats, f)
+    except Exception as e:
+        print(f"Stats error: {e}")
+
 # Initialize ThreadPool for concurrent downloads. 
 # On Railway Free (512MB RAM), set MAX_WORKERS to 2 or 3 in environment variables.
 executor = ThreadPoolExecutor(max_workers=int(os.environ.get('MAX_WORKERS', 3)))
@@ -598,12 +619,17 @@ def download_file(download_id):
     if 'video' in data['mime_type']:
         as_attachment = True # Force attachment for videos on iOS
     
+    increment_stats() # Increment on success
     return send_file(
         filepath,
         mimetype=data['mime_type'],
         as_attachment=as_attachment,
         download_name=download_name
     )
+
+@app.route('/api/stats')
+def api_stats():
+    return jsonify(get_stats())
 
 @app.route('/api/youtube/info', methods=['POST'])
 def youtube_info():
