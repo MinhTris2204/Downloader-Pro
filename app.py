@@ -26,8 +26,35 @@ download_data = {}
 
 def strip_ansi(text):
     """Remove ANSI escape codes from text"""
+    if not text: return ''
     ansi_pattern = re.compile(r'\x1b\[[0-9;]*m')
-    return ansi_pattern.sub('', text) if text else ''
+    return ansi_pattern.sub('', text)
+
+def cleanup_old_files():
+    """Background task to delete files older than 30 minutes"""
+    while True:
+        try:
+            current_time = time.time()
+            to_delete = []
+            for did, data in list(download_data.items()):
+                # If file is older than 30 minutes
+                if current_time - data.get('timestamp', 0) > 1800:
+                    to_delete.append(did)
+            
+            for did in to_delete:
+                data = download_data.get(did)
+                if data and os.path.exists(data['filepath']):
+                    try: os.remove(data['filepath'])
+                    except: pass
+                if did in download_data: del download_data[did]
+                if did in download_progress: del download_progress[did]
+                print(f"Cleaned up expired download: {did}")
+        except Exception as e:
+            print(f"Cleanup task error: {e}")
+        time.sleep(300) # Check every 5 mins
+
+# Start cleanup thread
+threading.Thread(target=cleanup_old_files, daemon=True).start()
 
 def is_valid_youtube_url(url):
     """Validate YouTube URL"""
@@ -468,12 +495,13 @@ def download_tiktok_video(url, format_type, download_id, quality='best'):
                 title = info.get('title', 'video')
             filepath = os.path.join(temp_dir, final_filename)
         
-        # Store file data
+        # Store file data with timestamp
         download_data[download_id] = {
             'filepath': filepath,
             'title': title,
             'mime_type': mime_type,
-            'ext': final_filename.split('.')[-1]
+            'ext': final_filename.split('.')[-1],
+            'timestamp': time.time()
         }
             
         download_progress[download_id]['status'] = 'completed'
@@ -566,24 +594,14 @@ def download_file(download_id):
         clean_title = 'download'
     download_name = f"{clean_title}.{data['ext']}"
     
-    # Schedule cleanup after request
-    @after_this_request
-    def cleanup(response):
-        try:
-            if os.path.exists(filepath):
-                os.remove(filepath)
-            if download_id in download_data:
-                del download_data[download_id]
-            if download_id in download_progress:
-                del download_progress[download_id]
-        except Exception as e:
-            print(f"Cleanup error: {e}")
-        return response
+    as_attachment = True
+    if 'video' in data['mime_type']:
+        as_attachment = True # Force attachment for videos on iOS
     
     return send_file(
         filepath,
         mimetype=data['mime_type'],
-        as_attachment=True,
+        as_attachment=as_attachment,
         download_name=download_name
     )
 
