@@ -427,6 +427,11 @@ function showProgress(platform, downloadId) {
                 fillEl.style.width = '100%';
                 percentEl.textContent = '100%';
                 statusEl.textContent = 'Hoàn tất!';
+                
+                // Update preview with actual title if available
+                if (data.title && platform === 'youtube') {
+                    document.getElementById('youtube-title').textContent = data.title;
+                }
 
                 setTimeout(() => {
                     triggerDownload(downloadId);
