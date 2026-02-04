@@ -902,49 +902,93 @@ def youtube_summary():
         if not video_id:
             return jsonify({'success': False, 'error': 'Không thể trích xuất video ID'}), 400
         
+        print(f"[AI Summary] Processing video: {video_id}")
+        
         # Get transcript
         try:
-            # Try Vietnamese first, then English
+            # Get all available transcripts
             transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
             
+            transcript_data = None
+            language = 'unknown'
+            is_generated = False
+            
+            # Try to get transcript in order of preference
             try:
-                transcript = transcript_list.find_transcript(['vi', 'en'])
+                # Try Vietnamese first
+                transcript = transcript_list.find_transcript(['vi'])
                 transcript_data = transcript.fetch()
+                language = 'vi'
+                is_generated = transcript.is_generated
+                print(f"[AI Summary] Found Vietnamese transcript")
             except:
-                # Get any available transcript
-                transcript = transcript_list.find_generated_transcript(['vi', 'en'])
-                transcript_data = transcript.fetch()
+                try:
+                    # Try English
+                    transcript = transcript_list.find_transcript(['en'])
+                    transcript_data = transcript.fetch()
+                    language = 'en'
+                    is_generated = transcript.is_generated
+                    print(f"[AI Summary] Found English transcript")
+                except:
+                    # Get any available transcript
+                    for transcript in transcript_list:
+                        try:
+                            transcript_data = transcript.fetch()
+                            language = transcript.language_code
+                            is_generated = transcript.is_generated
+                            print(f"[AI Summary] Found {language} transcript")
+                            break
+                        except:
+                            continue
+            
+            if not transcript_data:
+                return jsonify({
+                    'success': False,
+                    'error': 'Không tìm thấy phụ đề cho video này'
+                }), 200
             
             # Combine all text
             full_text = ' '.join([item['text'] for item in transcript_data])
             
+            if len(full_text) < 50:
+                return jsonify({
+                    'success': False,
+                    'error': 'Nội dung phụ đề quá ngắn để tóm tắt'
+                }), 200
+            
             # Summarize
             summary = summarize_transcript(full_text, max_sentences=5)
+            
+            print(f"[AI Summary] Generated summary: {len(summary)} chars")
             
             return jsonify({
                 'success': True,
                 'summary': summary,
-                'language': transcript.language_code,
-                'is_generated': transcript.is_generated
+                'language': language,
+                'is_generated': is_generated
             })
             
         except TranscriptsDisabled:
+            print(f"[AI Summary] Transcripts disabled for {video_id}")
             return jsonify({
                 'success': False, 
-                'error': 'Video này không có phụ đề'
+                'error': 'Video này đã tắt phụ đề'
             }), 200
             
         except NoTranscriptFound:
+            print(f"[AI Summary] No transcript found for {video_id}")
             return jsonify({
                 'success': False,
-                'error': 'Không tìm thấy phụ đề cho video này'
+                'error': 'Video này không có phụ đề'
             }), 200
         
     except Exception as e:
-        print(f"YouTube summary error: {e}")
+        print(f"[AI Summary] Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
-            'error': 'Không thể tạo tóm tắt'
+            'error': 'Không thể tạo tóm tắt. Vui lòng thử video khác.'
         }), 200
 
 @app.route('/api/tiktok/info', methods=['POST'])
