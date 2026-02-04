@@ -482,21 +482,26 @@ def download_youtube_video(url, format_type, quality, download_id):
             'progress_hooks': [progress_hook],
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'ios', 'mweb'],
+                    # Try multiple clients in order
+                    'player_client': ['android', 'web', 'ios'],
                     'skip': ['hls', 'dash'],
                 }
             },
-            # Add headers to mimic real browser
+            # Add headers to mimic real Android browser
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Sec-Fetch-Mode': 'navigate',
+                'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
+                'Accept': '*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate',
             },
             # Retry and timeout settings
-            'retries': 10,
-            'fragment_retries': 10,
-            'socket_timeout': 30,
+            'retries': 15,
+            'fragment_retries': 15,
+            'socket_timeout': 40,
+            # Additional bypass options
+            'nocheckcertificate': True,
+            'prefer_insecure': False,
+            'age_limit': None,
         }
         
         if format_type == 'mp3':
