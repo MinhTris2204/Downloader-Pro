@@ -396,9 +396,9 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 20px 28px;
+    max-width: 900px;
+    margin: 0 auto 40px;
+    padding: 24px 32px;
     background: linear-gradient(135deg, rgba(0, 242, 234, 0.15) 0%, rgba(0, 168, 255, 0.15) 100%);
     border: 2px solid rgba(0, 242, 234, 0.3);
     border-radius: var(--radius);
@@ -416,7 +416,7 @@ body {
 }
 
 .promo-icon {
-    font-size: 2.5rem;
+    font-size: 3rem;
     animation: bounce 2s ease-in-out infinite;
 }
 
@@ -434,26 +434,26 @@ body {
 }
 
 .promo-content h3 {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    margin: 0 0 4px 0;
+    margin: 0 0 6px 0;
     color: var(--text-primary);
 }
 
 .promo-content p {
-    font-size: 0.95rem;
+    font-size: 1rem;
     margin: 0;
     color: var(--text-secondary);
 }
 
 .promo-btn {
-    padding: 12px 24px;
+    padding: 14px 28px;
     background: var(--gradient-1);
     color: white;
     border: none;
     border-radius: 12px;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.05rem;
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
