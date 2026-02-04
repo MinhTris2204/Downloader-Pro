@@ -92,11 +92,13 @@ def is_valid_tiktok_url(url):
 
 @app.before_request
 def force_https():
-    # Only redirect if not secure and not on localhost/internal
-    if not request.is_secure:
-        if 'localhost' not in request.url and '127.0.0.1' not in request.url and '.railway.internal' not in request.url:
-            url = request.url.replace('http://', 'https://', 1)
-            return redirect(url, code=301)
+    if 'localhost' in request.host or '127.0.0.1' in request.host or '.internal' in request.host:
+        return
+    
+    # Railway/Heroku standard: check the forwarded protocol header
+    if request.headers.get('X-Forwarded-Proto', 'http') == 'http':
+        url = request.url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
 
 # Helper function to extract images (Shared logic)
 def extract_tiktok_images(url):
