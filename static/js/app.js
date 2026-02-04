@@ -234,16 +234,8 @@ async function downloadYoutube() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
 
-    // Show ad container
-    const adContainer = document.getElementById('youtube-ad-container');
-    adContainer.style.display = 'block';
-    
-    // Initialize ad
-    try {
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-        console.log('Ad error:', e);
-    }
+    // Show ad popup
+    showAdPopup();
 
     // Hide previous complete state
     document.getElementById('youtube-complete').style.display = 'none';
@@ -262,12 +254,12 @@ async function downloadYoutube() {
         } else {
             showToast(data.error || 'Có lỗi xảy ra', 'error');
             resetButton('youtube');
-            adContainer.style.display = 'none';
+            closeAdPopup();
         }
     } catch (err) {
         showToast('Lỗi kết nối server', 'error');
         resetButton('youtube');
-        adContainer.style.display = 'none';
+        closeAdPopup();
     }
 }
 
@@ -387,16 +379,8 @@ async function downloadTiktok() {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
 
-    // Show ad container
-    const adContainer = document.getElementById('tiktok-ad-container');
-    adContainer.style.display = 'block';
-    
-    // Initialize ad
-    try {
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-        console.log('Ad error:', e);
-    }
+    // Show ad popup
+    showAdPopup();
 
     // Hide previous complete state
     document.getElementById('tiktok-complete').style.display = 'none';
@@ -410,7 +394,7 @@ async function downloadTiktok() {
         if (selected.length === 0) {
             showToast('Vui lòng chọn ít nhất 1 ảnh!', 'error');
             resetButton('tiktok');
-            adContainer.style.display = 'none';
+            closeAdPopup();
             return;
         }
         payload.selected_images = selected;
@@ -430,12 +414,12 @@ async function downloadTiktok() {
         } else {
             showToast(data.error || 'Có lỗi xảy ra', 'error');
             resetButton('tiktok');
-            adContainer.style.display = 'none';
+            closeAdPopup();
         }
     } catch (err) {
         showToast('Lỗi kết nối server', 'error');
         resetButton('tiktok');
-        adContainer.style.display = 'none';
+        closeAdPopup();
     }
 }
 
@@ -669,4 +653,48 @@ if (themeToggleBtn) {
             if (moonIcon) moonIcon.style.display = 'block';
         }
     });
+}
+
+
+// ====== Ad Popup Functions ======
+let adCountdownTimer = null;
+
+function showAdPopup() {
+    const overlay = document.getElementById('ad-popup-overlay');
+    overlay.style.display = 'flex';
+    
+    // Initialize ad
+    try {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (e) {
+        console.log('Ad error:', e);
+    }
+    
+    // Start countdown (5 seconds)
+    let countdown = 5;
+    const countdownEl = document.getElementById('ad-countdown');
+    
+    adCountdownTimer = setInterval(() => {
+        countdown--;
+        countdownEl.textContent = countdown;
+        
+        if (countdown <= 0) {
+            clearInterval(adCountdownTimer);
+            // Auto close after 5 seconds (optional)
+            // closeAdPopup();
+        }
+    }, 1000);
+}
+
+function closeAdPopup() {
+    const overlay = document.getElementById('ad-popup-overlay');
+    overlay.style.display = 'none';
+    
+    if (adCountdownTimer) {
+        clearInterval(adCountdownTimer);
+        adCountdownTimer = null;
+    }
+    
+    // Reset countdown
+    document.getElementById('ad-countdown').textContent = '5';
 }
