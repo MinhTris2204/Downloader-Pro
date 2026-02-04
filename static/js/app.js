@@ -77,51 +77,23 @@ async function fetchYoutubeInfo(url) {
 
     if (url.length < 10) return;
 
-    // Disable download button while loading
+    // Just enable download button, skip preview due to YouTube bot detection
     const downloadBtn = document.getElementById('youtube-download-btn');
-    downloadBtn.disabled = true;
-    downloadBtn.innerHTML = 'Đang tải thông tin...';
-
-    // Show loading state
-    const preview = document.getElementById('youtube-preview');
-    preview.style.display = 'flex';
-    document.getElementById('youtube-title').textContent = 'Đang tải thông tin...';
-    document.getElementById('youtube-author').textContent = '';
-    document.getElementById('youtube-thumbnail').src = '';
-
-    try {
-        const response = await fetch('/api/youtube/info', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url })
-        });
-
-        if (!response.ok) {
-            preview.style.display = 'none';
-            downloadBtn.disabled = false;
-            downloadBtn.innerHTML = 'Tải Xuống';
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            document.getElementById('youtube-thumbnail').src = data.thumbnail || '';
-            document.getElementById('youtube-title').textContent = data.title || 'Video YouTube';
-            document.getElementById('youtube-author').textContent = data.author || '';
-        } else {
-            document.getElementById('youtube-title').textContent = 'Sẵn sàng tải xuống';
-            document.getElementById('youtube-author').textContent = 'Nhấn nút Tải Xuống để bắt đầu';
-        }
-    } catch (err) {
-        document.getElementById('youtube-title').textContent = 'Sẵn sàng tải xuống';
-        document.getElementById('youtube-author').textContent = 'Nhấn nút Tải Xuống để bắt đầu';
-    }
-
-    // Re-enable download button
     downloadBtn.disabled = false;
     downloadBtn.innerHTML = 'Tải Xuống';
+    
+    // Show simple preview
+    const preview = document.getElementById('youtube-preview');
+    preview.style.display = 'flex';
+    document.getElementById('youtube-title').textContent = 'Video YouTube';
+    document.getElementById('youtube-author').textContent = 'Sẵn sàng tải xuống';
+    document.getElementById('youtube-thumbnail').src = 'https://img.youtube.com/vi/' + extractYoutubeId(url) + '/maxresdefault.jpg';
+}
 
+function extractYoutubeId(url) {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : '';
 }
 
 async function fetchTiktokInfo(url) {

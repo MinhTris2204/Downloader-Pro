@@ -474,7 +474,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
         
-        # Common options to bypass bot detection
+        # Common options to bypass bot detection - Use Android client
         common_opts = {
             'quiet': True,
             'no_warnings': True,
@@ -482,19 +482,13 @@ def download_youtube_video(url, format_type, quality, download_id):
             'progress_hooks': [progress_hook],
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'ios', 'web', 'tv_embedded'],
-                    'skip': ['hls', 'dash'],
-                    'player_skip': ['webpage', 'configs']
+                    'player_client': ['android'],  # Android works best
+                    'skip': ['hls', 'dash', 'translated_subs']
                 }
             },
             'http_headers': {
                 'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
+                'Accept-Language': 'en-US,en;q=0.9',
             }
         }
         
