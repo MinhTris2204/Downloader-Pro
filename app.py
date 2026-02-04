@@ -15,6 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 import functools
 import psycopg2
 from psycopg2 import pool
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound
 
 app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
@@ -225,6 +227,43 @@ def is_valid_tiktok_url(url):
     """Validate TikTok URL"""
     tiktok_regex = r'(https?://)?(www\.|vm\.|vt\.)?tiktok\.com/.*'
     return bool(re.match(tiktok_regex, url))
+
+def extract_video_id(url):
+    """Extract YouTube video ID from URL"""
+    patterns = [
+        r'(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)',
+        r'youtube\.com\/embed\/([^&\n?#]+)',
+        r'youtube\.com\/v\/([^&\n?#]+)'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return None
+
+def summarize_transcript(transcript_text, max_sentences=5):
+    """Simple extractive summarization"""
+    # Split into sentences
+    sentences = re.split(r'[.!?]+', transcript_text)
+    sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
+    
+    if len(sentences) <= max_sentences:
+        return ' '.join(sentences)
+    
+    # Simple scoring: prefer sentences with common keywords
+    keywords = ['video', 'hướng dẫn', 'cách', 'giới thiệu', 'chúng ta', 'bạn', 'này', 'sẽ']
+    
+    scored = []
+    for sent in sentences:
+        score = sum(1 for kw in keywords if kw.lower() in sent.lower())
+        score += len(sent.split()) / 10  # Prefer medium-length sentences
+        scored.append((score, sent))
+    
+    # Get top sentences
+    scored.sort(reverse=True)
+    top_sentences = [sent for _, sent in scored[:max_sentences]]
+    
+    return ' '.join(top_sentences)
 
 @app.before_request
 def force_https():
@@ -844,6 +883,69 @@ def youtube_info():
     except Exception as e:
         print(f"YouTube info error: {e}")
         return jsonify({'success': False, 'error': 'Không thể lấy thông tin video'}), 200
+
+@app.route('/api/youtube/summary', methods=['POST'])
+def youtube_summary():
+    """Get AI summary of YouTube video"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No data'}), 400
+            
+        url = data.get('url', '').strip()
+        
+        if not url or not is_valid_youtube_url(url):
+            return jsonify({'success': False, 'error': 'URL không hợp lệ'}), 400
+        
+        # Extract video ID
+        video_id = extract_video_id(url)
+        if not video_id:
+            return jsonify({'success': False, 'error': 'Không thể trích xuất video ID'}), 400
+        
+        # Get transcript
+        try:
+            # Try Vietnamese first, then English
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            
+            try:
+                transcript = transcript_list.find_transcript(['vi', 'en'])
+                transcript_data = transcript.fetch()
+            except:
+                # Get any available transcript
+                transcript = transcript_list.find_generated_transcript(['vi', 'en'])
+                transcript_data = transcript.fetch()
+            
+            # Combine all text
+            full_text = ' '.join([item['text'] for item in transcript_data])
+            
+            # Summarize
+            summary = summarize_transcript(full_text, max_sentences=5)
+            
+            return jsonify({
+                'success': True,
+                'summary': summary,
+                'language': transcript.language_code,
+                'is_generated': transcript.is_generated
+            })
+            
+        except TranscriptsDisabled:
+            return jsonify({
+                'success': False, 
+                'error': 'Video này không có phụ đề'
+            }), 200
+            
+        except NoTranscriptFound:
+            return jsonify({
+                'success': False,
+                'error': 'Không tìm thấy phụ đề cho video này'
+            }), 200
+        
+    except Exception as e:
+        print(f"YouTube summary error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Không thể tạo tóm tắt'
+        }), 200
 
 @app.route('/api/tiktok/info', methods=['POST'])
 def tiktok_info():

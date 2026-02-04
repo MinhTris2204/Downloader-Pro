@@ -3,3 +3,4 @@ yt-dlp
 requests
 waitress
 psycopg2-binary
+youtube-transcript-api

@@ -179,6 +179,16 @@
                             <div class="preview-info">
                                 <h3 id="youtube-title"></h3>
                                 <p id="youtube-author"></p>
+                                <button class="ai-summary-btn" id="youtube-summary-btn" onclick="getYoutubeSummary()">
+                                    🤖 AI Tóm tắt nội dung
+                                </button>
+                                <div class="ai-summary-box" id="youtube-summary-box" style="display:none;">
+                                    <div class="summary-header">
+                                        <span class="summary-icon">✨</span>
+                                        <span class="summary-title">Tóm tắt nội dung video</span>
+                                    </div>
+                                    <p id="youtube-summary-text"></p>
+                                </div>
                             </div>
                         </div>
                         <div class="format-selector">
