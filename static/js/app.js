@@ -589,18 +589,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// ====== Toggle Quality Selector based on Format ======
-document.querySelectorAll('input[name="youtube-format"]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-        const qualitySelector = document.getElementById('youtube-quality-selector');
-        if (e.target.value === 'mp3') {
-            qualitySelector.style.display = 'none';
-        } else {
-            qualitySelector.style.display = 'block';
-        }
-    });
-});
-
 // ====== Initialize ======
 async function fetchStats() {
     try {
