@@ -145,6 +145,9 @@ class NewsController:
         except Exception as e:
             print(f"Error proxying article: {e}")
             return jsonify({'error': str(e)}), 500
+    
+    @staticmethod
+    def get_news():
         """API lấy tin tức từ RSS feeds"""
         all_articles = []
         
