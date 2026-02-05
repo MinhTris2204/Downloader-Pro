@@ -479,7 +479,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
         
-        # Common options to bypass bot detection - Use multiple strategies
+        # Common options to bypass bot detection - Enhanced strategies
         common_opts = {
             'quiet': True,
             'no_warnings': True,
@@ -487,26 +487,34 @@ def download_youtube_video(url, format_type, quality, download_id):
             'progress_hooks': [progress_hook],
             'extractor_args': {
                 'youtube': {
-                    # Try multiple clients in order
-                    'player_client': ['android', 'web', 'ios'],
+                    # Use multiple client strategies
+                    'player_client': ['android_creator', 'android', 'ios', 'web'],
                     'skip': ['hls', 'dash'],
+                    'player_skip': ['webpage', 'configs'],
                 }
             },
-            # Add headers to mimic real Android browser
+            # Enhanced headers to mimic real mobile app
             'http_headers': {
-                'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
+                'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 13; en_US) gzip',
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Accept-Encoding': 'gzip, deflate',
+                'X-YouTube-Client-Name': '3',
+                'X-YouTube-Client-Version': '19.09.37',
             },
-            # Retry and timeout settings
-            'retries': 15,
-            'fragment_retries': 15,
-            'socket_timeout': 40,
+            # Enhanced retry and timeout settings
+            'retries': 20,
+            'fragment_retries': 20,
+            'file_access_retries': 10,
+            'socket_timeout': 60,
             # Additional bypass options
             'nocheckcertificate': True,
             'prefer_insecure': False,
             'age_limit': None,
+            'geo_bypass': True,
+            'geo_bypass_country': 'US',
+            # Use cookies if available
+            'cookiesfrombrowser': None,
         }
         
         if format_type == 'mp3':
@@ -570,11 +578,19 @@ def download_youtube_video(url, format_type, quality, download_id):
         error_msg = str(e)
         download_progress[download_id]['status'] = 'error'
         
-        # Friendly error message for bot detection
-        if 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower():
-            download_progress[download_id]['error'] = 'YouTube đang chặn tải xuống. Vui lòng thử lại sau vài phút hoặc thử video khác.'
+        # Friendly error messages
+        if 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg:
+            download_progress[download_id]['error'] = '⚠️ YouTube đang bảo vệ video này. Vui lòng:\n• Thử lại sau 2-3 phút\n• Hoặc thử video khác\n• Hoặc sử dụng video ngắn hơn'
+        elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
+            download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
+        elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
+            download_progress[download_id]['error'] = '🔞 Video có giới hạn độ tuổi, không thể tải'
+        elif 'copyright' in error_msg.lower():
+            download_progress[download_id]['error'] = '©️ Video có vấn đề bản quyền'
+        elif 'network' in error_msg.lower() or 'timeout' in error_msg.lower():
+            download_progress[download_id]['error'] = '🌐 Lỗi kết nối mạng. Vui lòng thử lại'
         else:
-            download_progress[download_id]['error'] = error_msg
+            download_progress[download_id]['error'] = f'❌ Lỗi: {error_msg[:100]}'
             
         print(f"YouTube download error: {e}")
 
