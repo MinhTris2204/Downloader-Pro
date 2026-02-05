@@ -14,7 +14,13 @@
     <meta name="description" content="Tải video YouTube, TikTok miễn phí không logo. Chuyển đổi sang MP4, MP3 chất lượng cao 1080p, 720p, 4K. Tải nhạc YouTube, video TikTok không watermark. Nhanh, an toàn, không giới hạn.">
     <meta name="keywords" content="tải video youtube, tải video tiktok, youtube downloader, tiktok downloader, chuyển youtube sang mp3, tải nhạc youtube, tải video không logo, download youtube, download tiktok, tải video tiktok không logo, youtube to mp3, tiktok no watermark, tải video hd, tải video 4k">
     <meta name="author" content="Downloader Pro">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="bingbot" content="index, follow">
+    <meta name="language" content="Vietnamese">
+    <meta name="revisit-after" content="1 days">
+    <meta name="rating" content="general">
+    <meta name="distribution" content="global">
     <link rel="canonical" href="https://downloaderpro.io.vn">
     
     <!-- Open Graph / Facebook -->
@@ -34,6 +40,12 @@
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="DownloaderPro">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,28 +66,182 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Downloader Pro",
+      "alternateName": "DownloaderPro",
       "url": "https://downloaderpro.io.vn",
-      "description": "Tải video YouTube, TikTok miễn phí. Chuyển đổi sang MP4, MP3 chất lượng cao.",
+      "description": "Tải video YouTube, TikTok miễn phí không logo. Chuyển đổi sang MP4, MP3 chất lượng cao 1080p, 720p, 4K. Công cụ tải video tốt nhất Việt Nam.",
       "applicationCategory": "MultimediaApplication",
-      "operatingSystem": "Web Browser",
+      "operatingSystem": "Web Browser, Windows, macOS, Linux, Android, iOS",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
       "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "VND"
+        "priceCurrency": "VND",
+        "availability": "https://schema.org/InStock"
       },
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.8",
-        "ratingCount": "1250"
+        "ratingCount": "1250",
+        "bestRating": "5",
+        "worstRating": "1"
       },
       "featureList": [
-        "Tải video YouTube",
-        "Tải video TikTok",
-        "Chuyển đổi MP3",
-        "Chất lượng HD, Full HD, 4K",
-        "Không cần đăng ký",
-        "Miễn phí không giới hạn"
+        "Tải video YouTube miễn phí",
+        "Tải video TikTok không logo",
+        "Chuyển đổi YouTube sang MP3",
+        "Tải video chất lượng HD, Full HD, 4K",
+        "Không cần đăng ký tài khoản",
+        "Miễn phí không giới hạn",
+        "Tải album ảnh TikTok",
+        "Hỗ trợ đa nền tảng"
+      ],
+      "screenshot": "https://downloaderpro.io.vn/static/favicon.svg",
+      "softwareVersion": "1.0",
+      "author": {
+        "@type": "Organization",
+        "name": "Downloader Pro"
+      },
+      "inLanguage": "vi-VN"
+    }
+    </script>
+    
+    <!-- Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Downloader Pro",
+      "url": "https://downloaderpro.io.vn",
+      "logo": "https://downloaderpro.io.vn/static/favicon.svg",
+      "sameAs": [
+        "https://www.facebook.com/share/1CF5KoMjyp/",
+        "https://www.instagram.com/dgth_annn"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "duongminhtri9311@gmail.com",
+        "contactType": "Customer Support"
+      }
+    }
+    </script>
+    
+    <!-- BreadcrumbList Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Trang chủ",
+          "item": "https://downloaderpro.io.vn"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Tải YouTube",
+          "item": "https://downloaderpro.io.vn/#youtube"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Tải TikTok",
+          "item": "https://downloaderpro.io.vn/#tiktok"
+        }
       ]
+    }
+    </script>
+    
+    <!-- FAQ Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Công cụ này có an toàn không?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Chúng tôi cam kết bảo mật thông tin người dùng và không cài đặt bất kỳ phần mềm độc hại nào. Downloader Pro hoàn toàn an toàn và không lưu trữ dữ liệu cá nhân của bạn."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Tại sao không tải được video?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Vui lòng kiểm tra lại liên kết (phải là công khai) hoặc thử lại sau vài phút nếu server đang bận. Đảm bảo video không bị giới hạn quyền truy cập."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Có hỗ trợ tải video TikTok không logo không?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Có, mặc định chúng tôi sẽ tải bản video gốc chất lượng cao nhất và không dính logo TikTok watermark. Hoàn toàn miễn phí."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Tải video YouTube có vi phạm bản quyền không?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Bạn chỉ nên tải video để sử dụng cá nhân, không thương mại. Tôn trọng bản quyền của tác giả và tuân thủ điều khoản sử dụng của YouTube."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Có giới hạn số lượng video tải không?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Không, Downloader Pro hoàn toàn miễn phí và không giới hạn số lượng video bạn có thể tải. Sử dụng thoải mái không cần đăng ký."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Chất lượng video tải về như thế nào?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Chúng tôi hỗ trợ tải video với nhiều chất lượng: 360p, 480p, 720p HD, 1080p Full HD, và 4K. Bạn có thể chọn chất lượng phù hợp với nhu cầu."
+          }
+        }
+      ]
+    }
+    </script>
+    
+    <!-- HowTo Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Cách tải video YouTube và TikTok",
+      "description": "Hướng dẫn chi tiết cách tải video từ YouTube và TikTok miễn phí không logo",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Sao chép Link",
+          "text": "Mở ứng dụng TikTok hoặc YouTube, chọn video bạn thích và sao chép liên kết chia sẻ.",
+          "image": "https://downloaderpro.io.vn/static/favicon.svg"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Dán vào Tool",
+          "text": "Quay lại Downloader Pro, dán liên kết vào ô nhập liệu và hệ thống sẽ tự động xử lý.",
+          "image": "https://downloaderpro.io.vn/static/favicon.svg"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Tải Xuống",
+          "text": "Chọn định dạng (MP4/MP3) và chất lượng mong muốn, sau đó nhấn nút Tải Xuống.",
+          "image": "https://downloaderpro.io.vn/static/favicon.svg"
+        }
+      ],
+      "totalTime": "PT1M"
     }
     </script>
 </head>

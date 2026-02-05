@@ -1,0 +1,3 @@
+Contact: mailto:duongminhtri9311@gmail.com
+Preferred-Languages: vi, en
+Canonical: https://downloaderpro.io.vn/.well-known/security.txt

@@ -1,0 +1,21 @@
+{
+  "name": "Downloader Pro - Tải Video YouTube TikTok",
+  "short_name": "DownloaderPro",
+  "description": "Tải video YouTube, TikTok miễn phí không logo. Chuyển đổi MP4, MP3 chất lượng cao.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "utilities"],
+  "lang": "vi-VN",
+  "dir": "ltr"
+}

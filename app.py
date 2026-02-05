@@ -758,6 +758,10 @@ def ads():
 def sitemap():
     return app.send_static_file('sitemap.xml')
 
+@app.route('/manifest.json')
+def manifest():
+    return app.send_static_file('manifest.json')
+
 @app.route('/api/youtube/download', methods=['POST'])
 def youtube_download():
     data = request.get_json()

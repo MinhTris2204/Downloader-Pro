@@ -1,5 +1,26 @@
 User-agent: *
 Allow: /
+Allow: /static/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /*.json$
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://downloaderpro.io.vn/sitemap.xml
+Sitemap: https://downloaderpro.io.vn/static/sitemap.xml
+
+# Specific bots
+User-agent: Googlebot
+Allow: /
 Disallow: /api/
 
-Sitemap: https://downloaderpro.io.vn/sitemap.xml
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+
+User-agent: Slurp
+Allow: /
+Disallow: /api/
