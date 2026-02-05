@@ -19,6 +19,7 @@ from psycopg2 import pool
 # Import controllers
 from controllers.home_controller import HomeController
 from controllers.blog_controller import BlogController
+from controllers.news_controller import NewsController
 
 app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
@@ -765,6 +766,14 @@ def blog_tiktok():
 @app.route('/blog/chuyen-youtube-sang-mp3')
 def blog_youtube_mp3():
     return BlogController.youtube_to_mp3()
+
+@app.route('/news')
+def news_index():
+    return NewsController.index()
+
+@app.route('/api/news')
+def api_news():
+    return NewsController.get_news()
 
 @app.route('/robots.txt')
 def robots():
