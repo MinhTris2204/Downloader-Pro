@@ -537,7 +537,7 @@ body {
     justify-content: center;
     gap: 10px;
     padding: 16px 24px;
-    border: none;
+    border: 2px solid transparent;
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--text-secondary);
@@ -548,6 +548,81 @@ body {
     transition: var(--transition);
     position: relative;
     overflow: hidden;
+}
+
+/* YouTube Button - Red Theme */
+.tab-btn[data-tab="youtube"] {
+    background: rgba(255, 0, 0, 0.1);
+    border-color: rgba(255, 0, 0, 0.3);
+    color: #ff0000;
+}
+
+.tab-btn[data-tab="youtube"]:hover {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: rgba(255, 0, 0, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 0, 0, 0.3);
+}
+
+.tab-btn[data-tab="youtube"].active {
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+    border-color: #ff0000;
+    color: white;
+    box-shadow: 0 8px 25px rgba(255, 0, 0, 0.4);
+}
+
+/* TikTok Button - Cyan/Pink Theme */
+.tab-btn[data-tab="tiktok"] {
+    background: rgba(0, 242, 234, 0.1);
+    border-color: rgba(0, 242, 234, 0.3);
+    color: #00f2ea;
+}
+
+.tab-btn[data-tab="tiktok"]:hover {
+    background: rgba(0, 242, 234, 0.2);
+    border-color: rgba(0, 242, 234, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 242, 234, 0.3);
+}
+
+.tab-btn[data-tab="tiktok"].active {
+    background: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%);
+    border-color: #00f2ea;
+    color: white;
+    box-shadow: 0 8px 25px rgba(0, 242, 234, 0.4);
+}
+
+/* Light Mode Adjustments */
+[data-theme="light"] .tab-btn[data-tab="youtube"] {
+    background: rgba(255, 0, 0, 0.08);
+    border-color: rgba(255, 0, 0, 0.2);
+    color: #cc0000;
+}
+
+[data-theme="light"] .tab-btn[data-tab="youtube"]:hover {
+    background: rgba(255, 0, 0, 0.15);
+    border-color: rgba(255, 0, 0, 0.4);
+}
+
+[data-theme="light"] .tab-btn[data-tab="youtube"].active {
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+    color: white;
+}
+
+[data-theme="light"] .tab-btn[data-tab="tiktok"] {
+    background: rgba(0, 242, 234, 0.08);
+    border-color: rgba(0, 242, 234, 0.2);
+    color: #00a8a8;
+}
+
+[data-theme="light"] .tab-btn[data-tab="tiktok"]:hover {
+    background: rgba(0, 242, 234, 0.15);
+    border-color: rgba(0, 242, 234, 0.4);
+}
+
+[data-theme="light"] .tab-btn[data-tab="tiktok"].active {
+    background: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%);
+    color: white;
 }
 
 /* Pulse animation for inactive tabs */
@@ -561,6 +636,19 @@ body {
     }
     50% {
         box-shadow: 0 0 0 8px rgba(0, 242, 234, 0);
+    }
+}
+
+.tab-btn[data-tab="youtube"]:not(.active) {
+    animation: youtube-pulse 2s ease-in-out infinite;
+}
+
+@keyframes youtube-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(255, 0, 0, 0);
     }
 }
 
@@ -584,23 +672,34 @@ body {
     opacity: 0;
 }
 
-.tab-btn:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
-    transform: translateY(-2px);
-}
-
-.tab-btn.active {
-    background: var(--gradient-1);
-    color: var(--bg-dark);
-    animation: none;
-    box-shadow: 0 4px 15px rgba(0, 242, 234, 0.4);
-}
-
 .tab-icon {
     width: 20px;
     height: 20px;
     transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.tab-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.tab-text strong {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.tab-hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.8;
+    line-height: 1.2;
+}
+
+.tab-btn.active .tab-hint {
+    opacity: 0.9;
 }
 
 .tab-btn:hover .tab-icon {
@@ -1945,21 +2044,60 @@ body {
     /* Tabs Mobile */
     .tab-buttons {
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
         padding: 0;
         background: transparent;
     }
 
     .tab-btn {
         width: 100%;
-        padding: 14px 20px;
-        font-size: 1rem;
+        padding: 16px 20px;
+        font-size: 1.05rem;
         border-radius: var(--radius-sm);
-        background: rgba(255, 255, 255, 0.05);
+        border-width: 2px;
+        justify-content: flex-start;
     }
 
-    .tab-btn.active {
-        background: var(--gradient-1);
+    .tab-text {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .tab-text strong {
+        font-size: 1.1rem;
+    }
+
+    .tab-hint {
+        font-size: 0.8rem;
+    }
+
+    /* Keep YouTube red theme on mobile */
+    .tab-btn[data-tab="youtube"] {
+        background: rgba(255, 0, 0, 0.15);
+        border-color: rgba(255, 0, 0, 0.4);
+    }
+
+    .tab-btn[data-tab="youtube"].active {
+        background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+        border-color: #ff0000;
+        color: white;
+    }
+
+    /* Keep TikTok cyan theme on mobile */
+    .tab-btn[data-tab="tiktok"] {
+        background: rgba(0, 242, 234, 0.15);
+        border-color: rgba(0, 242, 234, 0.4);
+    }
+
+    .tab-btn[data-tab="tiktok"].active {
+        background: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%);
+        border-color: #00f2ea;
+        color: white;
+    }
+
+    .tab-icon {
+        width: 24px;
+        height: 24px;
     }
 
     /* Input Stacked */
