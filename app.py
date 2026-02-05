@@ -16,6 +16,10 @@ import functools
 import psycopg2
 from psycopg2 import pool
 
+# Import controllers
+from controllers.home_controller import HomeController
+from controllers.blog_controller import BlogController
+
 app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -744,7 +748,23 @@ def download_tiktok_video(url, format_type, download_id, quality='best'):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return HomeController.index()
+
+@app.route('/blog')
+def blog_index():
+    return BlogController.index()
+
+@app.route('/blog/tai-video-youtube')
+def blog_youtube():
+    return BlogController.youtube_guide()
+
+@app.route('/blog/tai-video-tiktok')
+def blog_tiktok():
+    return BlogController.tiktok_guide()
+
+@app.route('/blog/chuyen-youtube-sang-mp3')
+def blog_youtube_mp3():
+    return BlogController.youtube_to_mp3()
 
 @app.route('/robots.txt')
 def robots():
