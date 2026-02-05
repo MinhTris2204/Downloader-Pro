@@ -484,47 +484,70 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Random delay to avoid rate limiting (0.5-2 seconds)
         time_module.sleep(random.uniform(0.5, 2.0))
         
-        # Try multiple strategies in order of reliability
+        # Try multiple strategies in order of reliability (tested with yt-dlp 2026.02.04)
         strategies = [
-            # Strategy 1: Use cookies from browser (most reliable)
+            # Strategy 1: Android VR (most reliable - confirmed working)
             {
-                'name': 'browser_cookies',
-                'opts': {
-                    'cookiesfrombrowser': ('chrome',),  # Try Chrome first
-                }
-            },
-            # Strategy 2: Android TV client (very reliable)
-            {
-                'name': 'android_tv',
+                'name': 'android_vr',
                 'opts': {
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android_embedded', 'android_creator'],
+                            'player_client': ['android_vr'],
+                            'skip': ['hls', 'dash', 'translated_subs'],
+                        }
+                    },
+                }
+            },
+            # Strategy 2: Android creator (alternative Android client)
+            {
+                'name': 'android_creator',
+                'opts': {
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_creator'],
                             'skip': ['hls', 'dash'],
                         }
                     },
                 }
             },
-            # Strategy 3: iOS client
+            # Strategy 3: iOS (works well for most videos)
             {
                 'name': 'ios',
                 'opts': {
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['ios', 'mweb'],
+                            'player_client': ['ios'],
                         }
                     },
                 }
             },
-            # Strategy 4: Web client with po_token (latest bypass)
+            # Strategy 4: iOS music (alternative iOS client)
             {
-                'name': 'web_po_token',
+                'name': 'ios_music',
                 'opts': {
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['web'],
+                            'player_client': ['ios_music'],
                         }
                     },
+                }
+            },
+            # Strategy 5: Media connect (works for some restricted videos)
+            {
+                'name': 'media_connect',
+                'opts': {
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['mediaconnect'],
+                        }
+                    },
+                }
+            },
+            # Strategy 6: Use cookies from browser (if Chrome is available)
+            {
+                'name': 'browser_cookies',
+                'opts': {
+                    'cookiesfrombrowser': ('chrome',),
                 }
             },
         ]
@@ -644,7 +667,9 @@ def download_youtube_video(url, format_type, quality, download_id):
         download_progress[download_id]['status'] = 'error'
         
         # Friendly error messages
-        if 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg:
+        if 'Failed to extract any player response' in error_msg:
+            download_progress[download_id]['error'] = '🔧 YouTube đã thay đổi API.\n\n💡 Giải pháp:\n1. Cập nhật ngay: pip install -U yt-dlp\n2. Khởi động lại server\n3. Nếu vẫn lỗi, đợi vài giờ để yt-dlp cập nhật\n4. Thử video khác trong lúc chờ'
+        elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg:
             download_progress[download_id]['error'] = '⚠️ YouTube đang chặn tải xuống.\n\n💡 Giải pháp:\n1. Cập nhật: pip install -U yt-dlp\n2. Đợi 5-10 phút rồi thử lại\n3. Thử video khác (video ngắn thường dễ tải hơn)\n4. Sử dụng trình duyệt Chrome để tự động lấy cookies'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
