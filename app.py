@@ -484,55 +484,23 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Random delay to avoid rate limiting (0.5-2 seconds)
         time_module.sleep(random.uniform(0.5, 2.0))
         
-        # Try multiple strategies in order of reliability
+        # Simplified strategies - minimal config for maximum compatibility
         strategies = [
-            # Strategy 1: Let yt-dlp auto-select best client (most compatible)
+            # Strategy 1: Minimal config - let yt-dlp handle everything
             {
-                'name': 'auto',
-                'opts': {}
-            },
-            # Strategy 2: Android VR (reliable for most videos)
-            {
-                'name': 'android_vr',
+                'name': 'minimal',
                 'opts': {
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_vr'],
-                        }
-                    },
+                    'quiet': True,
+                    'no_warnings': True,
                 }
             },
-            # Strategy 3: iOS (works well for most videos)
+            # Strategy 2: With legacy format (for older yt-dlp versions)
             {
-                'name': 'ios',
+                'name': 'legacy',
                 'opts': {
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['ios'],
-                        }
-                    },
-                }
-            },
-            # Strategy 4: Android creator
-            {
-                'name': 'android_creator',
-                'opts': {
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_creator'],
-                        }
-                    },
-                }
-            },
-            # Strategy 5: Web with embed (fallback)
-            {
-                'name': 'web',
-                'opts': {
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['web'],
-                        }
-                    },
+                    'quiet': True,
+                    'no_warnings': True,
+                    'format': 'best',
                 }
             },
         ]
@@ -543,38 +511,8 @@ def download_youtube_video(url, format_type, quality, download_id):
             try:
                 # Base options for all strategies
                 common_opts = {
-                    'quiet': True,
-                    'no_warnings': True,
                     'noprogress': False,
                     'progress_hooks': [progress_hook],
-                    # Randomize user agent
-                    'http_headers': {
-                        'User-Agent': random.choice([
-                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        ]),
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.9',
-                        'Accept-Encoding': 'gzip, deflate, br',
-                        'DNT': '1',
-                        'Connection': 'keep-alive',
-                        'Upgrade-Insecure-Requests': '1',
-                    },
-                    # Retry settings
-                    'retries': 10,
-                    'fragment_retries': 10,
-                    'file_access_retries': 5,
-                    'socket_timeout': 30,
-                    # Additional options
-                    'nocheckcertificate': True,
-                    'prefer_insecure': False,
-                    'geo_bypass': True,
-                    'geo_bypass_country': 'US',
-                    # Don't use IPv6
-                    'source_address': '0.0.0.0',
-                    # Allow age-restricted content
-                    'age_limit': None,
                 }
                 
                 # Merge strategy-specific options
@@ -597,18 +535,19 @@ def download_youtube_video(url, format_type, quality, download_id):
                     final_filename = filename + '.mp3'
                     mime_type = 'audio/mpeg'
                 else:
-                    # Video
+                    # Video - use simple format selector
+                    if quality == 'best' or not quality.isdigit():
+                        format_str = 'best'
+                    else:
+                        # Try to get specific quality
+                        format_str = f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best'
+                    
                     ydl_opts = {
                         **common_opts,
-                        'format': 'best[ext=mp4]/best',
-                        'outtmpl': output_path + '.mp4',
+                        'format': format_str,
+                        'outtmpl': output_path + '.%(ext)s',
+                        'merge_output_format': 'mp4',
                     }
-                    
-                    if quality != 'best' and quality.isdigit():
-                        res = int(quality)
-                        ydl_opts['format'] = f'best[height<={res}][ext=mp4]/best[height<={res}]/best'
-                        ydl_opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
-                        ydl_opts['postprocessor_args'] = ['-vf', f'scale=-2:{res}']
 
                     final_filename = filename + '.mp4'
                     mime_type = 'video/mp4'
