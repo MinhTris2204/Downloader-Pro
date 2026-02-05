@@ -83,30 +83,39 @@ class NewsController:
         all_articles = []
         
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+            'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7'
         }
         
         for feed_info in NewsController.RSS_FEEDS:
             try:
+                print(f"Fetching {feed_info['name']} from {feed_info['url']}")
+                
                 # Fetch RSS feed
-                response = requests.get(feed_info['url'], headers=headers, timeout=10)
+                response = requests.get(feed_info['url'], headers=headers, timeout=15)
                 response.raise_for_status()
+                
+                print(f"Got response: {response.status_code}, length: {len(response.content)}")
                 
                 # Parse RSS
                 articles = NewsController.parse_rss_simple(response.content)
+                print(f"Parsed {len(articles)} articles from {feed_info['name']}")
                 
-                for article in articles[:10]:  # Lấy 10 bài mới nhất
+                for article in articles[:15]:  # Lấy 15 bài mới nhất
                     # Lọc chỉ lấy bài liên quan TikTok, YouTube
                     title = article['title'].lower()
                     description = article['description'].lower()
                     content = title + ' ' + description
                     
-                    # Kiểm tra keywords
+                    # Kiểm tra keywords - mở rộng để lấy nhiều bài hơn
                     keywords = ['tiktok', 'youtube', 'video', 'mạng xã hội', 'social', 
                                'streaming', 'content', 'youtuber', 'tiktoker', 'facebook',
-                               'instagram', 'twitter', 'meta', 'google', 'apple']
+                               'instagram', 'twitter', 'meta', 'google', 'apple', 'smartphone',
+                               'app', 'ứng dụng', 'công nghệ', 'tech', 'ai', 'trí tuệ nhân tạo']
                     
-                    if any(keyword in content for keyword in keywords):
+                    # Lấy tất cả bài công nghệ, không lọc quá chặt
+                    if any(keyword in content for keyword in keywords) or len(all_articles) < 5:
                         # Format thời gian
                         published = article['published']
                         try:
@@ -124,44 +133,22 @@ class NewsController:
                         
             except Exception as e:
                 print(f"Error fetching {feed_info['name']}: {e}")
+                import traceback
+                traceback.print_exc()
                 continue
         
-        # Nếu không có bài nào, tạo bài mẫu
+        print(f"Total articles collected: {len(all_articles)}")
+        
+        # Nếu vẫn không có bài nào, trả về lỗi
         if not all_articles:
-            all_articles = NewsController.get_sample_articles()
+            return jsonify({
+                'success': False,
+                'error': 'Không thể lấy tin tức từ các nguồn RSS. Vui lòng thử lại sau.',
+                'articles': []
+            })
         
         return jsonify({
             'success': True,
-            'articles': all_articles[:20]  # Trả về 20 bài mới nhất
+            'articles': all_articles[:30]  # Trả về 30 bài mới nhất
         })
-    
-    @staticmethod
-    def get_sample_articles():
-        """Tạo bài viết mẫu khi không lấy được RSS"""
-        return [
-            {
-                'title': 'TikTok ra mắt tính năng mới cho phép tải video dài hơn',
-                'link': 'https://vnexpress.net',
-                'description': 'TikTok đang thử nghiệm cho phép người dùng tải lên video dài tới 10 phút, cạnh tranh với YouTube.',
-                'thumbnail': '',
-                'published': datetime.now().strftime('%d/%m/%Y %H:%M'),
-                'source': 'VnExpress'
-            },
-            {
-                'title': 'YouTube cập nhật thuật toán đề xuất video mới',
-                'link': 'https://zingnews.vn',
-                'description': 'YouTube thông báo cập nhật thuật toán để ưu tiên nội dung chất lượng cao và giảm spam.',
-                'thumbnail': '',
-                'published': datetime.now().strftime('%d/%m/%Y %H:%M'),
-                'source': 'Zing News'
-            },
-            {
-                'title': 'Xu hướng video ngắn đang thay đổi cách người dùng tiêu thụ nội dung',
-                'link': 'https://genk.vn',
-                'description': 'Các nền tảng video ngắn như TikTok, YouTube Shorts đang thu hút hàng tỷ lượt xem mỗi ngày.',
-                'thumbnail': '',
-                'published': datetime.now().strftime('%d/%m/%Y %H:%M'),
-                'source': 'Genk'
-            }
-        ]
 

@@ -540,40 +540,48 @@ function showToast(message, type = 'info') {
 let youtubeDebounce = null;
 let tiktokDebounce = null;
 
-document.getElementById('youtube-url').addEventListener('input', (e) => {
-    const url = e.target.value.trim();
+// Check if elements exist before adding event listeners
+const youtubeUrlInput = document.getElementById('youtube-url');
+const tiktokUrlInput = document.getElementById('tiktok-url');
 
-    // Debounce to avoid too many requests
-    clearTimeout(youtubeDebounce);
-    youtubeDebounce = setTimeout(() => {
-        fetchYoutubeInfo(url);
-    }, 500);
-});
-
-document.getElementById('tiktok-url').addEventListener('input', (e) => {
-    const url = e.target.value.trim();
-
-    // Debounce to avoid too many requests
-    clearTimeout(tiktokDebounce);
-    tiktokDebounce = setTimeout(() => {
-        fetchTiktokInfo(url);
-    }, 500);
-});
-
-// ====== Also trigger on paste event ======
-document.getElementById('youtube-url').addEventListener('paste', (e) => {
-    setTimeout(() => {
+if (youtubeUrlInput) {
+    youtubeUrlInput.addEventListener('input', (e) => {
         const url = e.target.value.trim();
-        fetchYoutubeInfo(url);
-    }, 100);
-});
 
-document.getElementById('tiktok-url').addEventListener('paste', (e) => {
-    setTimeout(() => {
+        // Debounce to avoid too many requests
+        clearTimeout(youtubeDebounce);
+        youtubeDebounce = setTimeout(() => {
+            fetchYoutubeInfo(url);
+        }, 500);
+    });
+    
+    // ====== Also trigger on paste event ======
+    youtubeUrlInput.addEventListener('paste', (e) => {
+        setTimeout(() => {
+            const url = e.target.value.trim();
+            fetchYoutubeInfo(url);
+        }, 100);
+    });
+}
+
+if (tiktokUrlInput) {
+    tiktokUrlInput.addEventListener('input', (e) => {
         const url = e.target.value.trim();
-        fetchTiktokInfo(url);
-    }, 100);
-});
+
+        // Debounce to avoid too many requests
+        clearTimeout(tiktokDebounce);
+        tiktokDebounce = setTimeout(() => {
+            fetchTiktokInfo(url);
+        }, 500);
+    });
+    
+    tiktokUrlInput.addEventListener('paste', (e) => {
+        setTimeout(() => {
+            const url = e.target.value.trim();
+            fetchTiktokInfo(url);
+        }, 100);
+    });
+}
 
 // ====== Keyboard Shortcuts ======
 document.addEventListener('keydown', (e) => {
