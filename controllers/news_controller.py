@@ -103,19 +103,46 @@ class NewsController:
                 print(f"Parsed {len(articles)} articles from {feed_info['name']}")
                 
                 for article in articles[:15]:  # Lấy 15 bài mới nhất
-                    # Lọc chỉ lấy bài liên quan TikTok, YouTube
+                    # Lọc CHỈ lấy bài liên quan TikTok, YouTube, mạng xã hội, công nghệ IT
                     title = article['title'].lower()
                     description = article['description'].lower()
                     content = title + ' ' + description
                     
-                    # Kiểm tra keywords - mở rộng để lấy nhiều bài hơn
-                    keywords = ['tiktok', 'youtube', 'video', 'mạng xã hội', 'social', 
-                               'streaming', 'content', 'youtuber', 'tiktoker', 'facebook',
-                               'instagram', 'twitter', 'meta', 'google', 'apple', 'smartphone',
-                               'app', 'ứng dụng', 'công nghệ', 'tech', 'ai', 'trí tuệ nhân tạo']
+                    # Keywords chặt chẽ - CHỈ công nghệ IT
+                    tech_keywords = [
+                        'tiktok', 'youtube', 'facebook', 'instagram', 'twitter', 'x.com',
+                        'mạng xã hội', 'social media', 'video', 'streaming', 'livestream',
+                        'youtuber', 'tiktoker', 'content creator', 'influencer',
+                        'meta', 'google', 'apple', 'microsoft', 'amazon',
+                        'smartphone', 'iphone', 'android', 'app', 'ứng dụng',
+                        'ai', 'trí tuệ nhân tạo', 'chatgpt', 'openai',
+                        'game', 'gaming', 'esports', 'steam',
+                        'netflix', 'spotify', 'zalo', 'telegram', 'whatsapp',
+                        'công nghệ', 'technology', 'tech', 'digital',
+                        'internet', 'web', 'online', 'cloud',
+                        'software', 'phần mềm', 'hardware', 'phần cứng',
+                        'laptop', 'pc', 'máy tính', 'tablet', 'ipad'
+                    ]
                     
-                    # Lấy tất cả bài công nghệ, không lọc quá chặt
-                    if any(keyword in content for keyword in keywords) or len(all_articles) < 5:
+                    # Từ khóa loại trừ - KHÔNG lấy
+                    exclude_keywords = [
+                        'chính trị', 'bầu cử', 'quốc hội', 'chính phủ',
+                        'kinh tế vĩ mô', 'chứng khoán', 'bất động sản',
+                        'thể thao', 'bóng đá', 'world cup',
+                        'giải trí', 'ca sĩ', 'diễn viên', 'phim ảnh',
+                        'thời tiết', 'giao thông', 'tai nạn',
+                        'y tế', 'bệnh viện', 'thuốc',
+                        'giáo dục', 'thi cử', 'đại học'
+                    ]
+                    
+                    # Kiểm tra có keyword công nghệ KHÔNG?
+                    has_tech = any(keyword in content for keyword in tech_keywords)
+                    
+                    # Kiểm tra có keyword loại trừ KHÔNG?
+                    has_exclude = any(keyword in content for keyword in exclude_keywords)
+                    
+                    # CHỈ lấy nếu có tech keyword VÀ KHÔNG có exclude keyword
+                    if has_tech and not has_exclude:
                         # Format thời gian
                         published = article['published']
                         try:
