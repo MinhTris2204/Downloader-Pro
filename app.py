@@ -25,6 +25,10 @@ app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Rate limiting tracking
+last_youtube_download = {}  # IP -> timestamp
+YOUTUBE_COOLDOWN = 30  # seconds between downloads per IP
+
 # Add security headers
 @app.after_request
 def add_security_headers(response):
@@ -481,8 +485,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
         
-        # Random delay to avoid rate limiting (0.5-2 seconds)
-        time_module.sleep(random.uniform(0.5, 2.0))
+        # Longer random delay to avoid rate limiting (2-5 seconds)
+        delay = random.uniform(2.0, 5.0)
+        print(f"[DEBUG] Waiting {delay:.1f}s before download to avoid rate limit...")
+        time_module.sleep(delay)
         
         # Simplified strategies - minimal config for maximum compatibility
         strategies = [
@@ -597,7 +603,7 @@ def download_youtube_video(url, format_type, quality, download_id):
         if 'Failed to extract any player response' in error_msg:
             download_progress[download_id]['error'] = '🔧 YouTube đã thay đổi API.\n\n💡 Giải pháp:\n1. Cập nhật ngay: pip install -U yt-dlp\n2. Khởi động lại server\n3. Nếu vẫn lỗi, đợi vài giờ để yt-dlp cập nhật\n4. Thử video khác trong lúc chờ'
         elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg:
-            download_progress[download_id]['error'] = '⚠️ YouTube đang chặn tải xuống.\n\n💡 Giải pháp:\n1. Cập nhật: pip install -U yt-dlp\n2. Đợi 5-10 phút rồi thử lại\n3. Thử video khác (video ngắn thường dễ tải hơn)\n4. Sử dụng trình duyệt Chrome để tự động lấy cookies'
+            download_progress[download_id]['error'] = '⏳ YouTube đang bảo vệ chống spam.\n\n💡 Cách khắc phục:\n\n🔹 Đợi 3-5 phút rồi thử lại\n🔹 Hoặc thử video khác ngay\n🔹 Video ngắn (<5 phút) dễ tải hơn\n🔹 Tránh tải liên tục nhiều video\n\n✨ Mẹo: Đợi một chút giữa các lần tải để tránh bị chặn!'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
@@ -841,12 +847,26 @@ def youtube_download():
     if not is_valid_youtube_url(url):
         return jsonify({'success': False, 'error': 'URL YouTube không hợp lệ'}), 400
     
+    # Check cooldown per IP
+    client_ip = request.remote_addr
+    current_time = time.time()
+    
+    if client_ip in last_youtube_download:
+        time_since_last = current_time - last_youtube_download[client_ip]
+        if time_since_last < YOUTUBE_COOLDOWN:
+            wait_time = int(YOUTUBE_COOLDOWN - time_since_last)
+            return jsonify({
+                'success': False, 
+                'error': f'⏳ Vui lòng đợi {wait_time} giây trước khi tải video tiếp theo.\n\nĐây là biện pháp bảo vệ để tránh bị YouTube chặn. Cảm ơn bạn đã thông cảm! 😊'
+            }), 429
+    
+    # Update last download time
+    last_youtube_download[client_ip] = current_time
+    
     download_id = str(uuid.uuid4())
     
     # Use ThreadPool to prevent server crash
     executor.submit(download_youtube_video, url, format_type, quality, download_id)
-    # thread = threading.Thread(target=download_youtube_video, args=(url, format_type, quality, download_id))
-    # thread.start()
     
     return jsonify({'success': True, 'download_id': download_id})
 
