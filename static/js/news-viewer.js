@@ -42,11 +42,11 @@ class NewsViewer {
                             <div class="spinner"></div>
                             <p>Đang tải bài viết...</p>
                         </div>
-                        <iframe class="news-iframe" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+                        <iframe class="news-iframe"></iframe>
                     </div>
                     <div class="news-viewer-footer">
                         <a href="#" target="_blank" rel="noopener noreferrer" class="news-original-link">
-                            🔗 Mở bài gốc trong tab mới
+                            🔗 Mở bài gốc trên ${''} 
                         </a>
                     </div>
                 </div>
@@ -270,7 +270,15 @@ class NewsViewer {
         this.modal.querySelector('.news-viewer-title').textContent = title;
         
         // Cập nhật link gốc
-        this.modal.querySelector('.news-original-link').href = url;
+        const originalLink = this.modal.querySelector('.news-original-link');
+        originalLink.href = url;
+        
+        // Lấy tên nguồn từ URL
+        let sourceName = 'trang gốc';
+        if (url.includes('vnexpress')) sourceName = 'VnExpress';
+        else if (url.includes('zing')) sourceName = 'Zing News';
+        else if (url.includes('genk')) sourceName = 'Genk';
+        originalLink.innerHTML = `🔗 Mở bài gốc trên ${sourceName}`;
         
         // Hiển thị loading
         const loading = this.modal.querySelector('.news-loading');
@@ -279,8 +287,9 @@ class NewsViewer {
         loading.classList.remove('hidden');
         iframe.style.display = 'none';
         
-        // Load iframe
-        iframe.src = url;
+        // Load qua proxy để tránh CSP
+        const proxyUrl = `/api/news/proxy?url=${encodeURIComponent(url)}`;
+        iframe.src = proxyUrl;
         
         // Ẩn loading khi iframe load xong
         iframe.onload = () => {
@@ -295,6 +304,19 @@ class NewsViewer {
                 iframe.style.display = 'block';
             }
         }, 10000);
+        
+        // Nếu lỗi, hiển thị thông báo
+        iframe.onerror = () => {
+            loading.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p style="color: #ef4444; margin-bottom: 15px;">❌ Không thể tải bài viết</p>
+                    <p style="opacity: 0.7; margin-bottom: 20px;">Trang báo có thể đang bảo trì hoặc chặn truy cập</p>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="download-btn" style="display: inline-block; text-decoration: none;">
+                        Mở bài gốc trên ${sourceName}
+                    </a>
+                </div>
+            `;
+        };
     }
 
     close() {

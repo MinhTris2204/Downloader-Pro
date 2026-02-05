@@ -78,7 +78,73 @@ class NewsController:
         return articles
     
     @staticmethod
-    def get_news():
+    def proxy_article():
+        """Proxy để lấy nội dung bài viết (tránh CSP)"""
+        from flask import request
+        
+        url = request.args.get('url')
+        if not url:
+            return jsonify({'error': 'Missing URL'}), 400
+        
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+            
+            # Parse HTML và lấy nội dung chính
+            html = response.text
+            
+            # Inject base tag để fix relative URLs
+            base_tag = f'<base href="{url}">'
+            html = html.replace('<head>', f'<head>{base_tag}')
+            
+            # Thêm CSS để ẩn header/footer/ads
+            custom_css = '''
+            <style>
+                /* Ẩn các element không cần thiết */
+                header, .header, #header,
+                footer, .footer, #footer,
+                .advertisement, .ads, .banner,
+                .sidebar, .side-bar,
+                .navigation, .nav, .menu,
+                .social-share, .share-buttons,
+                .comment, .comments,
+                .related-news, .related-articles,
+                iframe[src*="ads"], iframe[src*="doubleclick"] {
+                    display: none !important;
+                }
+                
+                /* Style cho nội dung chính */
+                body {
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    line-height: 1.6;
+                }
+                
+                article, .article, .content, .article-content {
+                    max-width: 100% !important;
+                }
+                
+                img {
+                    max-width: 100%;
+                    height: auto;
+                }
+            </style>
+            '''
+            html = html.replace('</head>', f'{custom_css}</head>')
+            
+            return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+            
+        except Exception as e:
+            print(f"Error proxying article: {e}")
+            return jsonify({'error': str(e)}), 500
         """API lấy tin tức từ RSS feeds"""
         all_articles = []
         

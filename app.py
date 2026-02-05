@@ -775,6 +775,10 @@ def news_index():
 def api_news():
     return NewsController.get_news()
 
+@app.route('/api/news/proxy')
+def api_news_proxy():
+    return NewsController.proxy_article()
+
 @app.route('/robots.txt')
 def robots():
     return app.send_static_file('robots.txt')
