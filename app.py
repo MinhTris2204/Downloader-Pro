@@ -484,28 +484,20 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Random delay to avoid rate limiting (0.5-2 seconds)
         time_module.sleep(random.uniform(0.5, 2.0))
         
-        # Try multiple strategies in order of reliability (tested with yt-dlp 2026.02.04)
+        # Try multiple strategies in order of reliability
         strategies = [
-            # Strategy 1: Android VR (most reliable - confirmed working)
+            # Strategy 1: Let yt-dlp auto-select best client (most compatible)
+            {
+                'name': 'auto',
+                'opts': {}
+            },
+            # Strategy 2: Android VR (reliable for most videos)
             {
                 'name': 'android_vr',
                 'opts': {
                     'extractor_args': {
                         'youtube': {
                             'player_client': ['android_vr'],
-                            'skip': ['hls', 'dash', 'translated_subs'],
-                        }
-                    },
-                }
-            },
-            # Strategy 2: Android creator (alternative Android client)
-            {
-                'name': 'android_creator',
-                'opts': {
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_creator'],
-                            'skip': ['hls', 'dash'],
                         }
                     },
                 }
@@ -521,29 +513,28 @@ def download_youtube_video(url, format_type, quality, download_id):
                     },
                 }
             },
-            # Strategy 4: iOS music (alternative iOS client)
+            # Strategy 4: Android creator
             {
-                'name': 'ios_music',
+                'name': 'android_creator',
                 'opts': {
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['ios_music'],
+                            'player_client': ['android_creator'],
                         }
                     },
                 }
             },
-            # Strategy 5: Media connect (works for some restricted videos)
+            # Strategy 5: Web with embed (fallback)
             {
-                'name': 'media_connect',
+                'name': 'web',
                 'opts': {
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['mediaconnect'],
+                            'player_client': ['web'],
                         }
                     },
                 }
             },
-
         ]
         
         last_error = None
@@ -623,10 +614,12 @@ def download_youtube_video(url, format_type, quality, download_id):
                     mime_type = 'video/mp4'
                 
                 # Try to download with this strategy
+                print(f"[DEBUG] Trying strategy: {strategy['name']}")
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=True)
                     title = info.get('title', 'video')
                 
+                print(f"[DEBUG] Success with strategy: {strategy['name']}")
                 # Success! Break out of strategy loop
                 filepath = os.path.join(temp_dir, final_filename)
                 
@@ -650,6 +643,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 
             except Exception as e:
                 last_error = e
+                print(f"[DEBUG] Strategy {strategy['name']} failed: {str(e)[:100]}")
                 # Try next strategy
                 continue
         
