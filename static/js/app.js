@@ -484,32 +484,17 @@ function showProgress(platform, downloadId) {
 function triggerDownload(downloadId) {
     const downloadUrl = `/api/download/${downloadId}`;
 
-    // Method 1: Direct window open (works best on most browsers)
-    const newWindow = window.open(downloadUrl, '_blank');
-
-    // If popup was blocked, try iframe method
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-        // Method 2: Use hidden iframe
-        let iframe = document.getElementById('download-iframe');
-        if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'download-iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-        }
-        iframe.src = downloadUrl;
-
-        // Method 3: Fallback to link click
-        setTimeout(() => {
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = '';
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }, 500);
+    // Use hidden iframe method - most reliable and doesn't open new tabs
+    let iframe = document.getElementById('download-iframe');
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'download-iframe';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
     }
+    
+    // Set src to trigger download
+    iframe.src = downloadUrl;
 }
 
 
