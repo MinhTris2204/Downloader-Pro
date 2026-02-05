@@ -4,10 +4,20 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including ffmpeg
+# Install system dependencies including ffmpeg and curl
 RUN apt-get update && apt-get install -y \
     ffmpeg \
+    curl \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Deno (CRITICAL for YouTube downloads)
+RUN curl -fsSL https://deno.land/install.sh | sh
+ENV DENO_INSTALL="/root/.deno"
+ENV PATH="$DENO_INSTALL/bin:$PATH"
+
+# Verify Deno installation
+RUN deno --version
 
 # Copy requirements first for better caching
 COPY requirements.txt .
