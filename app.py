@@ -543,13 +543,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                     },
                 }
             },
-            # Strategy 6: Use cookies from browser (if Chrome is available)
-            {
-                'name': 'browser_cookies',
-                'opts': {
-                    'cookiesfrombrowser': ('chrome',),
-                }
-            },
+
         ]
         
         last_error = None
