@@ -946,6 +946,57 @@ def download_file(download_id):
 def api_stats():
     return jsonify(get_stats())
 
+@app.route('/api/debug/env')
+def debug_env():
+    """Debug endpoint to check server environment"""
+    import subprocess
+    import sys
+    
+    env_info = {
+        'python_version': sys.version,
+        'yt_dlp_version': None,
+        'ffmpeg_installed': False,
+        'deno_installed': False,
+        'node_installed': False,
+    }
+    
+    # Check yt-dlp version
+    try:
+        result = subprocess.run(['yt-dlp', '--version'], capture_output=True, text=True, timeout=5)
+        env_info['yt_dlp_version'] = result.stdout.strip()
+    except:
+        env_info['yt_dlp_version'] = 'NOT INSTALLED'
+    
+    # Check FFmpeg
+    try:
+        result = subprocess.run(['ffmpeg', '-version'], capture_output=True, text=True, timeout=5)
+        env_info['ffmpeg_installed'] = 'version' in result.stdout.lower()
+    except:
+        pass
+    
+    # Check Deno
+    try:
+        result = subprocess.run(['deno', '--version'], capture_output=True, text=True, timeout=5)
+        env_info['deno_installed'] = 'deno' in result.stdout.lower()
+        env_info['deno_version'] = result.stdout.strip().split('\n')[0] if env_info['deno_installed'] else None
+    except:
+        pass
+    
+    # Check Node.js
+    try:
+        result = subprocess.run(['node', '--version'], capture_output=True, text=True, timeout=5)
+        env_info['node_installed'] = result.returncode == 0
+        env_info['node_version'] = result.stdout.strip() if env_info['node_installed'] else None
+    except:
+        pass
+    
+    return jsonify(env_info)
+
+@app.route('/debug')
+def debug_page():
+    """Debug page to check server environment"""
+    return render_template('debug.html')
+
 @app.route('/api/youtube/info', methods=['POST'])
 def youtube_info():
     try:

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Server Environment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .status-card.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .status-card.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .status-card.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        
+        .status-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-value {
+            font-family: 'Courier New', monospace;
+            color: #555;
+            font-size: 0.95rem;
+        }
+        
+        .icon {
+            font-size: 1.5rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .recommendation {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+        
+        .recommendation h3 {
+            color: #0066cc;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .recommendation ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .recommendation li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .recommendation li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #0066cc;
+            font-weight: bold;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Server Environment Debug</h1>
+        <p class="subtitle">Kiểm tra cấu hình server để tải YouTube</p>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Đang kiểm tra môi trường server...</p>
+        </div>
+        
+        <div id="results" style="display: none;"></div>
+    </div>
+    
+    <script>
+        async function checkEnvironment() {
+            try {
+                const response = await fetch('/api/debug/env');
+                const data = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                
+                let html = '';
+                let hasIssues = false;
+                let recommendations = [];
+                
+                // Python Version
+                html += `
+                    <div class="status-card success">
+                        <div class="status-title">
+                            <span class="icon">🐍</span>
+                            Python Version
+                        </div>
+                        <div class="status-value">${data.python_version.split('\\n')[0]}</div>
+                    </div>
+                `;
+                
+                // yt-dlp
+                if (data.yt_dlp_version && data.yt_dlp_version !== 'NOT INSTALLED') {
+                    html += `
+                        <div class="status-card success">
+                            <div class="status-title">
+                                <span class="icon">✅</span>
+                                yt-dlp
+                            </div>
+                            <div class="status-value">Version: ${data.yt_dlp_version}</div>
+                        </div>
+                    `;
+                } else {
+                    hasIssues = true;
+                    html += `
+                        <div class="status-card error">
+                            <div class="status-title">
+                                <span class="icon">❌</span>
+                                yt-dlp
+                            </div>
+                            <div class="status-value">NOT INSTALLED</div>
+                        </div>
+                    `;
+                    recommendations.push('Cài đặt yt-dlp: <code>pip install -U yt-dlp</code>');
+                }
+                
+                // FFmpeg
+                if (data.ffmpeg_installed) {
+                    html += `
+                        <div class="status-card success">
+                            <div class="status-title">
+                                <span class="icon">✅</span>
+                                FFmpeg
+                            </div>
+                            <div class="status-value">Installed</div>
+                        </div>
+                    `;
+                } else {
+                    hasIssues = true;
+                    html += `
+                        <div class="status-card error">
+                            <div class="status-title">
+                                <span class="icon">❌</span>
+                                FFmpeg
+                            </div>
+                            <div class="status-value">NOT INSTALLED</div>
+                        </div>
+                    `;
+                    recommendations.push('Cài đặt FFmpeg: <code>sudo apt install ffmpeg</code>');
+                }
+                
+                // Deno (CRITICAL for YouTube)
+                if (data.deno_installed) {
+                    html += `
+                        <div class="status-card success">
+                            <div class="status-title">
+                                <span class="icon">✅</span>
+                                Deno (JavaScript Runtime)
+                            </div>
+                            <div class="status-value">${data.deno_version || 'Installed'}</div>
+                        </div>
+                    `;
+                } else {
+                    hasIssues = true;
+                    html += `
+                        <div class="status-card error">
+                            <div class="status-title">
+                                <span class="icon">❌</span>
+                                Deno (JavaScript Runtime) - CRITICAL!
+                            </div>
+                            <div class="status-value">NOT INSTALLED - Đây là nguyên nhân chính YouTube bị lỗi!</div>
+                        </div>
+                    `;
+                    recommendations.push('Cài đặt Deno (QUAN TRỌNG): <code>curl -fsSL https://deno.land/install.sh | sh</code>');
+                    recommendations.push('Thêm vào PATH: <code>echo \'export PATH="$HOME/.deno/bin:$PATH"\' >> ~/.bashrc && source ~/.bashrc</code>');
+                }
+                
+                // Node.js (alternative)
+                if (data.node_installed) {
+                    html += `
+                        <div class="status-card success">
+                            <div class="status-title">
+                                <span class="icon">✅</span>
+                                Node.js (Alternative Runtime)
+                            </div>
+                            <div class="status-value">${data.node_version || 'Installed'}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="status-card warning">
+                            <div class="status-title">
+                                <span class="icon">⚠️</span>
+                                Node.js (Alternative Runtime)
+                            </div>
+                            <div class="status-value">NOT INSTALLED (Optional nếu có Deno)</div>
+                        </div>
+                    `;
+                }
+                
+                // Recommendations
+                if (hasIssues) {
+                    html += `
+                        <div class="recommendation">
+                            <h3>💡 Khuyến Nghị Khắc Phục</h3>
+                            <ul>
+                                ${recommendations.map(r => `<li>${r}</li>`).join('')}
+                                <li>Sau khi cài đặt, khởi động lại server: <code>sudo systemctl restart downloaderpro</code></li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="recommendation">
+                            <h3>✨ Môi Trường Hoàn Hảo!</h3>
+                            <p>Server đã được cấu hình đầy đủ. Nếu vẫn gặp lỗi YouTube, có thể do:</p>
+                            <ul>
+                                <li>IP server đang bị YouTube rate limit tạm thời</li>
+                                <li>Đợi 5-10 phút rồi thử lại</li>
+                                <li>Hoặc thử video khác</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('results').innerHTML = html;
+                
+            } catch (err) {
+                document.getElementById('loading').innerHTML = `
+                    <div class="status-card error">
+                        <div class="status-title">
+                            <span class="icon">❌</span>
+                            Lỗi
+                        </div>
+                        <div class="status-value">Không thể kiểm tra môi trường: ${err.message}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        checkEnvironment();
+    </script>
+</body>
+</html>
