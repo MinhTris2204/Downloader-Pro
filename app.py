@@ -432,9 +432,11 @@ def download_tiktok_photos(url, download_id, selected_indices=None):
         download_progress[download_id]['error'] = error_msg
 
 def download_youtube_video(url, format_type, quality, download_id):
-    """Download YouTube video using yt-dlp"""
+    """Download YouTube video using yt-dlp with advanced bypass"""
     try:
         import yt_dlp
+        import random
+        import time as time_module
         
         download_progress[download_id] = {
             'status': 'preparing',
@@ -479,100 +481,163 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
         
-        # Common options to bypass bot detection - Enhanced strategies
-        common_opts = {
-            'quiet': True,
-            'no_warnings': True,
-            'noprogress': False,
-            'progress_hooks': [progress_hook],
-            'extractor_args': {
-                'youtube': {
-                    # Use multiple client strategies
-                    'player_client': ['android_creator', 'android', 'ios', 'web'],
-                    'skip': ['hls', 'dash'],
-                    'player_skip': ['webpage', 'configs'],
+        # Random delay to avoid rate limiting (0.5-2 seconds)
+        time_module.sleep(random.uniform(0.5, 2.0))
+        
+        # Try multiple strategies in order of reliability
+        strategies = [
+            # Strategy 1: Use cookies from browser (most reliable)
+            {
+                'name': 'browser_cookies',
+                'opts': {
+                    'cookiesfrombrowser': ('chrome',),  # Try Chrome first
                 }
             },
-            # Enhanced headers to mimic real mobile app
-            'http_headers': {
-                'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 13; en_US) gzip',
-                'Accept': '*/*',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Accept-Encoding': 'gzip, deflate',
-                'X-YouTube-Client-Name': '3',
-                'X-YouTube-Client-Version': '19.09.37',
+            # Strategy 2: Android TV client (very reliable)
+            {
+                'name': 'android_tv',
+                'opts': {
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_embedded', 'android_creator'],
+                            'skip': ['hls', 'dash'],
+                        }
+                    },
+                }
             },
-            # Enhanced retry and timeout settings
-            'retries': 20,
-            'fragment_retries': 20,
-            'file_access_retries': 10,
-            'socket_timeout': 60,
-            # Additional bypass options
-            'nocheckcertificate': True,
-            'prefer_insecure': False,
-            'age_limit': None,
-            'geo_bypass': True,
-            'geo_bypass_country': 'US',
-            # Use cookies if available
-            'cookiesfrombrowser': None,
-        }
+            # Strategy 3: iOS client
+            {
+                'name': 'ios',
+                'opts': {
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios', 'mweb'],
+                        }
+                    },
+                }
+            },
+            # Strategy 4: Web client with po_token (latest bypass)
+            {
+                'name': 'web_po_token',
+                'opts': {
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['web'],
+                        }
+                    },
+                }
+            },
+        ]
         
-        if format_type == 'mp3':
-            # Default to 128k if not specified
-            audio_bitrate = quality if quality in ['320', '192', '128'] else '128'
-            
-            ydl_opts = {
-                **common_opts,
-                'format': 'bestaudio/best',
-                'outtmpl': output_path, # No ext, postprocessor handles it
-                'postprocessors': [{
-                    'key': 'FFmpegExtractAudio',
-                    'preferredcodec': 'mp3',
-                    'preferredquality': audio_bitrate,
-                }],
-            }
-            final_filename = filename + '.mp3'
-            mime_type = 'audio/mpeg'
-        else:
-            # Video
-            ydl_opts = {
-                **common_opts,
-                'format': 'best[ext=mp4]/best',
-                'outtmpl': output_path + '.mp4',
-            }
-            
-            if quality != 'best' and quality.isdigit():
-                res = int(quality)
-                # Try close match
-                ydl_opts['format'] = f'best[height<={res}][ext=mp4]/best[height<={res}]/best'
-                # Force scale
-                ydl_opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
-                ydl_opts['postprocessor_args'] = ['-vf', f'scale=-2:{res}']
+        last_error = None
+        
+        for strategy in strategies:
+            try:
+                # Base options for all strategies
+                common_opts = {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'noprogress': False,
+                    'progress_hooks': [progress_hook],
+                    # Randomize user agent
+                    'http_headers': {
+                        'User-Agent': random.choice([
+                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        ]),
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept-Encoding': 'gzip, deflate, br',
+                        'DNT': '1',
+                        'Connection': 'keep-alive',
+                        'Upgrade-Insecure-Requests': '1',
+                    },
+                    # Retry settings
+                    'retries': 10,
+                    'fragment_retries': 10,
+                    'file_access_retries': 5,
+                    'socket_timeout': 30,
+                    # Additional options
+                    'nocheckcertificate': True,
+                    'prefer_insecure': False,
+                    'geo_bypass': True,
+                    'geo_bypass_country': 'US',
+                    # Don't use IPv6
+                    'source_address': '0.0.0.0',
+                    # Allow age-restricted content
+                    'age_limit': None,
+                }
+                
+                # Merge strategy-specific options
+                common_opts.update(strategy['opts'])
+                
+                if format_type == 'mp3':
+                    # Default to 128k if not specified
+                    audio_bitrate = quality if quality in ['320', '192', '128'] else '128'
+                    
+                    ydl_opts = {
+                        **common_opts,
+                        'format': 'bestaudio/best',
+                        'outtmpl': output_path,
+                        'postprocessors': [{
+                            'key': 'FFmpegExtractAudio',
+                            'preferredcodec': 'mp3',
+                            'preferredquality': audio_bitrate,
+                        }],
+                    }
+                    final_filename = filename + '.mp3'
+                    mime_type = 'audio/mpeg'
+                else:
+                    # Video
+                    ydl_opts = {
+                        **common_opts,
+                        'format': 'best[ext=mp4]/best',
+                        'outtmpl': output_path + '.mp4',
+                    }
+                    
+                    if quality != 'best' and quality.isdigit():
+                        res = int(quality)
+                        ydl_opts['format'] = f'best[height<={res}][ext=mp4]/best[height<={res}]/best'
+                        ydl_opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': 'mp4'}]
+                        ydl_opts['postprocessor_args'] = ['-vf', f'scale=-2:{res}']
 
-            final_filename = filename + '.mp4'
-            mime_type = 'video/mp4'
+                    final_filename = filename + '.mp4'
+                    mime_type = 'video/mp4'
+                
+                # Try to download with this strategy
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=True)
+                    title = info.get('title', 'video')
+                
+                # Success! Break out of strategy loop
+                filepath = os.path.join(temp_dir, final_filename)
+                
+                # Store file data for streaming
+                download_data[download_id] = {
+                    'filepath': filepath,
+                    'title': title,
+                    'mime_type': mime_type,
+                    'ext': final_filename.split('.')[-1],
+                    'timestamp': time.time(),
+                    'platform': 'youtube',
+                    'format': format_type,
+                    'quality': quality
+                }
+                    
+                download_progress[download_id]['status'] = 'completed'
+                download_progress[download_id]['filename'] = final_filename
+                download_progress[download_id]['title'] = title
+                
+                return  # Success!
+                
+            except Exception as e:
+                last_error = e
+                # Try next strategy
+                continue
         
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            title = info.get('title', 'video')
-        
-        filepath = os.path.join(temp_dir, final_filename)
-        
-        # Store file data for streaming
-        download_data[download_id] = {
-            'filepath': filepath,
-            'title': title,
-            'mime_type': mime_type,
-            'ext': final_filename.split('.')[-1],
-            'timestamp': time.time(),
-            'platform': 'youtube',
-            'format': format_type,
-            'quality': quality
-        }
-            
-        download_progress[download_id]['status'] = 'completed'
-        download_progress[download_id]['filename'] = final_filename
-        download_progress[download_id]['title'] = title
+        # All strategies failed
+        raise last_error if last_error else Exception("Không thể tải video")
         
     except Exception as e:
         error_msg = str(e)
@@ -580,7 +645,7 @@ def download_youtube_video(url, format_type, quality, download_id):
         
         # Friendly error messages
         if 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg:
-            download_progress[download_id]['error'] = '⚠️ YouTube đang bảo vệ video này. Vui lòng:\n• Thử lại sau 2-3 phút\n• Hoặc thử video khác\n• Hoặc sử dụng video ngắn hơn'
+            download_progress[download_id]['error'] = '⚠️ YouTube đang chặn tải xuống.\n\n💡 Giải pháp:\n1. Cập nhật: pip install -U yt-dlp\n2. Đợi 5-10 phút rồi thử lại\n3. Thử video khác (video ngắn thường dễ tải hơn)\n4. Sử dụng trình duyệt Chrome để tự động lấy cookies'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
@@ -590,7 +655,7 @@ def download_youtube_video(url, format_type, quality, download_id):
         elif 'network' in error_msg.lower() or 'timeout' in error_msg.lower():
             download_progress[download_id]['error'] = '🌐 Lỗi kết nối mạng. Vui lòng thử lại'
         else:
-            download_progress[download_id]['error'] = f'❌ Lỗi: {error_msg[:100]}'
+            download_progress[download_id]['error'] = f'❌ Lỗi: {error_msg[:150]}'
             
         print(f"YouTube download error: {e}")
 
