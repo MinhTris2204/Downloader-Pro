@@ -147,7 +147,7 @@ async function loadNews() {
         if (data.success && data.articles.length > 0) {
             // Render articles
             grid.innerHTML = data.articles.map(article => `
-                <a href="${article.link}" target="_blank" rel="noopener noreferrer" class="news-card glass-card">
+                <a href="${article.link}" class="news-card glass-card">
                     ${article.thumbnail ? `
                         <img src="${article.thumbnail}" alt="${article.title}" class="news-thumbnail" loading="lazy" onerror="this.style.display='none'">
                     ` : `
@@ -185,4 +185,6 @@ loadNews();
 // Refresh every 5 minutes
 setInterval(loadNews, 5 * 60 * 1000);
 </script>
+
+<script src="{{ url_for('static', filename='js/news-viewer.js') }}"></script>
 {% endblock %}
