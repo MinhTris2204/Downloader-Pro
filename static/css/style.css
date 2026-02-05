@@ -679,6 +679,31 @@ body {
     flex-shrink: 0;
 }
 
+/* TikTok Logo Glitch Effect */
+.tab-btn[data-tab="tiktok"] .tab-icon {
+    filter: drop-shadow(0 0 2px rgba(0, 242, 234, 0.5)) drop-shadow(0 0 2px rgba(255, 0, 79, 0.5));
+}
+
+.tab-btn[data-tab="tiktok"]:hover .tab-icon,
+.tab-btn[data-tab="tiktok"].active .tab-icon {
+    animation: tiktok-glitch 0.3s ease-in-out;
+}
+
+@keyframes tiktok-glitch {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+    25% {
+        transform: translate(-1px, 1px);
+    }
+    50% {
+        transform: translate(1px, -1px);
+    }
+    75% {
+        transform: translate(-1px, -1px);
+    }
+}
+
 .tab-text {
     display: flex;
     flex-direction: column;
