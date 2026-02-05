@@ -27,7 +27,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Rate limiting tracking
 last_youtube_download = {}  # IP -> timestamp
-YOUTUBE_COOLDOWN = 30  # seconds between downloads per IP
+YOUTUBE_COOLDOWN = 15  # seconds between downloads per IP (reduced from 30)
 
 # Add security headers
 @app.after_request

@@ -249,8 +249,21 @@ async function downloadYoutube() {
         if (data.success) {
             showProgress('youtube', data.download_id);
         } else {
-            showToast(data.error || 'Có lỗi xảy ra', 'error');
-            resetButton('youtube');
+            // Check if it's a rate limit error (429)
+            if (response.status === 429 && data.error) {
+                // Extract wait time from error message
+                const match = data.error.match(/đợi (\d+) giây/);
+                if (match) {
+                    const waitTime = parseInt(match[1]);
+                    startCooldownTimer('youtube', waitTime);
+                } else {
+                    showToast(data.error, 'error');
+                    resetButton('youtube');
+                }
+            } else {
+                showToast(data.error || 'Có lỗi xảy ra', 'error');
+                resetButton('youtube');
+            }
         }
     } catch (err) {
         showToast('Lỗi kết nối server', 'error');
@@ -503,6 +516,27 @@ function resetButton(platform) {
     const btn = document.getElementById(`${platform}-download-btn`);
     btn.disabled = false;
     btn.innerHTML = 'Tải Xuống';
+}
+
+// ====== Cooldown Timer ======
+function startCooldownTimer(platform, seconds) {
+    const btn = document.getElementById(`${platform}-download-btn`);
+    btn.disabled = true;
+    
+    let remaining = seconds;
+    
+    const updateButton = () => {
+        if (remaining > 0) {
+            btn.innerHTML = `⏳ Đợi ${remaining}s...`;
+            remaining--;
+            setTimeout(updateButton, 1000);
+        } else {
+            resetButton(platform);
+            showToast('Bạn có thể tải video tiếp theo rồi! 😊', 'success');
+        }
+    };
+    
+    updateButton();
 }
 
 // ====== Toast Notifications ======
