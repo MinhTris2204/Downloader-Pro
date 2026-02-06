@@ -27,13 +27,13 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ===== INVIDIOUS PROXY INSTANCES (Fallback when cookies fail) =====
 INVIDIOUS_INSTANCES = [
-    'https://invidious.flokinet.to',
-    'https://inv.tux.rs',
-    'https://invidious.io.lol',
-    'https://iv.melmac.space',
-    'https://invidious.perennialte.ch',
-    'https://yt.artemislena.eu',
-    'https://invidious.nerdvpn.de',
+    'https://invidious.ducks.cloud',
+    'https://inv.nand.sh',
+    'https://invidious.no-logs.com',
+    'https://invidious.snopyta.org',
+    'https://invidious.projectsegfau.lt',
+    'https://invidious.slipfox.xyz',
+    'https://invidious.sethforprivacy.com',
 ]
 
 # ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
@@ -686,58 +686,62 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
         strategies = [
-            # Strategy 1: Combined Mobile (Most effective for restricted videos)
+            # Strategy 1: TV Client (Extremely low bot detection)
             {
-                'name': 'mobile_combo',
+                'name': 'tv',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['ios', 'android', 'mweb'],
+                            'player_client': ['tv'],
                         }
                     },
                 },
                 'delay': 0
             },
-            # Strategy 2: Android Creator & VR
+            # Strategy 2: Android Embedded (Often works for music videos)
             {
-                'name': 'android_high_res',
+                'name': 'android_embed',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android_creator', 'android_vr', 'web'],
+                            'player_client': ['android_embedded', 'android'],
                         }
                     },
                 },
                 'delay': 2
             },
-            # Strategy 3: Web-Based Guest (Safest fallback)
+            # Strategy 3: iOS (Using cookies)
             {
-                'name': 'web_guest',
-                'use_cookies': False,
+                'name': 'ios_classic',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['web', 'mweb'],
-                            'player_skip': ['webpage', 'configs', 'js'],
+                            'player_client': ['ios'],
                         }
                     },
                 },
-                'delay': 4
+                'delay': 3
             },
-            # Strategy 4: Auto Detect
+            # Strategy 4: Web Mobile with cleanup
             {
-                'name': 'auto_detect',
+                'name': 'mweb_clean',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['mweb', 'web_embedded'],
+                            'player_skip': ['webpage', 'configs'],
+                        }
+                    },
                 },
-                'delay': 6
+                'delay': 5
             },
         ]
         
