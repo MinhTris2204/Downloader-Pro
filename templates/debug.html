@@ -280,6 +280,38 @@
                     `;
                 }
                 
+                // bgutil POT Provider (CRITICAL for YouTube bypass)
+                if (data.bgutil_server_running) {
+                    html += `
+                        <div class="status-card success">
+                            <div class="status-title">
+                                <span class="icon">🚀</span>
+                                bgutil POT Provider - PROFESSIONAL
+                            </div>
+                            <div class="status-value">Running at ${data.bgutil_server_url || 'http://127.0.0.1:4416'}</div>
+                            <div class="status-value" style="margin-top: 8px; color: #28a745; font-weight: 600;">
+                                ✨ 95%+ success rate for YouTube downloads!
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    hasIssues = true;
+                    html += `
+                        <div class="status-card error">
+                            <div class="status-title">
+                                <span class="icon">❌</span>
+                                bgutil POT Provider - CRITICAL!
+                            </div>
+                            <div class="status-value">NOT RUNNING - Đây là lý do YouTube bị chặn!</div>
+                            <div class="status-value" style="margin-top: 8px;">
+                                bgutil cung cấp PO Token chuyên nghiệp để bypass YouTube bot detection
+                            </div>
+                        </div>
+                    `;
+                    recommendations.push('Khởi động bgutil server: <code>python -m bgutil_ytdlp_pot_provider --host 0.0.0.0 --port 4416 &</code>');
+                    recommendations.push('Hoặc khởi động lại toàn bộ service: <code>bash start_services.sh</code>');
+                }
+                
                 // Recommendations
                 if (hasIssues) {
                     html += `

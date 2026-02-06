@@ -50,3 +50,8 @@ cookies.txt
 *_cookies.txt
 *.youtube.com_cookies.txt
 youtube_oauth_token.json
+
+# Test cache
+.yt_cache/
+*.part
+*.ytdl

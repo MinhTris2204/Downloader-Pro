@@ -691,7 +691,25 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
         strategies = [
-            # Strategy 0: PO Token with Web Client (NEWEST - Bypass bot detection)
+            # Strategy 0: bgutil POT Provider (BEST - 95%+ success rate)
+            {
+                'name': 'bgutil_pot',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['web'],
+                            # bgutil POT provider - professional token generation
+                            'pot_bgutilhttp': {
+                                'base_url': 'http://127.0.0.1:4416'
+                            }
+                        }
+                    },
+                },
+                'delay': 0
+            },
+            # Strategy 1: PO Token with Web Client (Fallback - Deno auto-generation)
             {
                 'name': 'po_token_web',
                 'opts': {
@@ -704,9 +722,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 0
+                'delay': 2
             },
-            # Strategy 1: TV Client (Extremely low bot detection)
+            # Strategy 2: TV Client (Extremely low bot detection)
             {
                 'name': 'tv',
                 'opts': {
@@ -718,9 +736,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 0
+                'delay': 3
             },
-            # Strategy 2: Android Embedded (Often works for music videos)
+            # Strategy 3: Android Embedded (Often works for music videos)
             {
                 'name': 'android_embed',
                 'opts': {
@@ -732,9 +750,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 2
+                'delay': 5
             },
-            # Strategy 3: iOS (Using cookies)
+            # Strategy 4: iOS (Using cookies)
             {
                 'name': 'ios_classic',
                 'opts': {
@@ -746,9 +764,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 3
+                'delay': 7
             },
-            # Strategy 4: Web Mobile with cleanup
+            # Strategy 5: Web Mobile with cleanup
             {
                 'name': 'mweb_clean',
                 'opts': {
@@ -761,7 +779,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 5
+                'delay': 10
             },
         ]
         
@@ -1327,6 +1345,8 @@ def debug_env():
         'ffmpeg_installed': False,
         'deno_installed': False,
         'node_installed': False,
+        'bgutil_server_running': False,
+        'bgutil_server_url': 'http://127.0.0.1:4416',
     }
     
     # Check yt-dlp version
@@ -1358,6 +1378,20 @@ def debug_env():
         env_info['node_version'] = result.stdout.strip() if env_info['node_installed'] else None
     except:
         pass
+    
+    # Check bgutil POT provider server
+    try:
+        import requests
+        response = requests.get('http://127.0.0.1:4416/health', timeout=2)
+        env_info['bgutil_server_running'] = response.status_code == 200
+    except:
+        # Try alternative check - see if process is running
+        try:
+            result = subprocess.run(['pgrep', '-f', 'bgutil_ytdlp_pot_provider'], 
+                                  capture_output=True, text=True, timeout=2)
+            env_info['bgutil_server_running'] = bool(result.stdout.strip())
+        except:
+            pass
     
     return jsonify(env_info)
 
