@@ -822,8 +822,16 @@ def download_youtube_video(url, format_type, quality, download_id):
                 if 'web' in strategy['name'] or 'auto' in strategy['name']:
                     common_opts['http_headers']['User-Agent'] = selected_ua
                 
-                # Merge strategy-specific options
-                common_opts.update(strategy['opts'])
+                # Merge strategy-specific options (deep merge for extractor_args)
+                for key, value in strategy['opts'].items():
+                    if key == 'extractor_args' and key in common_opts:
+                        # Deep merge extractor_args
+                        for extractor, args in value.items():
+                            if extractor not in common_opts['extractor_args']:
+                                common_opts['extractor_args'][extractor] = {}
+                            common_opts['extractor_args'][extractor].update(args)
+                    else:
+                        common_opts[key] = value
                 
                 if format_type == 'mp3':
                     # Default to 128k if not specified
