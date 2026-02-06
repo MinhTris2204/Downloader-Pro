@@ -25,12 +25,37 @@ app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# ===== YOUTUBE COOKIES SUPPORT FOR RAILWAY =====
-# Cookies can be provided via YOUTUBE_COOKIES environment variable (base64 encoded)
+# ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
+# Method 1: Cookies via YOUTUBE_COOKIES environment variable (base64 encoded)
+# Method 2: OAuth via YOUTUBE_OAUTH_REFRESH_TOKEN environment variable
 # To generate: base64 -w 0 cookies.txt > cookies_base64.txt
 # Then set YOUTUBE_COOKIES=<content of cookies_base64.txt> in Railway
+
 COOKIES_FILE_PATH = os.path.join(tempfile.gettempdir(), 'yt_cookies.txt')
 YOUTUBE_COOKIES_ENV = os.environ.get('YOUTUBE_COOKIES', '')
+YOUTUBE_OAUTH_TOKEN = os.environ.get('YOUTUBE_OAUTH_REFRESH_TOKEN', '')
+
+# OAuth Token file path for yt-dlp-youtube-oauth2 plugin
+OAUTH_TOKEN_FILE = os.path.join(tempfile.gettempdir(), 'youtube_oauth_token.json')
+
+if YOUTUBE_OAUTH_TOKEN:
+    try:
+        import base64
+        oauth_content = base64.b64decode(YOUTUBE_OAUTH_TOKEN).decode('utf-8')
+        with open(OAUTH_TOKEN_FILE, 'w', encoding='utf-8') as f:
+            f.write(oauth_content)
+        print(f"[SUCCESS] YouTube OAuth token loaded from environment variable")
+    except Exception as e:
+        print(f"[WARNING] Failed to decode YOUTUBE_OAUTH_REFRESH_TOKEN: {e}")
+        OAUTH_TOKEN_FILE = None
+else:
+    # Check for local oauth token file
+    local_oauth = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'youtube_oauth_token.json')
+    if os.path.exists(local_oauth):
+        OAUTH_TOKEN_FILE = local_oauth
+        print(f"[INFO] Using local YouTube OAuth token file")
+    else:
+        OAUTH_TOKEN_FILE = None
 
 if YOUTUBE_COOKIES_ENV:
     try:
@@ -50,7 +75,9 @@ else:
         print(f"[INFO] Using local cookies.txt file")
     else:
         COOKIES_FILE_PATH = None
-        print(f"[INFO] No YouTube cookies configured. Bot detection bypass may be limited.")
+        if not OAUTH_TOKEN_FILE:
+            print(f"[WARNING] No YouTube auth configured! Bot detection bypass will be limited.")
+            print(f"[INFO] Add YOUTUBE_COOKIES or YOUTUBE_OAUTH_REFRESH_TOKEN env var for reliable downloads.")
 
 # Rate limiting tracking
 last_youtube_download = {}  # IP -> timestamp
