@@ -619,9 +619,10 @@ async function fetchStats() {
     try {
         const response = await fetch('/api/stats');
         const data = await response.json();
-        if (data.total_downloads) {
-            const displayCount = data.total_downloads.toLocaleString();
-            document.getElementById('total-downloads').textContent = `${displayCount}+`;
+        if (data.total_downloads !== undefined) {
+            // Format number with dots for thousands (Vietnamese style: 1.313)
+            const displayCount = data.total_downloads.toLocaleString('vi-VN');
+            document.getElementById('total-downloads').textContent = displayCount;
             document.getElementById('stats-badge').style.opacity = '1';
         }
     } catch (err) {
