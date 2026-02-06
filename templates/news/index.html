@@ -21,17 +21,15 @@
     </section>
 
     <!-- Loading State (Chỉ hiện nếu không có initial_news) -->
-    <div id="news-loading"
-        style="{% if initial_news %}display: none;{% else %}display: block;{% endif %} text-align: center; padding: 60px 20px;">
-        <div class="spinner"
-            style="width: 50px; height: 50px; border: 4px solid rgba(99, 102, 241, 0.1); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;">
-        </div>
+    <div id="news-loading" class="{% if initial_news %}hidden{% endif %}"
+        style="text-align: center; padding: 60px 20px;">
+        <div class="spinner"></div>
         <p style="opacity: 0.7;" data-i18n="news_loading">Đang tải tin tức...</p>
     </div>
 
     <!-- News Grid -->
-    <div id="news-grid"
-        style="{% if initial_news %}display: grid;{% else %}display: none;{% endif %} max-width: 1200px; margin: 0 auto;">
+    <div id="news-grid" class="{% if initial_news %}grid{% else %}hidden{% endif %}"
+        style="max-width: 1200px; margin: 0 auto;">
         {% if initial_news %}
         {% for article in initial_news %}
         <a href="{{ article.link }}" class="news-card glass-card">
@@ -76,96 +74,7 @@
     </div>
 </div>
 
-<style>
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
 
-    .news-card {
-        background: var(--card-bg);
-        border-radius: 15px;
-        overflow: hidden;
-        transition: all 0.3s;
-        cursor: pointer;
-        text-decoration: none;
-        color: inherit;
-        display: block;
-        height: 100%;
-    }
-
-    .news-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
-    }
-
-    .news-thumbnail {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-    }
-
-    .news-content {
-        padding: 20px;
-    }
-
-    .news-source {
-        display: inline-block;
-        padding: 4px 10px;
-        background: rgba(99, 102, 241, 0.1);
-        color: #6366f1;
-        border-radius: 12px;
-        font-size: 0.8em;
-        margin-bottom: 10px;
-    }
-
-    .news-title {
-        font-size: 1.1em;
-        font-weight: 600;
-        margin-bottom: 10px;
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .news-description {
-        opacity: 0.7;
-        font-size: 0.9em;
-        line-height: 1.5;
-        margin-bottom: 10px;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    .news-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.85em;
-        opacity: 0.6;
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid rgba(99, 102, 241, 0.1);
-    }
-
-    #news-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 25px;
-    }
-
-    @media (max-width: 768px) {
-        #news-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 
 <script>
     async function loadNews(isAutoRefresh = false) {
