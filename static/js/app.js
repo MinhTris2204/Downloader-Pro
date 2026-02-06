@@ -682,6 +682,7 @@ fetchStats();
 setInterval(fetchStats, 30000);
 
 
+
 // ====== Theme Toggle ======
 const themeToggleBtn = document.getElementById('theme-toggle');
 const sunIcon = document.querySelector('.sun-icon');
@@ -716,266 +717,71 @@ if (themeToggleBtn) {
             localStorage.setItem('theme', 'light');
             if (sunIcon) sunIcon.style.display = 'none';
             if (moonIcon) moonIcon.style.display = 'block';
-
-            // Set src to trigger download
-            iframe.src = downloadUrl;
         }
+    });
+}
 
 
-        // ====== Reset Button ======
-        function resetButton(platform) {
-            const btn = document.getElementById(`${platform}-download-btn`);
-            btn.disabled = false;
-            btn.innerHTML = 'Tải Xuống';
-        }
+// ====== Language Two-Way Switcher ======
+const langToggleBtn = document.getElementById('lang-toggle');
+// Default to Vietnamese if no setting found
+let currentLang = localStorage.getItem('language') || 'vi';
 
-        // ====== Cooldown Timer ======
-        function startCooldownTimer(platform, seconds) {
-            const btn = document.getElementById(`${platform}-download-btn`);
-            btn.disabled = true;
+function updateContent() {
+    // Get correct dictionary
+    if (typeof translations === 'undefined') return;
 
-            let remaining = seconds;
+    const t = translations[currentLang];
+    if (!t) return;
 
-            const updateButton = () => {
-                if (remaining > 0) {
-                    btn.innerHTML = `⏳ Đợi ${remaining}s...`;
-                    remaining--;
-                    setTimeout(updateButton, 1000);
-                } else {
-                    resetButton(platform);
-                    showToast('Bạn có thể tải video tiếp theo rồi! 😊', 'success');
-                }
-            };
-
-            updateButton();
-        }
-
-        // ====== Toast Notifications ======
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // ====== URL Input Events - Auto Fetch Preview ======
-        let youtubeDebounce = null;
-        let tiktokDebounce = null;
-
-        // Check if elements exist before adding event listeners
-        const youtubeUrlInput = document.getElementById('youtube-url');
-        const tiktokUrlInput = document.getElementById('tiktok-url');
-
-        if (youtubeUrlInput) {
-            youtubeUrlInput.addEventListener('input', (e) => {
-                const url = e.target.value.trim();
-
-                // Debounce to avoid too many requests
-                clearTimeout(youtubeDebounce);
-                youtubeDebounce = setTimeout(() => {
-                    fetchYoutubeInfo(url);
-                }, 500);
-            });
-
-            // ====== Also trigger on paste event ======
-            youtubeUrlInput.addEventListener('paste', (e) => {
-                setTimeout(() => {
-                    const url = e.target.value.trim();
-                    fetchYoutubeInfo(url);
-                }, 100);
-            });
-        }
-
-        if (tiktokUrlInput) {
-            tiktokUrlInput.addEventListener('input', (e) => {
-                const url = e.target.value.trim();
-
-                // Debounce to avoid too many requests
-                clearTimeout(tiktokDebounce);
-                tiktokDebounce = setTimeout(() => {
-                    fetchTiktokInfo(url);
-                }, 500);
-            });
-
-            tiktokUrlInput.addEventListener('paste', (e) => {
-                setTimeout(() => {
-                    const url = e.target.value.trim();
-                    fetchTiktokInfo(url);
-                }, 100);
-            });
-        }
-
-        // ====== Keyboard Shortcuts ======
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const activeTab = document.querySelector('.tab-content.active');
-                if (activeTab.id === 'youtube-tab') {
-                    downloadYoutube();
-                } else if (activeTab.id === 'tiktok-tab') {
-                    downloadTiktok();
-                }
-            }
-        });
-
-        // ====== Initialize ======
-        let lastDownloadCount = 0;
-
-        // Animated counter effect
-        function animateCounter(element, target, duration = 1500) {
-            const start = lastDownloadCount;
-            const increment = (target - start) / (duration / 16);
-            let current = start;
-
-            const timer = setInterval(() => {
-                current += increment;
-                if ((increment > 0 && current >= target) || (increment < 0 && current <= target)) {
-                    current = target;
-                    clearInterval(timer);
-                }
-                element.textContent = Math.floor(current).toLocaleString('vi-VN');
-            }, 16);
-
-            lastDownloadCount = target;
-        }
-
-        async function fetchStats() {
-            try {
-                const response = await fetch('/api/stats');
-                const data = await response.json();
-                if (data.total_downloads !== undefined) {
-                    const element = document.getElementById('total-downloads');
-                    const badge = document.getElementById('stats-badge');
-
-                    // Animate the counter
-                    animateCounter(element, data.total_downloads);
-                    badge.style.opacity = '1';
-
-                    // Add "rising" effect when count increases
-                    if (data.total_downloads > lastDownloadCount && lastDownloadCount > 0) {
-                        badge.style.animation = 'none';
-                        badge.offsetHeight; // Trigger reflow
-                        badge.style.animation = 'stats-pulse 0.5s ease-in-out 3';
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to fetch stats');
-            }
-        }
-
-        console.log('Downloader Pro - Ready!');
-        fetchStats();
-
-        // Auto refresh stats every 30 seconds
-        setInterval(fetchStats, 30000);
-
-
-        // ====== Theme Toggle ======
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const sunIcon = document.querySelector('.sun-icon');
-        const moonIcon = document.querySelector('.moon-icon');
-
-        if (themeToggleBtn) {
-            // Check saved theme, default to light
-            const savedTheme = localStorage.getItem('theme') || 'light';
-
-            if (savedTheme === 'light') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                if (sunIcon) sunIcon.style.display = 'none';
-                if (moonIcon) moonIcon.style.display = 'block';
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) {
+            // Handle input placeholders specially
+            if (el.tagName === 'INPUT' && el.getAttribute('placeholder')) {
+                el.placeholder = t[key];
             } else {
-                document.documentElement.removeAttribute('data-theme');
-                if (sunIcon) sunIcon.style.display = 'block';
-                if (moonIcon) moonIcon.style.display = 'none';
-            }
-
-            themeToggleBtn.addEventListener('click', () => {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-
-                if (currentTheme === 'light') {
-                    // Switch to Dark
-                    document.documentElement.removeAttribute('data-theme');
-                    localStorage.setItem('theme', 'dark');
-                    if (sunIcon) sunIcon.style.display = 'block';
-                    if (moonIcon) moonIcon.style.display = 'none';
-                } else {
-                    // Switch to Light
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    localStorage.setItem('theme', 'light');
-                    if (sunIcon) sunIcon.style.display = 'none';
-                    if (moonIcon) moonIcon.style.display = 'block';
-                }
-            });
-        }
-
-
-        // ====== Language Two-Way Switcher ======
-        const langToggleBtn = document.getElementById('lang-toggle');
-        // Default to Vietnamese if no setting found
-        let currentLang = localStorage.getItem('language') || 'vi';
-
-        function updateContent() {
-            // Get correct dictionary
-            if (typeof translations === 'undefined') return;
-
-            const t = translations[currentLang];
-            if (!t) return;
-
-            // Update all elements with data-i18n attribute
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (t[key]) {
-                    // Handle input placeholders specially
-                    if (el.tagName === 'INPUT' && el.getAttribute('placeholder')) {
-                        el.placeholder = t[key];
-                    } else {
-                        el.textContent = t[key];
-                    }
-                }
-            });
-
-            // Update specific dynamic placeholders if needed
-            const youtubeInput = document.getElementById('youtube-url');
-            const tiktokInput = document.getElementById('tiktok-url');
-            if (youtubeInput && t['input_placeholder_youtube']) youtubeInput.placeholder = t['input_placeholder_youtube'];
-            if (tiktokInput && t['input_placeholder_tiktok']) tiktokInput.placeholder = t['input_placeholder_tiktok'];
-
-            // Update toggle button appearance
-            const langIcon = document.querySelector('.lang-icon') || document.getElementById('lang-icon');
-            const langText = document.querySelector('.lang-text') || document.getElementById('lang-text');
-
-            if (currentLang === 'vi') {
-                if (langIcon) langIcon.textContent = '🇻🇳';
-                if (langText) langText.textContent = 'Tiếng Việt';
-            } else {
-                if (langIcon) langIcon.textContent = '🇺🇸';
-                if (langText) langText.textContent = 'English';
+                el.textContent = t[key];
             }
         }
+    });
 
-        // Make accessible globally
-        window.updateContent = updateContent;
+    // Update specific dynamic placeholders if needed
+    const youtubeInput = document.getElementById('youtube-url');
+    const tiktokInput = document.getElementById('tiktok-url');
+    if (youtubeInput && t['input_placeholder_youtube']) youtubeInput.placeholder = t['input_placeholder_youtube'];
+    if (tiktokInput && t['input_placeholder_tiktok']) tiktokInput.placeholder = t['input_placeholder_tiktok'];
 
-        function toggleLanguage() {
-            currentLang = currentLang === 'vi' ? 'en' : 'vi';
-            localStorage.setItem('language', currentLang);
-            updateContent();
-        }
+    // Update toggle button appearance
+    const langIcon = document.querySelector('.lang-icon') || document.getElementById('lang-icon');
+    const langText = document.querySelector('.lang-text') || document.getElementById('lang-text');
 
-        if (langToggleBtn) {
-            // Remove existing listeners to be safe (though not possible with anonymous functions easily, here we just add one)
-            // To avoid multiple listeners if this script re-runs, we can check a property, but app.js usually runs once.
-            langToggleBtn.onclick = toggleLanguage; // Use property assignment to prevent multiple adds if this code runs multiple times
-        }
+    if (currentLang === 'vi') {
+        if (langIcon) langIcon.textContent = '🇻🇳';
+        if (langText) langText.textContent = 'Tiếng Việt';
+    } else {
+        if (langIcon) langIcon.textContent = '🇺🇸';
+        if (langText) langText.textContent = 'English';
+    }
+}
 
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateContent();
-        });
+// Make accessible globally
+window.updateContent = updateContent;
+
+function toggleLanguage() {
+    currentLang = currentLang === 'vi' ? 'en' : 'vi';
+    localStorage.setItem('language', currentLang);
+    updateContent();
+}
+
+if (langToggleBtn) {
+    // Basic event listener - app.js runs once so this is safe
+    langToggleBtn.onclick = toggleLanguage;
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    updateContent();
+});
+
