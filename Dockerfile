@@ -22,7 +22,7 @@ RUN deno --version
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies (v3: removed oauth2 plugin)
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Update yt-dlp to latest version (critical for YouTube bypass)

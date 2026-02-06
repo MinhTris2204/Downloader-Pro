@@ -35,6 +35,10 @@ COOKIES_FILE_PATH = os.path.join(tempfile.gettempdir(), 'yt_cookies.txt')
 YOUTUBE_COOKIES_ENV = os.environ.get('YOUTUBE_COOKIES', '')
 YOUTUBE_OAUTH_TOKEN = os.environ.get('YOUTUBE_OAUTH_REFRESH_TOKEN', '')
 
+# Debug: Check if env vars are loaded
+print(f"[DEBUG] YOUTUBE_COOKIES env length: {len(YOUTUBE_COOKIES_ENV)} chars")
+print(f"[DEBUG] Temp dir: {tempfile.gettempdir()}")
+
 # OAuth Token file path for yt-dlp-youtube-oauth2 plugin
 OAUTH_TOKEN_FILE = os.path.join(tempfile.gettempdir(), 'youtube_oauth_token.json')
 
