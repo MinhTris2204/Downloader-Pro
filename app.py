@@ -676,64 +676,24 @@ def download_youtube_video(url, format_type, quality, download_id):
         
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
+        # Advanced strategies optimized for Railway/Cloud deployment
+        # Order matters: try most reliable strategies first
         strategies = [
-            # Strategy 1: Android client (best for cloud - bypasses most restrictions)
+            # Strategy 1: Android Creator (often works when main android app fails)
             {
-                'name': 'android_vr',
+                'name': 'android_creator',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android', 'android_vr'],
+                            'player_client': ['android_creator', 'android'],
                         }
                     },
                 },
                 'delay': 0
             },
-            # Strategy 2: iOS client with web fallback
-            {
-                'name': 'ios_web',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['ios', 'web'],
-                        }
-                    },
-                },
-                'delay': 3
-            },
-            # Strategy 3: TV embedded (good for cloud IPs)
-            {
-                'name': 'tv_embedded',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['tv_embedded'],
-                        }
-                    },
-                },
-                'delay': 4
-            },
-            # Strategy 4: Media Connect client (newer, less detected)
-            {
-                'name': 'mediaconnect',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['mediaconnect', 'web'],
-                        }
-                    },
-                },
-                'delay': 5
-            },
-            # Strategy 5: Web with mobile fallback
+            # Strategy 2: Web with Mobile fallback (most 'natural' for a browser)
             {
                 'name': 'web_mweb',
                 'opts': {
@@ -746,9 +706,37 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
+                'delay': 3
+            },
+            # Strategy 3: iOS client
+            {
+                'name': 'ios',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios'],
+                        }
+                    },
+                },
+                'delay': 5
+            },
+            # Strategy 4: Android Embed (good fallback)
+            {
+                'name': 'android_embed',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_embed', 'web_embedded'],
+                        }
+                    },
+                },
                 'delay': 6
             },
-            # Strategy 6: Let yt-dlp auto-detect (fallback)
+            # Strategy 5: Let yt-dlp auto-detect (fallback)
             {
                 'name': 'auto_detect',
                 'opts': {
