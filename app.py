@@ -793,6 +793,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'fragment_retries': 5,
                     'skip_unavailable_fragments': True,
                     'ignoreerrors': False,
+                    'extractor_args': {},  # Initialize empty dict for extractor args
                 }
 
                 # Strategy-specific: Use cookies unless it's a 'no_cookies' strategy
