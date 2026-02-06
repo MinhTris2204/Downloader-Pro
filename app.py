@@ -27,13 +27,14 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ===== INVIDIOUS PROXY INSTANCES (Fallback when cookies fail) =====
 INVIDIOUS_INSTANCES = [
-    'https://invidious.ducks.cloud',
-    'https://inv.nand.sh',
-    'https://invidious.no-logs.com',
-    'https://invidious.snopyta.org',
-    'https://invidious.projectsegfau.lt',
-    'https://invidious.slipfox.xyz',
-    'https://invidious.sethforprivacy.com',
+    'https://invidious.asir.dev',
+    'https://inv.nndhc.top',
+    'https://invidious.namazso.eu',
+    'https://inv.riverside.rocks',
+    'https://invidious.lunar.icu',
+    'https://yt.drnd.rd',
+    'https://invidious.private.coffee',
+    'https://iv.ggtyler.dev',
 ]
 
 # ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
@@ -785,6 +786,13 @@ def download_youtube_video(url, format_type, quality, download_id):
                 else:
                     print(f"[DEBUG] Strategy {strategy['name']} is skipping cookies")
 
+                # Strategy-specific: Better PO Token integration
+                if YOUTUBE_PO_TOKEN:
+                    if 'youtube' not in common_opts['extractor_args']:
+                         common_opts['extractor_args']['youtube'] = {}
+                    # Try both formats (some clients like web, some like raw token)
+                    common_opts['extractor_args']['youtube']['po_token'] = [f"web+{YOUTUBE_PO_TOKEN}", YOUTUBE_PO_TOKEN]
+                
                 # Strategy-specific: Integrate OAuth2 if available
                 if OAUTH_TOKEN_FILE and os.path.exists(OAUTH_TOKEN_FILE):
                      if 'youtube' not in common_opts['extractor_args']:
@@ -792,12 +800,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                      common_opts['extractor_args']['youtube']['token_file'] = OAUTH_TOKEN_FILE
                      print(f"[DEBUG] Integrating YouTube OAuth2 token")
 
-                # Strategy-specific: Better PO Token integration
-                if YOUTUBE_PO_TOKEN:
-                    if 'youtube' not in common_opts['extractor_args']:
-                         common_opts['extractor_args']['youtube'] = {}
-                    # Passing PO Token to the youtube extractor
-                    common_opts['extractor_args']['youtube']['po_token'] = [f"web+{YOUTUBE_PO_TOKEN}"]
+                # Add a dynamic visitor data to rotate "guest" identity (helps bypass some IP-based blocks)
+                if 'youtube' not in common_opts['extractor_args']:
+                    common_opts['extractor_args']['youtube'] = {}
+                common_opts['extractor_args']['youtube']['player_skip'] = ['webpage', 'configs']
                 
                 # Only force User-Agent for web-based strategies
                 if 'web' in strategy['name'] or 'auto' in strategy['name']:
