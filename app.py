@@ -679,38 +679,9 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
         strategies = [
-            # Strategy 1: Android Creator (often works when main android app fails)
+            # Strategy 1: iOS client (Often bypasses bot detection when Android fails)
             {
-                'name': 'android_creator',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_creator', 'android'],
-                        }
-                    },
-                },
-                'delay': 0
-            },
-            # Strategy 2: Web with Mobile fallback (most 'natural' for a browser)
-            {
-                'name': 'web_mweb',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['web', 'mweb'],
-                            'player_skip': ['webpage', 'configs'],
-                        }
-                    },
-                },
-                'delay': 3
-            },
-            # Strategy 3: iOS client
-            {
-                'name': 'ios',
+                'name': 'ios_standalone',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
@@ -720,23 +691,67 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 5
+                'delay': 0
             },
-            # Strategy 4: Android Embed (good fallback)
+            # Strategy 2: Android Creator (Successful in previous runs)
             {
-                'name': 'android_embed',
+                'name': 'android_creator',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android_embed', 'web_embedded'],
+                            'player_client': ['android_creator', 'android'],
+                            'player_skip': ['webpage', 'configs'],
+                        }
+                    },
+                },
+                'delay': 2
+            },
+            # Strategy 3: Android VR (Extremely lightweight, often bypasses restrictions)
+            {
+                'name': 'android_vr',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_vr', 'android'],
+                        }
+                    },
+                },
+                'delay': 3
+            },
+            # Strategy 4: Web Mobile with aggressive skipping
+            {
+                'name': 'web_mweb_clean',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['mweb', 'web'],
+                            'player_skip': ['webpage', 'configs', 'js'],
+                        }
+                    },
+                },
+                'delay': 5
+            },
+            # Strategy 5: MediaConnect (Cloud optimized)
+            {
+                'name': 'mediaconnect',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['mediaconnect', 'web'],
                         }
                     },
                 },
                 'delay': 6
             },
-            # Strategy 5: Let yt-dlp auto-detect (fallback)
+            # Strategy 6: Auto Detect (Last resort)
             {
                 'name': 'auto_detect',
                 'opts': {
