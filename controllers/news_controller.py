@@ -29,10 +29,93 @@ class NewsController:
         }
     ]
     
+    # Cache cho tin tức
+    _news_cache = {
+        'articles': [],
+        'last_updated': None
+    }
+    _CACHE_TIMEOUT = 600  # 10 phút (giây)
+    
+    @staticmethod
+    def _fetch_all_news():
+        """Hàm helper để fetch tin tức từ tất cả RSS feeds"""
+        all_articles = []
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+            'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7'
+        }
+        
+        for feed_info in NewsController.RSS_FEEDS:
+            try:
+                # Fetch RSS feed
+                response = requests.get(feed_info['url'], headers=headers, timeout=10)
+                if response.status_code == 200:
+                    articles = NewsController.parse_rss_simple(response.content)
+                    for article in articles[:15]:
+                        title = article['title'].lower()
+                        description = article['description'].lower()
+                        content = title + ' ' + description
+                        
+                        tech_keywords = [
+                            'tiktok', 'youtube', 'facebook', 'instagram', 'twitter', 'x.com',
+                            'mạng xã hội', 'social media', 'video', 'streaming', 'livestream',
+                            'youtuber', 'tiktoker', 'content creator', 'influencer',
+                            'meta', 'google', 'apple', 'microsoft', 'amazon',
+                            'smartphone', 'iphone', 'android', 'app', 'ứng dụng',
+                            'ai', 'trí tuệ nhân tạo', 'chatgpt', 'openai',
+                            'game', 'gaming', 'esports', 'steam',
+                            'netflix', 'spotify', 'zalo', 'telegram', 'whatsapp',
+                            'công nghệ', 'technology', 'tech', 'digital',
+                            'internet', 'web', 'online', 'cloud',
+                            'software', 'phần mềm', 'hardware', 'phần cứng',
+                            'laptop', 'pc', 'máy tính', 'tablet', 'ipad'
+                        ]
+                        
+                        exclude_keywords = [
+                            'chính trị', 'bầu cử', 'quốc hội', 'chính phủ',
+                            'kinh tế vĩ mô', 'chứng khoán', 'bất động sản',
+                            'thể thao', 'bóng đá', 'world cup',
+                            'giải trí', 'ca sĩ', 'diễn viên', 'phim ảnh',
+                            'thời tiết', 'giao thông', 'tai nạn'
+                        ]
+                        
+                        has_tech = any(keyword in content for keyword in tech_keywords)
+                        has_exclude = any(keyword in content for keyword in exclude_keywords)
+                        
+                        if has_tech and not has_exclude:
+                            published = article['published']
+                            try:
+                                from email.utils import parsedate_to_datetime
+                                dt = parsedate_to_datetime(published)
+                                published = dt.strftime('%d/%m/%Y %H:%M')
+                            except:
+                                published = datetime.now().strftime('%d/%m/%Y %H:%M')
+                            
+                            article['published'] = published
+                            article['source'] = feed_info['name']
+                            all_articles.append(article)
+            except Exception as e:
+                print(f"Error fetching {feed_info['name']}: {e}")
+                continue
+        
+        return all_articles[:40]
+
     @staticmethod
     def index():
-        """Trang danh sách tin tức"""
-        return render_template('news/index.html')
+        """Trang danh sách tin tức - Load từ cache hoặc fetch mới"""
+        now = datetime.now()
+        
+        # Kiểm tra cache
+        if (not NewsController._news_cache['articles'] or 
+            not NewsController._news_cache['last_updated'] or 
+            (now - NewsController._news_cache['last_updated']).total_seconds() > NewsController._CACHE_TIMEOUT):
+            
+            # Update cache
+            NewsController._news_cache['articles'] = NewsController._fetch_all_news()
+            NewsController._news_cache['last_updated'] = now
+                
+        return render_template('news/index.html', initial_news=NewsController._news_cache['articles'])
     
     @staticmethod
     def parse_rss_simple(xml_content):
@@ -106,7 +189,6 @@ class NewsController:
             # Thêm CSS để ẩn header/footer/ads
             custom_css = '''
             <style>
-                /* Ẩn các element không cần thiết */
                 header, .header, #header,
                 footer, .footer, #footer,
                 .advertisement, .ads, .banner,
@@ -119,17 +201,12 @@ class NewsController:
                     display: none !important;
                 }
                 
-                /* Style cho nội dung chính */
                 body {
                     max-width: 800px;
                     margin: 0 auto;
                     padding: 20px;
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                     line-height: 1.6;
-                }
-                
-                article, .article, .content, .article-content {
-                    max-width: 100% !important;
                 }
                 
                 img {
@@ -148,103 +225,18 @@ class NewsController:
     
     @staticmethod
     def get_news():
-        """API lấy tin tức từ RSS feeds"""
-        all_articles = []
+        """API lấy tin tức - Sử dụng cache"""
+        now = datetime.now()
         
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
-            'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7'
-        }
-        
-        for feed_info in NewsController.RSS_FEEDS:
-            try:
-                print(f"Fetching {feed_info['name']} from {feed_info['url']}")
-                
-                # Fetch RSS feed
-                response = requests.get(feed_info['url'], headers=headers, timeout=15)
-                response.raise_for_status()
-                
-                print(f"Got response: {response.status_code}, length: {len(response.content)}")
-                
-                # Parse RSS
-                articles = NewsController.parse_rss_simple(response.content)
-                print(f"Parsed {len(articles)} articles from {feed_info['name']}")
-                
-                for article in articles[:15]:  # Lấy 15 bài mới nhất
-                    # Lọc CHỈ lấy bài liên quan TikTok, YouTube, mạng xã hội, công nghệ IT
-                    title = article['title'].lower()
-                    description = article['description'].lower()
-                    content = title + ' ' + description
-                    
-                    # Keywords chặt chẽ - CHỈ công nghệ IT
-                    tech_keywords = [
-                        'tiktok', 'youtube', 'facebook', 'instagram', 'twitter', 'x.com',
-                        'mạng xã hội', 'social media', 'video', 'streaming', 'livestream',
-                        'youtuber', 'tiktoker', 'content creator', 'influencer',
-                        'meta', 'google', 'apple', 'microsoft', 'amazon',
-                        'smartphone', 'iphone', 'android', 'app', 'ứng dụng',
-                        'ai', 'trí tuệ nhân tạo', 'chatgpt', 'openai',
-                        'game', 'gaming', 'esports', 'steam',
-                        'netflix', 'spotify', 'zalo', 'telegram', 'whatsapp',
-                        'công nghệ', 'technology', 'tech', 'digital',
-                        'internet', 'web', 'online', 'cloud',
-                        'software', 'phần mềm', 'hardware', 'phần cứng',
-                        'laptop', 'pc', 'máy tính', 'tablet', 'ipad'
-                    ]
-                    
-                    # Từ khóa loại trừ - KHÔNG lấy
-                    exclude_keywords = [
-                        'chính trị', 'bầu cử', 'quốc hội', 'chính phủ',
-                        'kinh tế vĩ mô', 'chứng khoán', 'bất động sản',
-                        'thể thao', 'bóng đá', 'world cup',
-                        'giải trí', 'ca sĩ', 'diễn viên', 'phim ảnh',
-                        'thời tiết', 'giao thông', 'tai nạn',
-                        'y tế', 'bệnh viện', 'thuốc',
-                        'giáo dục', 'thi cử', 'đại học'
-                    ]
-                    
-                    # Kiểm tra có keyword công nghệ KHÔNG?
-                    has_tech = any(keyword in content for keyword in tech_keywords)
-                    
-                    # Kiểm tra có keyword loại trừ KHÔNG?
-                    has_exclude = any(keyword in content for keyword in exclude_keywords)
-                    
-                    # CHỈ lấy nếu có tech keyword VÀ KHÔNG có exclude keyword
-                    if has_tech and not has_exclude:
-                        # Format thời gian
-                        published = article['published']
-                        try:
-                            # Parse RFC 2822 date format
-                            from email.utils import parsedate_to_datetime
-                            dt = parsedate_to_datetime(published)
-                            published = dt.strftime('%d/%m/%Y %H:%M')
-                        except:
-                            # Nếu không parse được, lấy ngày hiện tại
-                            published = datetime.now().strftime('%d/%m/%Y %H:%M')
-                        
-                        article['published'] = published
-                        article['source'] = feed_info['name']
-                        all_articles.append(article)
-                        
-            except Exception as e:
-                print(f"Error fetching {feed_info['name']}: {e}")
-                import traceback
-                traceback.print_exc()
-                continue
-        
-        print(f"Total articles collected: {len(all_articles)}")
-        
-        # Nếu vẫn không có bài nào, trả về lỗi
-        if not all_articles:
-            return jsonify({
-                'success': False,
-                'error': 'Không thể lấy tin tức từ các nguồn RSS. Vui lòng thử lại sau.',
-                'articles': []
-            })
-        
+        if (not NewsController._news_cache['articles'] or 
+            not NewsController._news_cache['last_updated'] or 
+            (now - NewsController._news_cache['last_updated']).total_seconds() > NewsController._CACHE_TIMEOUT):
+            
+            NewsController._news_cache['articles'] = NewsController._fetch_all_news()
+            NewsController._news_cache['last_updated'] = now
+            
         return jsonify({
             'success': True,
-            'articles': all_articles[:30]  # Trả về 30 bài mới nhất
+            'articles': NewsController._news_cache['articles']
         })
 
