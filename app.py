@@ -25,6 +25,17 @@ app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# ===== INVIDIOUS PROXY INSTANCES (Fallback when cookies fail) =====
+# These are public Invidious instances that can proxy YouTube requests
+INVIDIOUS_INSTANCES = [
+    'https://inv.nadeko.net',
+    'https://invidious.nerdvpn.de',
+    'https://invidious.jing.rocks',
+    'https://invidious.privacyredirect.com',
+    'https://iv.ggtyler.dev',
+    'https://invidious.protokolla.fi',
+]
+
 # ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
 # Method 1: Cookies via YOUTUBE_COOKIES environment variable (base64 encoded)
 # Method 2: OAuth via YOUTUBE_OAUTH_REFRESH_TOKEN environment variable
@@ -500,6 +511,105 @@ def download_tiktok_photos(url, download_id, selected_indices=None):
         download_progress[download_id]['status'] = 'error'
         download_progress[download_id]['error'] = error_msg
 
+def try_invidious_download(video_id, format_type, quality, download_id, temp_dir, progress_hook):
+    """Try to download video via Invidious proxy instances"""
+    import random
+    import time as time_module
+    
+    # Shuffle instances to distribute load
+    instances = INVIDIOUS_INSTANCES.copy()
+    random.shuffle(instances)
+    
+    for instance in instances:
+        try:
+            print(f"[DEBUG] Trying Invidious instance: {instance}")
+            
+            # Get video info from Invidious API
+            api_url = f"{instance}/api/v1/videos/{video_id}"
+            response = http_requests.get(api_url, timeout=15)
+            
+            if response.status_code != 200:
+                print(f"[DEBUG] Invidious {instance} returned {response.status_code}")
+                continue
+                
+            data = response.json()
+            title = data.get('title', 'video')
+            # Clean title for filename
+            safe_title = re.sub(r'[<>:"/\\|?*]', '', title)[:100]
+            
+            # Find the best format
+            download_url = None
+            
+            if format_type == 'mp3':
+                # Get audio only
+                for fmt in data.get('adaptiveFormats', []):
+                    if 'audio' in fmt.get('type', '').lower():
+                        download_url = fmt.get('url')
+                        break
+            else:
+                # Get video - try adaptive formats first for quality control
+                target_height = int(quality.replace('p', '')) if quality != 'best' else 1080
+                
+                best_match = None
+                for fmt in data.get('adaptiveFormats', []):
+                    if 'video' in fmt.get('type', '').lower() and 'audio' not in fmt.get('type', '').lower():
+                        height = fmt.get('resolution', '').replace('p', '')
+                        if height.isdigit():
+                            if int(height) <= target_height:
+                                if best_match is None or int(height) > int(best_match.get('resolution', '0').replace('p', '')):
+                                    best_match = fmt
+                
+                if best_match:
+                    download_url = best_match.get('url')
+                else:
+                    # Fallback to formatStreams (combined video+audio)
+                    for fmt in data.get('formatStreams', []):
+                        download_url = fmt.get('url')
+                        break
+            
+            if not download_url:
+                print(f"[DEBUG] No download URL found from {instance}")
+                continue
+            
+            # Download the file
+            print(f"[DEBUG] Downloading from Invidious: {download_url[:100]}...")
+            
+            ext = 'mp3' if format_type == 'mp3' else 'mp4'
+            output_path = os.path.join(temp_dir, f"{download_id}.{ext}")
+            
+            # Stream download with progress
+            with http_requests.get(download_url, stream=True, timeout=120) as r:
+                r.raise_for_status()
+                total_size = int(r.headers.get('content-length', 0))
+                downloaded = 0
+                
+                with open(output_path, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        
+                        if total_size > 0:
+                            progress = int((downloaded / total_size) * 100)
+                            progress_hook({
+                                'status': 'downloading',
+                                'downloaded_bytes': downloaded,
+                                'total_bytes': total_size,
+                                '_percent_str': f'{progress}%',
+                                '_speed_str': '',
+                                '_eta_str': ''
+                            })
+            
+            print(f"[SUCCESS] Downloaded via Invidious: {instance}")
+            return output_path, safe_title, ext
+            
+        except Exception as e:
+            print(f"[DEBUG] Invidious {instance} failed: {str(e)[:100]}")
+            time_module.sleep(1)
+            continue
+    
+    return None, None, None
+
+
 def download_youtube_video(url, format_type, quality, download_id):
     """Download YouTube video using yt-dlp with advanced bypass techniques"""
     try:
@@ -764,7 +874,58 @@ def download_youtube_video(url, format_type, quality, download_id):
                 # Try next strategy
                 continue
         
-        # All strategies failed
+        # All yt-dlp strategies failed - try Invidious as last resort
+        print(f"[DEBUG] All yt-dlp strategies failed, trying Invidious...")
+        
+        # Extract video ID from URL
+        video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})', url)
+        if video_id_match:
+            video_id = video_id_match.group(1)
+            
+            # Define progress hook for Invidious
+            def invidious_progress_hook(d):
+                if d['status'] == 'downloading':
+                    percent_str = d.get('_percent_str', '0%').replace('%', '')
+                    try:
+                        percent = float(percent_str)
+                    except:
+                        percent = 0
+                    download_progress[download_id]['status'] = 'downloading'
+                    download_progress[download_id]['progress'] = percent
+            
+            inv_path, inv_title, inv_ext = try_invidious_download(
+                video_id, format_type, quality, download_id, temp_dir, invidious_progress_hook
+            )
+            
+            if inv_path and os.path.exists(inv_path):
+                print(f"[SUCCESS] Download completed via Invidious!")
+                
+                mime_type = 'audio/mpeg' if inv_ext == 'mp3' else 'video/mp4'
+                
+                download_data[download_id] = {
+                    'filepath': inv_path,
+                    'title': inv_title or 'video',
+                    'mime_type': mime_type,
+                    'ext': inv_ext,
+                    'timestamp': time.time(),
+                    'platform': 'youtube',
+                    'format': format_type,
+                    'quality': quality
+                }
+                
+                download_progress[download_id]['status'] = 'completed'
+                download_progress[download_id]['progress'] = 100
+                download_progress[download_id]['title'] = inv_title or 'video'
+                
+                # Record in database
+                try:
+                    record_download('youtube', inv_title or 'video', format_type, quality)
+                except Exception as db_err:
+                    print(f"DB record error: {db_err}")
+                    
+                return
+        
+        # Everything failed
         raise last_error if last_error else Exception("Không thể tải video")
         
     except Exception as e:
