@@ -1,1 +1,1 @@
-web: bash install_deno.sh && python app.py
+web: bash start_services.sh
