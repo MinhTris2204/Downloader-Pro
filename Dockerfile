@@ -35,5 +35,6 @@ COPY . .
 # Expose port (Railway will set PORT env var)
 EXPOSE 8080
 
-# Run the application
-CMD ["python", "app.py"]
+# Run the application with auto-update yt-dlp on startup
+# This ensures we always have the latest YouTube bypass methods
+CMD pip install -q --upgrade yt-dlp && python app.py
