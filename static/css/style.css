@@ -849,17 +849,19 @@ body {
 }
 
 .platform-badge.youtube {
-    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+    background: none;
+    color: #ff0000;
 }
 
 .platform-badge.tiktok {
-    background: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%);
+    background: none;
+    padding: 0;
+    border-radius: 0;
 }
 
 .platform-badge svg {
-    width: 32px;
-    height: 32px;
-    color: white;
+    width: 36px;
+    height: 36px;
 }
 
 .card-title h2 {
