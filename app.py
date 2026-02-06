@@ -693,7 +693,22 @@ def download_youtube_video(url, format_type, quality, download_id):
                 },
                 'delay': 0
             },
-            # Strategy 2: Android Creator (Successful in previous runs)
+            # Strategy 2: iOS NO COOKIES (Sometimes Guest access is less restricted)
+            {
+                'name': 'ios_no_cookies',
+                'use_cookies': False,
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios'],
+                        }
+                    },
+                },
+                'delay': 2
+            },
+            # Strategy 3: Android Creator
             {
                 'name': 'android_creator',
                 'opts': {
@@ -708,23 +723,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                 },
                 'delay': 2
             },
-            # Strategy 3: Android VR (Extremely lightweight, often bypasses restrictions)
+            # Strategy 4: Web Mobile Clean (Strict guest access)
             {
-                'name': 'android_vr',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_vr', 'android'],
-                        }
-                    },
-                },
-                'delay': 3
-            },
-            # Strategy 4: Web Mobile with aggressive skipping
-            {
-                'name': 'web_mweb_clean',
+                'name': 'web_no_cookies',
+                'use_cookies': False,
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
@@ -735,21 +737,21 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 5
+                'delay': 3
             },
-            # Strategy 5: MediaConnect (Cloud optimized)
+            # Strategy 5: TV Embedded (Legacy fallback)
             {
-                'name': 'mediaconnect',
+                'name': 'tv_embedded',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['mediaconnect', 'web'],
+                            'player_client': ['tv_embedded'],
                         }
                     },
                 },
-                'delay': 6
+                'delay': 4
             },
             # Strategy 6: Auto Detect (Last resort)
             {
@@ -778,7 +780,6 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'noprogress': False,
                     'progress_hooks': [progress_hook],
                     'http_headers': {
-                        # 'User-Agent': selected_ua, # REMOVED: Don't force UA, let yt-dlp set it for specific clients (android/ios)
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.5',
                         'Accept-Encoding': 'gzip, deflate',
@@ -791,17 +792,30 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'fragment_retries': 5,
                     'skip_unavailable_fragments': True,
                     'ignoreerrors': False,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_skip': ['webpage', 'configs', 'js'],
+                        }
+                    }
                 }
+
+                # Strategy-specific: Use cookies unless it's a 'no_cookies' strategy
+                if strategy.get('use_cookies', True) and COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
+                    common_opts['cookiefile'] = COOKIES_FILE_PATH
+                    print(f"[DEBUG] Using cookies from: {COOKIES_FILE_PATH}")
+                else:
+                    print(f"[DEBUG] Strategy {strategy['name']} is skipping cookies")
+
+                # Strategy-specific: Integrate OAuth2 if available
+                if OAUTH_TOKEN_FILE and os.path.exists(OAUTH_TOKEN_FILE):
+                     if 'youtube' not in common_opts['extractor_args']:
+                         common_opts['extractor_args']['youtube'] = {}
+                     common_opts['extractor_args']['youtube']['token_file'] = OAUTH_TOKEN_FILE
+                     print(f"[DEBUG] Integrating YouTube OAuth2 token")
 
                 # Only force User-Agent for web-based strategies
                 if 'web' in strategy['name'] or 'auto' in strategy['name']:
                     common_opts['http_headers']['User-Agent'] = selected_ua
-                
-                # Use cookies from environment variable or local file
-                if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
-                    common_opts['cookiefile'] = COOKIES_FILE_PATH
-                    print(f"[DEBUG] Using cookies from: {COOKIES_FILE_PATH}")
-
                 
                 # Merge strategy-specific options
                 common_opts.update(strategy['opts'])
