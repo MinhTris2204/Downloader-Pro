@@ -79,21 +79,21 @@ async function fetchYoutubeInfo(url) {
 
     const downloadBtn = document.getElementById('youtube-download-btn');
     const preview = document.getElementById('youtube-preview');
-    
+
     // Extract video ID
     const videoId = extractYoutubeId(url);
     if (!videoId) return;
-    
+
     // Show preview with thumbnail immediately
     preview.style.display = 'flex';
     document.getElementById('youtube-thumbnail').src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     document.getElementById('youtube-title').textContent = 'Đang tải thông tin...';
     document.getElementById('youtube-author').textContent = '';
-    
+
     // Enable download button
     downloadBtn.disabled = false;
     downloadBtn.innerHTML = 'Tải Xuống';
-    
+
     // Try to get title from oEmbed API (no auth needed)
     try {
         const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
@@ -444,24 +444,24 @@ function showProgress(platform, downloadId) {
             percentEl.textContent = `${progress}%`;
 
             if (data.status === 'preparing') {
-                statusEl.textContent = 'Đang chuẩn bị...';
+                statusEl.textContent = progress > 0 ? `Đang chuẩn bị... ${progress}%` : 'Đang chuẩn bị...';
             } else if (data.status === 'downloading') {
-                let statusText = 'Đang tải xuống...';
+                let statusText = `Đang tải: ${progress}%`;
                 if (data.speed) {
-                    statusText = `Tải: ${data.speed}`;
+                    statusText = `Tải: ${progress}% | ${data.speed}`;
                 }
                 if (data.eta && data.eta !== 'Unknown') {
                     statusText += ` | Còn ${data.eta}`;
                 }
                 statusEl.textContent = statusText;
             } else if (data.status === 'processing') {
-                statusEl.textContent = 'Đang xử lý file...';
+                statusEl.textContent = `Đang xử lý file... ${progress}%`;
             } else if (data.status === 'completed') {
                 clearInterval(progressInterval);
                 fillEl.style.width = '100%';
                 percentEl.textContent = '100%';
                 statusEl.textContent = 'Hoàn tất!';
-                
+
                 // Update preview with actual title if available
                 if (data.title && platform === 'youtube') {
                     document.getElementById('youtube-title').textContent = data.title;
@@ -505,7 +505,7 @@ function triggerDownload(downloadId) {
         iframe.style.display = 'none';
         document.body.appendChild(iframe);
     }
-    
+
     // Set src to trigger download
     iframe.src = downloadUrl;
 }
@@ -522,9 +522,9 @@ function resetButton(platform) {
 function startCooldownTimer(platform, seconds) {
     const btn = document.getElementById(`${platform}-download-btn`);
     btn.disabled = true;
-    
+
     let remaining = seconds;
-    
+
     const updateButton = () => {
         if (remaining > 0) {
             btn.innerHTML = `⏳ Đợi ${remaining}s...`;
@@ -535,7 +535,7 @@ function startCooldownTimer(platform, seconds) {
             showToast('Bạn có thể tải video tiếp theo rồi! 😊', 'success');
         }
     };
-    
+
     updateButton();
 }
 
@@ -573,7 +573,7 @@ if (youtubeUrlInput) {
             fetchYoutubeInfo(url);
         }, 500);
     });
-    
+
     // ====== Also trigger on paste event ======
     youtubeUrlInput.addEventListener('paste', (e) => {
         setTimeout(() => {
@@ -593,7 +593,7 @@ if (tiktokUrlInput) {
             fetchTiktokInfo(url);
         }, 500);
     });
-    
+
     tiktokUrlInput.addEventListener('paste', (e) => {
         setTimeout(() => {
             const url = e.target.value.trim();
