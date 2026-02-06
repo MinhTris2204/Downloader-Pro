@@ -182,11 +182,17 @@ class NewsController:
             # Parse HTML và lấy nội dung chính
             html = response.text
             
+            # Remove all script tags to prevent redirects/reloads/tracking
+            html = re.sub(r'<script\b[^>]*>([\s\S]*?)</script>', '', html, flags=re.IGNORECASE)
+            
+            # Remove meta refresh
+            html = re.sub(r'<meta[^>]*http-equiv=["\']refresh["\'][^>]*>', '', html, flags=re.IGNORECASE)
+            
             # Inject base tag để fix relative URLs
             base_tag = f'<base href="{url}">'
             html = html.replace('<head>', f'<head>{base_tag}')
             
-            # Thêm CSS để ẩn header/footer/ads
+            # Thêm CSS để ẩn header/footer/ads và tối ưu hiển thị
             custom_css = '''
             <style>
                 header, .header, #header,
@@ -198,7 +204,8 @@ class NewsController:
                 .comment, .comments,
                 .related-news, .related-articles,
                 iframe[src*="ads"], iframe[src*="doubleclick"],
-                .box-tinkhac, .box-tinlienquan, .recommendation, .popup {
+                .box-tinkhac, .box-tinlienquan, .recommendation, .popup,
+                #sticky_banner, .bottom-bar, .app-banner {
                     display: none !important;
                 }
                 
@@ -220,6 +227,12 @@ class NewsController:
                     height: auto !important;
                     display: block;
                     margin: 10px auto;
+                }
+                
+                a {
+                    pointer-events: none; /* Disable links in content */
+                    color: #333;
+                    text-decoration: none;
                 }
 
                 @media (max-width: 768px) {
