@@ -775,7 +775,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'noprogress': False,
                     'progress_hooks': [progress_hook],
                     'http_headers': {
-                        'User-Agent': selected_ua,
+                        # 'User-Agent': selected_ua, # REMOVED: Don't force UA, let yt-dlp set it for specific clients (android/ios)
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.5',
                         'Accept-Encoding': 'gzip, deflate',
@@ -789,6 +789,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'skip_unavailable_fragments': True,
                     'ignoreerrors': False,
                 }
+
+                # Only force User-Agent for web-based strategies
+                if 'web' in strategy['name'] or 'auto' in strategy['name']:
+                    common_opts['http_headers']['User-Agent'] = selected_ua
                 
                 # Use cookies from environment variable or local file
                 if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
