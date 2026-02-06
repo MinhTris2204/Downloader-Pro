@@ -601,12 +601,12 @@ body {
     color: var(--text-secondary);
 }
 
-.tab-btn[data-tab="youtube"] span {
+.tab-btn[data-tab="youtube"] .border-line {
     position: absolute;
     display: block;
 }
 
-.tab-btn[data-tab="youtube"] span:nth-child(1) {
+.tab-btn[data-tab="youtube"] .border-line:nth-child(1) {
     top: 0;
     left: -100%;
     width: 100%;
@@ -615,7 +615,7 @@ body {
     animation: btn-anim1 2s linear infinite;
 }
 
-.tab-btn[data-tab="youtube"] span:nth-child(2) {
+.tab-btn[data-tab="youtube"] .border-line:nth-child(2) {
     top: -100%;
     right: 0;
     width: 2px;
@@ -625,7 +625,7 @@ body {
     animation-delay: 0.5s;
 }
 
-.tab-btn[data-tab="youtube"] span:nth-child(3) {
+.tab-btn[data-tab="youtube"] .border-line:nth-child(3) {
     bottom: 0;
     right: -100%;
     width: 100%;
@@ -635,7 +635,7 @@ body {
     animation-delay: 1s;
 }
 
-.tab-btn[data-tab="youtube"] span:nth-child(4) {
+.tab-btn[data-tab="youtube"] .border-line:nth-child(4) {
     bottom: -100%;
     left: 0;
     width: 2px;
@@ -653,21 +653,22 @@ body {
 }
 
 /* Speed up for active state */
-.tab-btn[data-tab="youtube"].active span:nth-child(1) {
+/* Speed up for active state */
+.tab-btn[data-tab="youtube"].active .border-line:nth-child(1) {
     animation: btn-anim1 1s linear infinite;
 }
 
-.tab-btn[data-tab="youtube"].active span:nth-child(2) {
+.tab-btn[data-tab="youtube"].active .border-line:nth-child(2) {
     animation: btn-anim2 1s linear infinite;
     animation-delay: 0.25s;
 }
 
-.tab-btn[data-tab="youtube"].active span:nth-child(3) {
+.tab-btn[data-tab="youtube"].active .border-line:nth-child(3) {
     animation: btn-anim3 1s linear infinite;
     animation-delay: 0.5s;
 }
 
-.tab-btn[data-tab="youtube"].active span:nth-child(4) {
+.tab-btn[data-tab="youtube"].active .border-line:nth-child(4) {
     animation: btn-anim4 1s linear infinite;
     animation-delay: 0.75s;
 }
@@ -680,12 +681,12 @@ body {
     color: var(--text-secondary);
 }
 
-.tab-btn[data-tab="tiktok"] span {
+.tab-btn[data-tab="tiktok"] .border-line {
     position: absolute;
     display: block;
 }
 
-.tab-btn[data-tab="tiktok"] span:nth-child(1) {
+.tab-btn[data-tab="tiktok"] .border-line:nth-child(1) {
     top: 0;
     left: -100%;
     width: 100%;
@@ -694,7 +695,7 @@ body {
     animation: btn-anim1 2s linear infinite;
 }
 
-.tab-btn[data-tab="tiktok"] span:nth-child(2) {
+.tab-btn[data-tab="tiktok"] .border-line:nth-child(2) {
     top: -100%;
     right: 0;
     width: 2px;
@@ -704,7 +705,7 @@ body {
     animation-delay: 0.5s;
 }
 
-.tab-btn[data-tab="tiktok"] span:nth-child(3) {
+.tab-btn[data-tab="tiktok"] .border-line:nth-child(3) {
     bottom: 0;
     right: -100%;
     width: 100%;
@@ -714,7 +715,7 @@ body {
     animation-delay: 1s;
 }
 
-.tab-btn[data-tab="tiktok"] span:nth-child(4) {
+.tab-btn[data-tab="tiktok"] .border-line:nth-child(4) {
     bottom: -100%;
     left: 0;
     width: 2px;
@@ -732,21 +733,21 @@ body {
 }
 
 /* Speed up for active state */
-.tab-btn[data-tab="tiktok"].active span:nth-child(1) {
+.tab-btn[data-tab="tiktok"].active .border-line:nth-child(1) {
     animation: btn-anim1 1s linear infinite;
 }
 
-.tab-btn[data-tab="tiktok"].active span:nth-child(2) {
+.tab-btn[data-tab="tiktok"].active .border-line:nth-child(2) {
     animation: btn-anim2 1s linear infinite;
     animation-delay: 0.25s;
 }
 
-.tab-btn[data-tab="tiktok"].active span:nth-child(3) {
+.tab-btn[data-tab="tiktok"].active .border-line:nth-child(3) {
     animation: btn-anim3 1s linear infinite;
     animation-delay: 0.5s;
 }
 
-.tab-btn[data-tab="tiktok"].active span:nth-child(4) {
+.tab-btn[data-tab="tiktok"].active .border-line:nth-child(4) {
     animation: btn-anim4 1s linear infinite;
     animation-delay: 0.75s;
 }
