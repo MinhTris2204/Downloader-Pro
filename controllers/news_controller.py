@@ -197,7 +197,8 @@ class NewsController:
                 .social-share, .share-buttons,
                 .comment, .comments,
                 .related-news, .related-articles,
-                iframe[src*="ads"], iframe[src*="doubleclick"] {
+                iframe[src*="ads"], iframe[src*="doubleclick"],
+                .box-tinkhac, .box-tinlienquan, .recommendation, .popup {
                     display: none !important;
                 }
                 
@@ -207,11 +208,25 @@ class NewsController:
                     padding: 20px;
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
                     line-height: 1.6;
+                    overflow-x: hidden;
+                    width: 100%;
+                    box-sizing: border-box;
+                    background: #fff;
+                    color: #333;
                 }
                 
-                img {
-                    max-width: 100%;
-                    height: auto;
+                img, video, iframe {
+                    max-width: 100% !important;
+                    height: auto !important;
+                    display: block;
+                    margin: 10px auto;
+                }
+
+                @media (max-width: 768px) {
+                    body {
+                        padding: 15px;
+                        font-size: 16px;
+                    }
                 }
             </style>
             '''
