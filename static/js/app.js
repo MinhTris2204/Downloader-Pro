@@ -760,9 +760,12 @@ function updateContent() {
     if (currentLang === 'vi') {
         if (langIcon) langIcon.textContent = '🇻🇳';
         if (langText) langText.textContent = 'Tiếng Việt';
-    } else {
+    } else if (currentLang === 'en') {
         if (langIcon) langIcon.textContent = '🇺🇸';
         if (langText) langText.textContent = 'English';
+    } else if (currentLang === 'ru') {
+        if (langIcon) langIcon.textContent = '🇷🇺';
+        if (langText) langText.textContent = 'Русский';
     }
 }
 
@@ -770,7 +773,13 @@ function updateContent() {
 window.updateContent = updateContent;
 
 function toggleLanguage() {
-    currentLang = currentLang === 'vi' ? 'en' : 'vi';
+    if (currentLang === 'vi') {
+        currentLang = 'en';
+    } else if (currentLang === 'en') {
+        currentLang = 'ru';
+    } else {
+        currentLang = 'vi';
+    }
     localStorage.setItem('language', currentLang);
     updateContent();
 }
