@@ -733,17 +733,11 @@ const langOptions = document.querySelectorAll('.lang-option');
 let currentLang = localStorage.getItem('language') || 'vi';
 
 // SVG Flags
-const flags = {
-    'vi': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"><path fill="#DA251D" d="M0 0h3v2H0z"/><path fill="#FFCD00" d="M1.5 0.6l0.2 0.58h0.55l-0.45 0.32 0.15 0.5L1.5 1.7l-0.45 0.3 0.15-0.5L0.75 1.18h0.55z"/></svg>',
-    'en': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"><clipPath id="a"><path d="M0 0v30h60V0z"/></clipPath><path d="M0 0v30h60V0z" fill="#002a86"/><path d="M0 0L60 30M60 0L0 30" stroke="#fff" stroke-width="6"/><path d="M0 0L60 30M60 0L0 30" clip-path="url(#a)" stroke="#cf142b" stroke-width="4"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"/><path d="M30 0v30M0 15h60" stroke="#cf142b" stroke-width="6"/></svg>',
-    'ru': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6"><path fill="#fff" d="M0 0h9v6H0z"/><path fill="#D52B1E" d="M0 4h9v2H0z"/><path fill="#0039A6" d="M0 2h9v2H0z"/></svg>'
-};
-// Note: English flag above is actually Union Jack (easier to genericize for English) or use US flag? 
-// User asked for "language", typically English = US or UK. Current emoji was US 🇺🇸. Let's switch 'en' to US Flag below to match previous emoji.
+// SVG Flags with explicit dimensions to ensure rendering
 const flagsSVGs = {
-    'vi': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2"><path fill="#DA251D" d="M0 0h3v2H0z"/><path fill="#FFCD00" d="M1.5 0.6l0.2 0.58h0.55l-0.45 0.32 0.15 0.5L1.5 1.7l-0.45 0.3 0.15-0.5L0.75 1.18h0.55z"/></svg>',
-    'en': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1235 650"><g fill-rule="evenodd"><path fill="#b22234" d="M0 0h1235v650H0z"/><path fill="#fff" d="M0 50h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0z"/><path fill="#3c3b6e" d="M0 0h494v350H0z"/><g fill="#fff"><path d="M24 18l11 35H0l11-35L0 53h35z" transform="translate(18 18) scale(0.35)"/></g></g></svg>',
-    'ru': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6"><path fill="#fff" d="M0 0h9v6H0z"/><path fill="#D52B1E" d="M0 4h9v2H0z"/><path fill="#0039A6" d="M0 2h9v2H0z"/></svg>'
+    'vi': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" width="100%" height="100%"><path fill="#DA251D" d="M0 0h3v2H0z"/><path fill="#FFCD00" d="M1.5 0.6l0.2 0.58h0.55l-0.45 0.32 0.15 0.5L1.5 1.7l-0.45 0.3 0.15-0.5L0.75 1.18h0.55z"/></svg>',
+    'en': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1235 650" width="100%" height="100%"><g fill-rule="evenodd"><path fill="#b22234" d="M0 0h1235v650H0z"/><path fill="#fff" d="M0 50h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0z"/><path fill="#3c3b6e" d="M0 0h494v350H0z"/><g fill="#fff"><path d="M24 18l11 35H0l11-35L0 53h35z" transform="translate(18 18) scale(0.35)"/></g></g></svg>',
+    'ru': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="100%" height="100%"><path fill="#fff" d="M0 0h9v6H0z"/><path fill="#D52B1E" d="M0 4h9v2H0z"/><path fill="#0039A6" d="M0 2h9v2H0z"/></svg>'
 };
 
 function updateContent() {
