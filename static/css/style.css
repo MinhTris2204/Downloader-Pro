@@ -594,55 +594,66 @@ body {
 /* YouTube Button */
 .tab-btn[data-tab="youtube"] {
     background: none;
-    border: none;
+    border: 1px solid transparent;
     opacity: 0.6;
 }
 
 .tab-btn[data-tab="youtube"]:hover,
 .tab-btn[data-tab="youtube"].active {
-    background: none;
+    background: rgba(255, 0, 0, 0.05);
+    /* Slight tint background */
     opacity: 1;
     color: #ff0000;
 }
 
 .tab-btn[data-tab="youtube"].active {
-    animation: youtube-active-pulse 2s infinite alternate;
+    border: 1px solid #ff0000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+    animation: youtube-border-pulse 2s infinite alternate;
 }
 
-@keyframes youtube-active-pulse {
+@keyframes youtube-border-pulse {
     from {
-        filter: drop-shadow(0 0 2px rgba(255, 0, 0, 0.4));
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.2), inset 0 0 5px rgba(255, 0, 0, 0.1);
+        border-color: rgba(255, 0, 0, 0.5);
     }
 
     to {
-        filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.7));
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.6), inset 0 0 10px rgba(255, 0, 0, 0.2);
+        border-color: #ff0000;
     }
 }
 
 /* TikTok Button */
 .tab-btn[data-tab="tiktok"] {
     background: none;
-    border: none;
+    border: 1px solid transparent;
     opacity: 0.6;
 }
 
 .tab-btn[data-tab="tiktok"]:hover,
 .tab-btn[data-tab="tiktok"].active {
-    background: none;
+    background: rgba(0, 242, 234, 0.05);
+    /* Slight tint background */
     opacity: 1;
+    color: var(--text-primary);
 }
 
 .tab-btn[data-tab="tiktok"].active {
-    animation: tiktok-active-pulse 2s infinite alternate;
+    border: 1px solid #00f2ea;
+    box-shadow: 0 0 10px rgba(0, 242, 234, 0.3);
+    animation: tiktok-border-pulse 2s infinite alternate;
 }
 
-@keyframes tiktok-active-pulse {
+@keyframes tiktok-border-pulse {
     from {
-        filter: drop-shadow(0 0 2px rgba(0, 242, 234, 0.4));
+        box-shadow: 0 0 5px rgba(0, 242, 234, 0.2), inset 0 0 5px rgba(0, 242, 234, 0.1);
+        border-color: rgba(0, 242, 234, 0.5);
     }
 
     to {
-        filter: drop-shadow(0 0 8px rgba(255, 0, 80, 0.7));
+        box-shadow: 0 0 15px rgba(0, 242, 234, 0.6), inset 0 0 10px rgba(0, 242, 234, 0.2);
+        border-color: #00f2ea;
     }
 }
 
