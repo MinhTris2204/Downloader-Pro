@@ -1,7 +1,8 @@
 {% extends "layouts/base.html" %}
 
 {% block meta %}
-<meta name="description" content="Blog hướng dẫn tải video YouTube, TikTok miễn phí. Mẹo, thủ thuật và cập nhật mới nhất về công cụ tải video.">
+<meta name="description"
+    content="Blog hướng dẫn tải video YouTube, TikTok miễn phí. Mẹo, thủ thuật và cập nhật mới nhất về công cụ tải video.">
 <meta name="keywords" content="blog tải video, hướng dẫn youtube, hướng dẫn tiktok, mẹo tải video">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://downloaderpro.io.vn/blog">
@@ -17,23 +18,27 @@
 {% block content %}
 <div class="container" style="padding: 40px 20px;">
     <section class="hero" style="text-align: center; margin-bottom: 60px;">
-        <h1 class="hero-title">📚 <span class="gradient-text">Blog</span> Hướng Dẫn</h1>
-        <p class="hero-subtitle">Mẹo, thủ thuật và hướng dẫn chi tiết về tải video YouTube, TikTok</p>
+        <h1 class="hero-title" data-i18n="blog_hero_title">📚 <span class="gradient-text">Blog</span> Hướng Dẫn</h1>
+        <p class="hero-subtitle" data-i18n="blog_hero_subtitle">Mẹo, thủ thuật và hướng dẫn chi tiết về tải video
+            YouTube, TikTok</p>
     </section>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto;">
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto;">
         {% for article in articles %}
         <article class="glass-card" style="padding: 0; overflow: hidden; transition: transform 0.3s;">
             <a href="/blog/{{ article.slug }}" style="text-decoration: none; color: inherit; display: block;">
                 <div style="padding: 30px 25px;">
-                    <div style="display: inline-block; padding: 6px 12px; background: rgba(99, 102, 241, 0.1); border-radius: 20px; font-size: 0.85em; color: #6366f1; margin-bottom: 15px;">
+                    <div
+                        style="display: inline-block; padding: 6px 12px; background: rgba(99, 102, 241, 0.1); border-radius: 20px; font-size: 0.85em; color: #6366f1; margin-bottom: 15px;">
                         {{ article.category }}
                     </div>
                     <h2 style="font-size: 1.4em; margin-bottom: 12px; line-height: 1.4;">{{ article.title }}</h2>
                     <p style="opacity: 0.8; line-height: 1.6; margin-bottom: 15px;">{{ article.description }}</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; opacity: 0.7;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; opacity: 0.7;">
                         <span>📅 {{ article.date }}</span>
-                        <span style="color: #6366f1;">Đọc thêm →</span>
+                        <span style="color: #6366f1;" data-i18n="blog_read_more">Đọc thêm →</span>
                     </div>
                 </div>
             </a>
@@ -42,15 +47,16 @@
     </div>
 
     <div style="text-align: center; margin-top: 60px;">
-        <a href="/" class="download-btn" style="display: inline-block; text-decoration: none;">
+        <a href="/" class="download-btn" style="display: inline-block; text-decoration: none;"
+            data-i18n="btn_back_home">
             ← Quay về Trang chủ
         </a>
     </div>
 </div>
 
 <style>
-.glass-card:hover {
-    transform: translateY(-5px);
-}
+    .glass-card:hover {
+        transform: translateY(-5px);
+    }
 </style>
 {% endblock %}

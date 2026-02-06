@@ -106,7 +106,16 @@ const translations = {
         "select_all": "Chọn tất cả",
         "deselect_all": "Bỏ chọn tất cả",
         "download_images": "📷 Tải {n} Ảnh",
-        "select_images_prompt": "Chọn ảnh để tải"
+        "download_images": "📷 Tải {n} Ảnh",
+        "select_images_prompt": "Chọn ảnh để tải",
+        "blog_hero_title": "📚 Blog Hướng Dẫn",
+        "blog_hero_subtitle": "Mẹo, thủ thuật và hướng dẫn chi tiết về tải video YouTube, TikTok",
+        "btn_back_home": "← Quay về Trang chủ",
+        "news_hero_title": "📰 Tin Công Nghệ Mới Nhất",
+        "news_hero_subtitle": "Cập nhật tin tức về TikTok, YouTube, mạng xã hội và công nghệ thông tin từ các nguồn uy tín",
+        "news_loading": "Đang tải tin tức...",
+        "news_error": "❌ Không thể tải tin tức",
+        "btn_retry": "Thử lại"
     },
     "en": {
         "nav_home": "Home",
@@ -215,6 +224,15 @@ const translations = {
         "select_all": "Select All",
         "deselect_all": "Deselect All",
         "download_images": "📷 Download {n} Images",
-        "select_images_prompt": "Select images to download"
+        "download_images": "📷 Download {n} Images",
+        "select_images_prompt": "Select images to download",
+        "blog_hero_title": "📚 Guide Blog",
+        "blog_hero_subtitle": "Tips, tricks and detailed guides on YouTube, TikTok video downloading",
+        "btn_back_home": "← Back to Home",
+        "news_hero_title": "📰 Latest Tech News",
+        "news_hero_subtitle": "Updates on TikTok, YouTube, social media and IT news from trusted sources",
+        "news_loading": "Loading news...",
+        "news_error": "❌ Cannot load news",
+        "btn_retry": "Retry"
     }
 };
