@@ -45,6 +45,9 @@ INVIDIOUS_INSTANCES = [
 COOKIES_FILE_PATH = os.path.join(tempfile.gettempdir(), 'yt_cookies.txt')
 YOUTUBE_COOKIES_ENV = os.environ.get('YOUTUBE_COOKIES', '')
 YOUTUBE_OAUTH_TOKEN = os.environ.get('YOUTUBE_OAUTH_REFRESH_TOKEN', '')
+YOUTUBE_PO_TOKEN = os.environ.get('YOUTUBE_PO_TOKEN', '')
+if YOUTUBE_PO_TOKEN:
+    print(f"[DEBUG] YouTube PO Token detected (length: {len(YOUTUBE_PO_TOKEN)})")
 
 # Debug: Check if env vars are loaded
 print(f"[DEBUG] YOUTUBE_COOKIES env length: {len(YOUTUBE_COOKIES_ENV)} chars")
@@ -789,6 +792,13 @@ def download_youtube_video(url, format_type, quality, download_id):
                      common_opts['extractor_args']['youtube']['token_file'] = OAUTH_TOKEN_FILE
                      print(f"[DEBUG] Integrating YouTube OAuth2 token")
 
+                # Strategy-specific: Better PO Token integration
+                if YOUTUBE_PO_TOKEN:
+                    if 'youtube' not in common_opts['extractor_args']:
+                         common_opts['extractor_args']['youtube'] = {}
+                    # Passing PO Token to the youtube extractor
+                    common_opts['extractor_args']['youtube']['po_token'] = [f"web+{YOUTUBE_PO_TOKEN}"]
+                
                 # Only force User-Agent for web-based strategies
                 if 'web' in strategy['name'] or 'auto' in strategy['name']:
                     common_opts['http_headers']['User-Agent'] = selected_ua
