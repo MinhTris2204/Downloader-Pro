@@ -26,14 +26,14 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # ===== INVIDIOUS PROXY INSTANCES (Fallback when cookies fail) =====
-# These are public Invidious instances that can proxy YouTube requests
 INVIDIOUS_INSTANCES = [
-    'https://inv.nadeko.net',
+    'https://invidious.flokinet.to',
+    'https://inv.tux.rs',
+    'https://invidious.io.lol',
+    'https://iv.melmac.space',
+    'https://invidious.perennialte.ch',
+    'https://yt.artemislena.eu',
     'https://invidious.nerdvpn.de',
-    'https://invidious.jing.rocks',
-    'https://invidious.privacyredirect.com',
-    'https://iv.ggtyler.dev',
-    'https://invidious.protokolla.fi',
 ]
 
 # ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
@@ -686,86 +686,58 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
         strategies = [
-            # Strategy 1: iOS client (Very strong against bot detection)
+            # Strategy 1: Combined Mobile (Most effective for restricted videos)
             {
-                'name': 'ios',
+                'name': 'mobile_combo',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['ios'],
+                            'player_client': ['ios', 'android', 'mweb'],
                         }
                     },
                 },
                 'delay': 0
             },
-            # Strategy 2: Android VR (Extremely lightweight, bypasses many blocks)
+            # Strategy 2: Android Creator & VR
             {
-                'name': 'android_vr',
+                'name': 'android_high_res',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android_vr', 'android'],
+                            'player_client': ['android_creator', 'android_vr', 'web'],
                         }
                     },
                 },
                 'delay': 2
             },
-            # Strategy 3: Android Creator
+            # Strategy 3: Web-Based Guest (Safest fallback)
             {
-                'name': 'android_creator',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_creator', 'android'],
-                        }
-                    },
-                },
-                'delay': 3
-            },
-            # Strategy 4: Web Mobile (Guest access)
-            {
-                'name': 'web_mweb',
+                'name': 'web_guest',
                 'use_cookies': False,
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['mweb'],
+                            'player_client': ['web', 'mweb'],
                             'player_skip': ['webpage', 'configs', 'js'],
                         }
                     },
                 },
                 'delay': 4
             },
-            # Strategy 5: TV Embedded (Legacy fallback)
-            {
-                'name': 'tv_embedded',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['tv_embedded'],
-                        }
-                    },
-                },
-                'delay': 5
-            },
-            # Strategy 6: Auto Detect (Last resort)
+            # Strategy 4: Auto Detect
             {
                 'name': 'auto_detect',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                 },
-                'delay': 8
+                'delay': 6
             },
         ]
         
@@ -839,11 +811,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                 else:
                     # Video - use simple format selector
                     if quality == 'best' or not quality.isdigit():
-                        # More permissive format string
                         format_str = 'bestvideo+bestaudio/best'
                     else:
-                        # Try to get specific quality
-                        format_str = f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best'
+                        format_str = f'bestvideo[height<={quality}]+bestaudio/best'
                     
                     ydl_opts = {
                         **common_opts,
