@@ -686,9 +686,9 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
         strategies = [
-            # Strategy 1: iOS client (Often bypasses bot detection when Android fails)
+            # Strategy 1: iOS client (Very strong against bot detection)
             {
-                'name': 'ios_standalone',
+                'name': 'ios',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
@@ -700,16 +700,15 @@ def download_youtube_video(url, format_type, quality, download_id):
                 },
                 'delay': 0
             },
-            # Strategy 2: iOS NO COOKIES (Sometimes Guest access is less restricted)
+            # Strategy 2: Android VR (Extremely lightweight, bypasses many blocks)
             {
-                'name': 'ios_no_cookies',
-                'use_cookies': False,
+                'name': 'android_vr',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['ios'],
+                            'player_client': ['android_vr', 'android'],
                         }
                     },
                 },
@@ -724,27 +723,26 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'extractor_args': {
                         'youtube': {
                             'player_client': ['android_creator', 'android'],
-                            'player_skip': ['webpage', 'configs'],
                         }
                     },
                 },
-                'delay': 2
+                'delay': 3
             },
-            # Strategy 4: Web Mobile Clean (Strict guest access)
+            # Strategy 4: Web Mobile (Guest access)
             {
-                'name': 'web_no_cookies',
+                'name': 'web_mweb',
                 'use_cookies': False,
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['mweb', 'web'],
+                            'player_client': ['mweb'],
                             'player_skip': ['webpage', 'configs', 'js'],
                         }
                     },
                 },
-                'delay': 3
+                'delay': 4
             },
             # Strategy 5: TV Embedded (Legacy fallback)
             {
@@ -758,7 +756,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 4
+                'delay': 5
             },
             # Strategy 6: Auto Detect (Last resort)
             {
@@ -799,11 +797,6 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'fragment_retries': 5,
                     'skip_unavailable_fragments': True,
                     'ignoreerrors': False,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_skip': ['webpage', 'configs', 'js'],
-                        }
-                    }
                 }
 
                 # Strategy-specific: Use cookies unless it's a 'no_cookies' strategy
@@ -846,10 +839,11 @@ def download_youtube_video(url, format_type, quality, download_id):
                 else:
                     # Video - use simple format selector
                     if quality == 'best' or not quality.isdigit():
-                        format_str = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                        # More permissive format string
+                        format_str = 'bestvideo+bestaudio/best'
                     else:
                         # Try to get specific quality
-                        format_str = f'bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best[height<={quality}]/best'
+                        format_str = f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best'
                     
                     ydl_opts = {
                         **common_opts,
