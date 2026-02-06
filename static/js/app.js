@@ -722,13 +722,17 @@ if (themeToggleBtn) {
 }
 
 
-// ====== Language Two-Way Switcher ======
-const langToggleBtn = document.getElementById('lang-toggle');
-// Default to Vietnamese if no setting found
+// ====== Dropdown Language Switcher ======
+const langDropdown = document.getElementById('lang-dropdown');
+const langToggleBtn = document.getElementById('lang-toggle-btn');
+const langMenu = document.querySelector('.lang-menu');
+const langOverlay = document.getElementById('lang-overlay');
+const langOptions = document.querySelectorAll('.lang-option');
+
+// Default to Vietnamese
 let currentLang = localStorage.getItem('language') || 'vi';
 
 function updateContent() {
-    // Get correct dictionary
     if (typeof translations === 'undefined') return;
 
     const t = translations[currentLang];
@@ -738,7 +742,6 @@ function updateContent() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (t[key]) {
-            // Handle input placeholders specially
             if (el.tagName === 'INPUT' && el.getAttribute('placeholder')) {
                 el.placeholder = t[key];
             } else {
@@ -753,9 +756,9 @@ function updateContent() {
     if (youtubeInput && t['input_placeholder_youtube']) youtubeInput.placeholder = t['input_placeholder_youtube'];
     if (tiktokInput && t['input_placeholder_tiktok']) tiktokInput.placeholder = t['input_placeholder_tiktok'];
 
-    // Update toggle button appearance
-    const langIcon = document.querySelector('.lang-icon') || document.getElementById('lang-icon');
-    const langText = document.querySelector('.lang-text') || document.getElementById('lang-text');
+    // Update toggle button appearance (text and flag)
+    const langIcon = document.querySelector('.lang-toggle .lang-icon');
+    const langText = document.querySelector('.lang-toggle .lang-text');
 
     if (currentLang === 'vi') {
         if (langIcon) langIcon.textContent = '🇻🇳';
@@ -767,27 +770,66 @@ function updateContent() {
         if (langIcon) langIcon.textContent = '🇷🇺';
         if (langText) langText.textContent = 'Русский';
     }
+
+    // Update active state in dropdown
+    langOptions.forEach(opt => {
+        if (opt.getAttribute('data-lang') === currentLang) {
+            opt.classList.add('active');
+        } else {
+            opt.classList.remove('active');
+        }
+    });
 }
 
 // Make accessible globally
 window.updateContent = updateContent;
 
-function toggleLanguage() {
-    if (currentLang === 'vi') {
-        currentLang = 'en';
-    } else if (currentLang === 'en') {
-        currentLang = 'ru';
-    } else {
-        currentLang = 'vi';
-    }
-    localStorage.setItem('language', currentLang);
-    updateContent();
+// Dropdown Logic
+function toggleLangMenu() {
+    langDropdown.classList.toggle('active');
+    langMenu.classList.toggle('show');
+    if (langOverlay) langOverlay.classList.toggle('show');
+
+    // Accessibility
+    const isExpanded = langToggleBtn.getAttribute('aria-expanded') === 'true';
+    langToggleBtn.setAttribute('aria-expanded', !isExpanded);
+}
+
+function closeLangMenu() {
+    langDropdown.classList.remove('active');
+    langMenu.classList.remove('show');
+    if (langOverlay) langOverlay.classList.remove('show');
+    langToggleBtn.setAttribute('aria-expanded', 'false');
 }
 
 if (langToggleBtn) {
-    // Basic event listener - app.js runs once so this is safe
-    langToggleBtn.onclick = toggleLanguage;
+    langToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleLangMenu();
+    });
 }
+
+if (langOverlay) {
+    langOverlay.addEventListener('click', closeLangMenu);
+}
+
+// Close when clicking outside
+document.addEventListener('click', (e) => {
+    if (langDropdown && !langDropdown.contains(e.target)) {
+        closeLangMenu();
+    }
+});
+
+// Option click handling
+langOptions.forEach(option => {
+    option.addEventListener('click', () => {
+        const selectedLang = option.getAttribute('data-lang');
+        currentLang = selectedLang;
+        localStorage.setItem('language', currentLang);
+        updateContent();
+        closeLangMenu();
+    });
+});
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
