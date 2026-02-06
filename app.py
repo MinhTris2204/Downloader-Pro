@@ -61,13 +61,20 @@ OAUTH_TOKEN_FILE = os.path.join(tempfile.gettempdir(), 'youtube_oauth_token.json
 
 if YOUTUBE_OAUTH_TOKEN:
     try:
-        import base64
-        oauth_content = base64.b64decode(YOUTUBE_OAUTH_TOKEN).decode('utf-8')
+        oauth_content = YOUTUBE_OAUTH_TOKEN
+        # If it looks like base64, try decoding it, otherwise use it raw (if it's already JSON)
+        if YOUTUBE_OAUTH_TOKEN.startswith('ey') or 'refresh_token' not in YOUTUBE_OAUTH_TOKEN:
+             try:
+                 import base64
+                 oauth_content = base64.b64decode(YOUTUBE_OAUTH_TOKEN).decode('utf-8')
+             except:
+                 pass # Use raw if decode fails
+
         with open(OAUTH_TOKEN_FILE, 'w', encoding='utf-8') as f:
             f.write(oauth_content)
-        print(f"[SUCCESS] YouTube OAuth token loaded from environment variable")
+        print(f"[SUCCESS] YouTube OAuth token initialized")
     except Exception as e:
-        print(f"[WARNING] Failed to decode YOUTUBE_OAUTH_REFRESH_TOKEN: {e}")
+        print(f"[WARNING] Failed to load YOUTUBE_OAUTH_REFRESH_TOKEN: {e}")
         OAUTH_TOKEN_FILE = None
 else:
     # Check for local oauth token file
