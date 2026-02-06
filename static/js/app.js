@@ -615,15 +615,44 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ====== Initialize ======
+let lastDownloadCount = 0;
+
+// Animated counter effect
+function animateCounter(element, target, duration = 1500) {
+    const start = lastDownloadCount;
+    const increment = (target - start) / (duration / 16);
+    let current = start;
+
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= target) || (increment < 0 && current <= target)) {
+            current = target;
+            clearInterval(timer);
+        }
+        element.textContent = Math.floor(current).toLocaleString('vi-VN');
+    }, 16);
+
+    lastDownloadCount = target;
+}
+
 async function fetchStats() {
     try {
         const response = await fetch('/api/stats');
         const data = await response.json();
         if (data.total_downloads !== undefined) {
-            // Format number with dots for thousands (Vietnamese style: 1.313)
-            const displayCount = data.total_downloads.toLocaleString('vi-VN');
-            document.getElementById('total-downloads').textContent = displayCount;
-            document.getElementById('stats-badge').style.opacity = '1';
+            const element = document.getElementById('total-downloads');
+            const badge = document.getElementById('stats-badge');
+
+            // Animate the counter
+            animateCounter(element, data.total_downloads);
+            badge.style.opacity = '1';
+
+            // Add "rising" effect when count increases
+            if (data.total_downloads > lastDownloadCount && lastDownloadCount > 0) {
+                badge.style.animation = 'none';
+                badge.offsetHeight; // Trigger reflow
+                badge.style.animation = 'stats-pulse 0.5s ease-in-out 3';
+            }
         }
     } catch (err) {
         console.error('Failed to fetch stats');
@@ -632,6 +661,9 @@ async function fetchStats() {
 
 console.log('Downloader Pro - Ready!');
 fetchStats();
+
+// Auto refresh stats every 30 seconds
+setInterval(fetchStats, 30000);
 
 
 // ====== Theme Toggle ======
