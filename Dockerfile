@@ -16,6 +16,9 @@ RUN curl -fsSL https://deno.land/install.sh | sh
 ENV DENO_INSTALL="/root/.deno"
 ENV PATH="$DENO_INSTALL/bin:$PATH"
 
+# Force Python to not buffer output (critical for Railway logs)
+ENV PYTHONUNBUFFERED=1
+
 # Verify Deno installation
 RUN deno --version
 
