@@ -2200,13 +2200,13 @@ body {
         padding: 16px 20px;
         font-size: 1.05rem;
         border-radius: var(--radius-sm);
-        border-width: 2px;
-        justify-content: flex-start;
+        /* border-width: 2px; Removed to respect global border: none */
     }
 
     .tab-text {
-        align-items: flex-start;
-        text-align: left;
+        align-items: center;
+        /* Center align for consistency */
+        text-align: center;
     }
 
     .tab-text strong {
@@ -2217,28 +2217,29 @@ body {
         font-size: 0.8rem;
     }
 
-    /* Keep YouTube red theme on mobile */
-    .tab-btn[data-tab="youtube"] {
-        background: rgba(255, 0, 0, 0.15);
-        border-color: rgba(255, 0, 0, 0.4);
+    /* Keep "Zin" style on mobile */
+    .tab-btn[data-tab="youtube"],
+    .tab-btn[data-tab="tiktok"] {
+        background: none;
+        border: none;
+        justify-content: center;
+        /* Center content on mobile too */
+    }
+
+    .tab-btn[data-tab="youtube"].active,
+    .tab-btn[data-tab="tiktok"].active {
+        background: rgba(255, 255, 255, 0.05);
+        /* Slight tint consistent with desktop */
+        color: inherit;
+        /* Let specific rules handle color */
     }
 
     .tab-btn[data-tab="youtube"].active {
-        background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
-        border-color: #ff0000;
-        color: white;
-    }
-
-    /* Keep TikTok cyan theme on mobile */
-    .tab-btn[data-tab="tiktok"] {
-        background: rgba(0, 242, 234, 0.15);
-        border-color: rgba(0, 242, 234, 0.4);
+        color: #ff0000;
     }
 
     .tab-btn[data-tab="tiktok"].active {
-        background: linear-gradient(135deg, #00f2ea 0%, #ff0050 100%);
-        border-color: #00f2ea;
-        color: white;
+        color: var(--text-primary);
     }
 
     .tab-icon {
