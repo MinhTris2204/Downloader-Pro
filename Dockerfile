@@ -38,7 +38,7 @@ ARG CACHEBUST=6
 COPY . .
 
 # Make startup scripts executable
-RUN chmod +x start_bgutil.sh start_services.sh
+RUN chmod +x start_bgutil.sh start_services.sh start.sh
 
 # Expose port (Railway will set PORT env var)
 EXPOSE 8080
