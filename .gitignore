@@ -40,6 +40,11 @@ temp/
 tmp/
 *.tmp
 
+# Node modules
+node_modules/
+package-lock.json
+yarn.lock
+
 # YouTube Cookies (sensitive)
 cookies.txt
 *_cookies.txt

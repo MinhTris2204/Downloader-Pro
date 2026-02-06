@@ -4,14 +4,16 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including ffmpeg and curl
+# Install system dependencies including ffmpeg, curl, and Node.js
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     curl \
     unzip \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Deno (CRITICAL for YouTube downloads)
+# Install Deno (PRIMARY - for PO Token generation)
 RUN curl -fsSL https://deno.land/install.sh | sh
 ENV DENO_INSTALL="/root/.deno"
 ENV PATH="$DENO_INSTALL/bin:$PATH"
@@ -19,8 +21,8 @@ ENV PATH="$DENO_INSTALL/bin:$PATH"
 # Force Python to not buffer output (critical for Railway logs)
 ENV PYTHONUNBUFFERED=1
 
-# Verify Deno installation
-RUN deno --version
+# Verify installations (Deno + Node.js for PO Token)
+RUN deno --version && node --version
 
 # Copy requirements first for better caching
 COPY requirements.txt .
