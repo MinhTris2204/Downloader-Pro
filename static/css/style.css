@@ -592,94 +592,207 @@ body {
 }
 
 /* YouTube Button */
+/* YouTube Button */
 .tab-btn[data-tab="youtube"] {
     background: none;
-    border: 1px solid rgba(255, 0, 0, 0.3);
+    border: none;
+    /* Let spans handle the border visual */
     opacity: 1;
-    animation: youtube-pulse-weak 3s infinite alternate;
+    color: var(--text-secondary);
 }
 
-@keyframes youtube-pulse-weak {
-    from {
-        box-shadow: 0 0 2px rgba(255, 0, 0, 0.1);
-        border-color: rgba(255, 0, 0, 0.2);
-    }
+.tab-btn[data-tab="youtube"] span {
+    position: absolute;
+    display: block;
+}
 
-    to {
-        box-shadow: 0 0 8px rgba(255, 0, 0, 0.25);
-        border-color: rgba(255, 0, 0, 0.5);
-    }
+.tab-btn[data-tab="youtube"] span:nth-child(1) {
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ff0000);
+    animation: btn-anim1 2s linear infinite;
+}
+
+.tab-btn[data-tab="youtube"] span:nth-child(2) {
+    top: -100%;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, #ff0000);
+    animation: btn-anim2 2s linear infinite;
+    animation-delay: 0.5s;
+}
+
+.tab-btn[data-tab="youtube"] span:nth-child(3) {
+    bottom: 0;
+    right: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(270deg, transparent, #ff0000);
+    animation: btn-anim3 2s linear infinite;
+    animation-delay: 1s;
+}
+
+.tab-btn[data-tab="youtube"] span:nth-child(4) {
+    bottom: -100%;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(360deg, transparent, #ff0000);
+    animation: btn-anim4 2s linear infinite;
+    animation-delay: 1.5s;
 }
 
 .tab-btn[data-tab="youtube"]:hover,
 .tab-btn[data-tab="youtube"].active {
     background: rgba(255, 0, 0, 0.05);
     /* Slight tint background */
-    opacity: 1;
     color: #ff0000;
 }
 
-.tab-btn[data-tab="youtube"].active {
-    border: 1px solid #ff0000;
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
-    animation: youtube-border-pulse 2s infinite alternate;
+/* Speed up for active state */
+.tab-btn[data-tab="youtube"].active span:nth-child(1) {
+    animation: btn-anim1 1s linear infinite;
 }
 
-@keyframes youtube-border-pulse {
-    from {
-        box-shadow: 0 0 5px rgba(255, 0, 0, 0.2), inset 0 0 5px rgba(255, 0, 0, 0.1);
-        border-color: rgba(255, 0, 0, 0.5);
-    }
+.tab-btn[data-tab="youtube"].active span:nth-child(2) {
+    animation: btn-anim2 1s linear infinite;
+    animation-delay: 0.25s;
+}
 
-    to {
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.6), inset 0 0 10px rgba(255, 0, 0, 0.2);
-        border-color: #ff0000;
-    }
+.tab-btn[data-tab="youtube"].active span:nth-child(3) {
+    animation: btn-anim3 1s linear infinite;
+    animation-delay: 0.5s;
+}
+
+.tab-btn[data-tab="youtube"].active span:nth-child(4) {
+    animation: btn-anim4 1s linear infinite;
+    animation-delay: 0.75s;
 }
 
 /* TikTok Button */
 .tab-btn[data-tab="tiktok"] {
     background: none;
-    border: 1px solid rgba(0, 242, 234, 0.3);
+    border: none;
     opacity: 1;
-    animation: tiktok-pulse-weak 3s infinite alternate;
+    color: var(--text-secondary);
 }
 
-@keyframes tiktok-pulse-weak {
-    from {
-        box-shadow: 0 0 2px rgba(0, 242, 234, 0.1);
-        border-color: rgba(0, 242, 234, 0.2);
-    }
+.tab-btn[data-tab="tiktok"] span {
+    position: absolute;
+    display: block;
+}
 
-    to {
-        box-shadow: 0 0 8px rgba(0, 242, 234, 0.25);
-        border-color: rgba(0, 242, 234, 0.5);
-    }
+.tab-btn[data-tab="tiktok"] span:nth-child(1) {
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00f2ea);
+    animation: btn-anim1 2s linear infinite;
+}
+
+.tab-btn[data-tab="tiktok"] span:nth-child(2) {
+    top: -100%;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, #00f2ea);
+    animation: btn-anim2 2s linear infinite;
+    animation-delay: 0.5s;
+}
+
+.tab-btn[data-tab="tiktok"] span:nth-child(3) {
+    bottom: 0;
+    right: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(270deg, transparent, #00f2ea);
+    animation: btn-anim3 2s linear infinite;
+    animation-delay: 1s;
+}
+
+.tab-btn[data-tab="tiktok"] span:nth-child(4) {
+    bottom: -100%;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(360deg, transparent, #00f2ea);
+    animation: btn-anim4 2s linear infinite;
+    animation-delay: 1.5s;
 }
 
 .tab-btn[data-tab="tiktok"]:hover,
 .tab-btn[data-tab="tiktok"].active {
     background: rgba(0, 242, 234, 0.05);
     /* Slight tint background */
-    opacity: 1;
     color: var(--text-primary);
 }
 
-.tab-btn[data-tab="tiktok"].active {
-    border: 1px solid #00f2ea;
-    box-shadow: 0 0 10px rgba(0, 242, 234, 0.3);
-    animation: tiktok-border-pulse 2s infinite alternate;
+/* Speed up for active state */
+.tab-btn[data-tab="tiktok"].active span:nth-child(1) {
+    animation: btn-anim1 1s linear infinite;
 }
 
-@keyframes tiktok-border-pulse {
-    from {
-        box-shadow: 0 0 5px rgba(0, 242, 234, 0.2), inset 0 0 5px rgba(0, 242, 234, 0.1);
-        border-color: rgba(0, 242, 234, 0.5);
+.tab-btn[data-tab="tiktok"].active span:nth-child(2) {
+    animation: btn-anim2 1s linear infinite;
+    animation-delay: 0.25s;
+}
+
+.tab-btn[data-tab="tiktok"].active span:nth-child(3) {
+    animation: btn-anim3 1s linear infinite;
+    animation-delay: 0.5s;
+}
+
+.tab-btn[data-tab="tiktok"].active span:nth-child(4) {
+    animation: btn-anim4 1s linear infinite;
+    animation-delay: 0.75s;
+}
+
+/* Animation Keyframes */
+@keyframes btn-anim1 {
+    0% {
+        left: -100%;
     }
 
-    to {
-        box-shadow: 0 0 15px rgba(0, 242, 234, 0.6), inset 0 0 10px rgba(0, 242, 234, 0.2);
-        border-color: #00f2ea;
+    50%,
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes btn-anim2 {
+    0% {
+        top: -100%;
+    }
+
+    50%,
+    100% {
+        top: 100%;
+    }
+}
+
+@keyframes btn-anim3 {
+    0% {
+        right: -100%;
+    }
+
+    50%,
+    100% {
+        right: 100%;
+    }
+}
+
+@keyframes btn-anim4 {
+    0% {
+        bottom: -100%;
+    }
+
+    50%,
+    100% {
+        bottom: 100%;
     }
 }
 
