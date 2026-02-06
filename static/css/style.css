@@ -605,6 +605,20 @@ body {
     color: #ff0000;
 }
 
+.tab-btn[data-tab="youtube"].active {
+    animation: youtube-active-pulse 2s infinite alternate;
+}
+
+@keyframes youtube-active-pulse {
+    from {
+        filter: drop-shadow(0 0 2px rgba(255, 0, 0, 0.4));
+    }
+
+    to {
+        filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.7));
+    }
+}
+
 /* TikTok Button */
 .tab-btn[data-tab="tiktok"] {
     background: none;
@@ -618,6 +632,20 @@ body {
     opacity: 1;
 }
 
+.tab-btn[data-tab="tiktok"].active {
+    animation: tiktok-active-pulse 2s infinite alternate;
+}
+
+@keyframes tiktok-active-pulse {
+    from {
+        filter: drop-shadow(0 0 2px rgba(0, 242, 234, 0.4));
+    }
+
+    to {
+        filter: drop-shadow(0 0 8px rgba(255, 0, 80, 0.7));
+    }
+}
+
 /* Light Mode Adjustments - Simplified */
 [data-theme="light"] .tab-btn {
     opacity: 0.7;
@@ -627,7 +655,31 @@ body {
     opacity: 1;
 }
 
-/* Removed pulse animations for cleaner look */
+/* Interactive feedback */
+.tab-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.tab-btn:active::after {
+    width: 200%;
+    height: 300px;
+    opacity: 0;
+}
+
+.tab-btn:hover .tab-icon {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
 
 .tab-icon {
     width: 24px;
