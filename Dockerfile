@@ -28,8 +28,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Update yt-dlp to latest version (critical for YouTube bypass)
 RUN pip install --no-cache-dir --upgrade --force-reinstall yt-dlp
 
-# Copy application code (rebuild triggered: 2026-02-06-v2)
-ARG CACHEBUST=1
+# Copy application code (force rebuild: 2026-02-06 v5)
+ARG CACHEBUST=5
 COPY . .
 
 # Expose port (Railway will set PORT env var)
