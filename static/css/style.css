@@ -319,8 +319,9 @@ body {
     background-clip: text;
 }
 
-/* ====== Theme Toggle ====== */
-.theme-toggle {
+/* ====== Theme & Lang Toggle ====== */
+.theme-toggle,
+.lang-toggle {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--border);
     height: auto;
@@ -337,17 +338,20 @@ body {
     font-weight: 500;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.lang-toggle:hover {
     background: rgba(255, 255, 255, 0.2);
     color: var(--text-primary);
 }
 
-.theme-text {
+.theme-text,
+.lang-text {
     font-size: 0.95rem;
     font-weight: 500;
 }
 
-.theme-toggle svg {
+.theme-toggle svg,
+.lang-toggle svg {
     width: 18px;
     height: 18px;
     stroke: currentColor;
@@ -356,12 +360,14 @@ body {
     flex-shrink: 0;
 }
 
-[data-theme="light"] .theme-toggle {
+[data-theme="light"] .theme-toggle,
+[data-theme="light"] .lang-toggle {
     background: rgba(0, 0, 0, 0.05);
     border-color: rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="light"] .theme-toggle:hover {
+[data-theme="light"] .theme-toggle:hover,
+[data-theme="light"] .lang-toggle:hover {
     background: rgba(0, 0, 0, 0.1);
 }
 
@@ -1913,13 +1919,16 @@ body {
         font-size: 0.75rem;
     }
 
-    .theme-toggle {
+    .theme-toggle,
+    .lang-toggle {
         flex-direction: column;
         gap: 4px;
         padding: 8px 4px;
+        height: auto;
     }
 
-    .theme-text {
+    .theme-text,
+    .lang-text {
         font-size: 0.75rem;
     }
 
@@ -1930,15 +1939,6 @@ body {
     .logo-icon {
         width: 36px;
         height: 36px;
-    }
-
-    .theme-toggle {
-        padding: 0 12px;
-        height: 36px;
-    }
-
-    .theme-text {
-        font-size: 0.85rem;
     }
 
     .main {
