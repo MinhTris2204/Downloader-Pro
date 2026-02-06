@@ -734,10 +734,11 @@ let currentLang = localStorage.getItem('language') || 'vi';
 
 // SVG Flags
 // SVG Flags with explicit dimensions to ensure rendering
+// SVG Flags with standard 3:2 aspect ratio (900x600 coordinate system) for consistent rendering
 const flagsSVGs = {
-    'vi': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" width="100%" height="100%"><path fill="#DA251D" d="M0 0h3v2H0z"/><path fill="#FFCD00" d="M1.5 0.6l0.2 0.58h0.55l-0.45 0.32 0.15 0.5L1.5 1.7l-0.45 0.3 0.15-0.5L0.75 1.18h0.55z"/></svg>',
+    'vi': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="100%" height="100%"><rect fill="#DA251D" width="900" height="600"/><polygon fill="#FFCD00" points="450,120 554.8,442.5 288.2,248.8 611.8,248.8 345.2,442.5"/></svg>',
     'en': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1235 650" width="100%" height="100%"><g fill-rule="evenodd"><path fill="#b22234" d="M0 0h1235v650H0z"/><path fill="#fff" d="M0 50h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0zm0 100h1235v50H0z"/><path fill="#3c3b6e" d="M0 0h494v350H0z"/><g fill="#fff"><path d="M24 18l11 35H0l11-35L0 53h35z" transform="translate(18 18) scale(0.35)"/></g></g></svg>',
-    'ru': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6" width="100%" height="100%"><path fill="#fff" d="M0 0h9v6H0z"/><path fill="#D52B1E" d="M0 4h9v2H0z"/><path fill="#0039A6" d="M0 2h9v2H0z"/></svg>'
+    'ru': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="100%" height="100%"><rect fill="#fff" width="900" height="200"/><rect fill="#0039a6" y="200" width="900" height="200"/><rect fill="#d52b1e" y="400" width="900" height="200"/></svg>'
 };
 
 function updateContent() {
