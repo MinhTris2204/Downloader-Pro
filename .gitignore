@@ -39,3 +39,6 @@ ENV/
 temp/
 tmp/
 *.tmp
+
+# YouTube Cookies (sensitive)
+cookies.txt

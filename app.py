@@ -25,9 +25,37 @@ app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# ===== YOUTUBE COOKIES SUPPORT FOR RAILWAY =====
+# Cookies can be provided via YOUTUBE_COOKIES environment variable (base64 encoded)
+# To generate: base64 -w 0 cookies.txt > cookies_base64.txt
+# Then set YOUTUBE_COOKIES=<content of cookies_base64.txt> in Railway
+COOKIES_FILE_PATH = os.path.join(tempfile.gettempdir(), 'yt_cookies.txt')
+YOUTUBE_COOKIES_ENV = os.environ.get('YOUTUBE_COOKIES', '')
+
+if YOUTUBE_COOKIES_ENV:
+    try:
+        import base64
+        cookies_content = base64.b64decode(YOUTUBE_COOKIES_ENV).decode('utf-8')
+        with open(COOKIES_FILE_PATH, 'w', encoding='utf-8') as f:
+            f.write(cookies_content)
+        print(f"[SUCCESS] YouTube cookies loaded from environment variable ({len(cookies_content)} bytes)")
+    except Exception as e:
+        print(f"[WARNING] Failed to decode YOUTUBE_COOKIES: {e}")
+        COOKIES_FILE_PATH = None
+else:
+    # Check for local cookies.txt file
+    local_cookies = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
+    if os.path.exists(local_cookies):
+        COOKIES_FILE_PATH = local_cookies
+        print(f"[INFO] Using local cookies.txt file")
+    else:
+        COOKIES_FILE_PATH = None
+        print(f"[INFO] No YouTube cookies configured. Bot detection bypass may be limited.")
+
 # Rate limiting tracking
 last_youtube_download = {}  # IP -> timestamp
-YOUTUBE_COOLDOWN = 15  # seconds between downloads per IP (reduced from 30)
+YOUTUBE_COOLDOWN = 20  # seconds between downloads per IP (increased for Railway)
+
 
 # Add security headers
 @app.after_request
@@ -436,7 +464,7 @@ def download_tiktok_photos(url, download_id, selected_indices=None):
         download_progress[download_id]['error'] = error_msg
 
 def download_youtube_video(url, format_type, quality, download_id):
-    """Download YouTube video using yt-dlp with advanced bypass"""
+    """Download YouTube video using yt-dlp with advanced bypass techniques"""
     try:
         import yt_dlp
         import random
@@ -454,6 +482,15 @@ def download_youtube_video(url, format_type, quality, download_id):
         temp_dir = tempfile.gettempdir()
         filename = f"{download_id}"
         output_path = os.path.join(temp_dir, filename)
+        
+        # User-Agent rotation to avoid detection
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+        ]
         
         def progress_hook(d):
             if d['status'] == 'downloading':
@@ -485,41 +522,132 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
         
-        # Longer random delay to avoid rate limiting (2-5 seconds)
-        delay = random.uniform(2.0, 5.0)
+        # Random delay with exponential backoff (3-8 seconds base)
+        delay = random.uniform(3.0, 8.0)
         print(f"[DEBUG] Waiting {delay:.1f}s before download to avoid rate limit...")
         time_module.sleep(delay)
         
-        # Simplified strategies - minimal config for maximum compatibility
+        # Advanced strategies optimized for Railway/Cloud deployment
+        # Order matters: try most reliable strategies first
         strategies = [
-            # Strategy 1: Minimal config - let yt-dlp handle everything
+            # Strategy 1: Android client (best for cloud - bypasses most restrictions)
             {
-                'name': 'minimal',
+                'name': 'android_vr',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
-                }
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android', 'android_vr'],
+                        }
+                    },
+                },
+                'delay': 0
             },
-            # Strategy 2: With legacy format (for older yt-dlp versions)
+            # Strategy 2: iOS client with web fallback
             {
-                'name': 'legacy',
+                'name': 'ios_web',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
-                    'format': 'best',
-                }
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios', 'web'],
+                        }
+                    },
+                },
+                'delay': 3
+            },
+            # Strategy 3: TV embedded (good for cloud IPs)
+            {
+                'name': 'tv_embedded',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['tv_embedded'],
+                        }
+                    },
+                },
+                'delay': 4
+            },
+            # Strategy 4: Media Connect client (newer, less detected)
+            {
+                'name': 'mediaconnect',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['mediaconnect', 'web'],
+                        }
+                    },
+                },
+                'delay': 5
+            },
+            # Strategy 5: Web with mobile fallback
+            {
+                'name': 'web_mweb',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['web', 'mweb'],
+                            'player_skip': ['webpage', 'configs'],
+                        }
+                    },
+                },
+                'delay': 6
+            },
+            # Strategy 6: Let yt-dlp auto-detect (fallback)
+            {
+                'name': 'auto_detect',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                },
+                'delay': 8
             },
         ]
         
         last_error = None
         
-        for strategy in strategies:
+        for idx, strategy in enumerate(strategies):
             try:
+                # Add delay between strategy retries (exponential backoff)
+                if idx > 0:
+                    retry_delay = strategy.get('delay', idx * 2)
+                    print(f"[DEBUG] Waiting {retry_delay}s before retry...")
+                    time_module.sleep(retry_delay)
+                
                 # Base options for all strategies
+                selected_ua = random.choice(user_agents)
                 common_opts = {
                     'noprogress': False,
                     'progress_hooks': [progress_hook],
+                    'http_headers': {
+                        'User-Agent': selected_ua,
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'Accept-Encoding': 'gzip, deflate',
+                        'DNT': '1',
+                        'Connection': 'keep-alive',
+                        'Upgrade-Insecure-Requests': '1',
+                    },
+                    'socket_timeout': 30,
+                    'retries': 3,
+                    'fragment_retries': 5,
+                    'skip_unavailable_fragments': True,
+                    'ignoreerrors': False,
                 }
+                
+                # Use cookies from environment variable or local file
+                if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
+                    common_opts['cookiefile'] = COOKIES_FILE_PATH
+                    print(f"[DEBUG] Using cookies from: {COOKIES_FILE_PATH}")
+
                 
                 # Merge strategy-specific options
                 common_opts.update(strategy['opts'])
@@ -543,10 +671,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                 else:
                     # Video - use simple format selector
                     if quality == 'best' or not quality.isdigit():
-                        format_str = 'best'
+                        format_str = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
                     else:
                         # Try to get specific quality
-                        format_str = f'bestvideo[height<={quality}]+bestaudio/best[height<={quality}]/best'
+                        format_str = f'bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best[height<={quality}]/best'
                     
                     ydl_opts = {
                         **common_opts,
@@ -559,7 +687,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                     mime_type = 'video/mp4'
                 
                 # Try to download with this strategy
-                print(f"[DEBUG] Trying strategy: {strategy['name']}")
+                print(f"[DEBUG] Trying strategy: {strategy['name']} (UA: {selected_ua[:50]}...)")
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=True)
                     title = info.get('title', 'video')
@@ -588,7 +716,14 @@ def download_youtube_video(url, format_type, quality, download_id):
                 
             except Exception as e:
                 last_error = e
-                print(f"[DEBUG] Strategy {strategy['name']} failed: {str(e)[:100]}")
+                error_str = str(e)
+                print(f"[DEBUG] Strategy {strategy['name']} failed: {error_str[:150]}")
+                
+                # If it's a fatal error (video unavailable, private, etc.), don't retry
+                if any(fatal in error_str for fatal in ['Video unavailable', 'Private video', 'removed', 'deleted', 'copyright']):
+                    print(f"[DEBUG] Fatal error detected, stopping retries")
+                    break
+                    
                 # Try next strategy
                 continue
         
@@ -601,19 +736,21 @@ def download_youtube_video(url, format_type, quality, download_id):
         
         # Friendly error messages
         if 'Failed to extract any player response' in error_msg:
-            download_progress[download_id]['error'] = '🔧 YouTube đã thay đổi API.\n\n💡 Giải pháp:\n1. Cập nhật ngay: pip install -U yt-dlp\n2. Khởi động lại server\n3. Nếu vẫn lỗi, đợi vài giờ để yt-dlp cập nhật\n4. Thử video khác trong lúc chờ'
-        elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg:
-            download_progress[download_id]['error'] = '⏳ YouTube đang bảo vệ chống spam.\n\n💡 Cách khắc phục:\n\n🔹 Đợi 3-5 phút rồi thử lại\n🔹 Hoặc thử video khác ngay\n🔹 Video ngắn (<5 phút) dễ tải hơn\n🔹 Tránh tải liên tục nhiều video\n\n✨ Mẹo: Đợi một chút giữa các lần tải để tránh bị chặn!'
+            download_progress[download_id]['error'] = '🔧 YouTube đã thay đổi API.\n\n💡 Giải pháp:\n1. Cập nhật yt-dlp: pip install -U yt-dlp\n2. Khởi động lại server\n3. Thử video khác hoặc đợi vài giờ'
+        elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg or 'confirm you' in error_msg.lower():
+            download_progress[download_id]['error'] = '⏳ YouTube phát hiện tải tự động.\n\n✅ Đã thử 5 phương pháp bypass khác nhau.\n\n💡 Giải pháp:\n🔹 Đợi 5-10 phút rồi thử lại\n🔹 Thử video ngắn hơn (<10 phút)\n🔹 Thử video từ kênh khác\n\n🍪 Mẹo nâng cao: Thêm file cookies.txt để bypass hoàn toàn'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
-            download_progress[download_id]['error'] = '🔞 Video có giới hạn độ tuổi, không thể tải'
+            download_progress[download_id]['error'] = '🔞 Video giới hạn độ tuổi.\n\n💡 Giải pháp: Thêm file cookies.txt từ tài khoản đã xác minh tuổi'
         elif 'copyright' in error_msg.lower():
-            download_progress[download_id]['error'] = '©️ Video có vấn đề bản quyền'
-        elif 'network' in error_msg.lower() or 'timeout' in error_msg.lower():
-            download_progress[download_id]['error'] = '🌐 Lỗi kết nối mạng. Vui lòng thử lại'
+            download_progress[download_id]['error'] = '©️ Video bị chặn do bản quyền'
+        elif 'network' in error_msg.lower() or 'timeout' in error_msg.lower() or 'connect' in error_msg.lower():
+            download_progress[download_id]['error'] = '🌐 Lỗi kết nối mạng. Vui lòng thử lại sau vài giây'
+        elif 'live' in error_msg.lower() or 'premiere' in error_msg.lower():
+            download_progress[download_id]['error'] = '📺 Video đang phát trực tiếp hoặc chưa công chiếu. Hãy đợi video kết thúc'
         else:
-            download_progress[download_id]['error'] = f'❌ Lỗi: {error_msg[:150]}'
+            download_progress[download_id]['error'] = f'❌ Lỗi: {error_msg[:200]}'
             
         print(f"YouTube download error: {e}")
 

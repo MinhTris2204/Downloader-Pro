@@ -1,0 +1,37 @@
+# Netscape HTTP Cookie File
+# https://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+# ===================================================================
+# HƯỚNG DẪN SỬ DỤNG COOKIES ĐỂ BYPASS YOUTUBE
+# ===================================================================
+#
+# Bước 1: Cài đặt extension "Get cookies.txt LOCALLY" trên Chrome/Firefox
+#         - Chrome: https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc
+#         - Firefox: https://addons.mozilla.org/en-US/firefox/addon/cookies-txt/
+#
+# Bước 2: Đăng nhập YouTube trên trình duyệt của bạn
+#
+# Bước 3: Mở YouTube.com và click vào extension để export cookies
+#
+# Bước 4: Lưu file thành "cookies.txt" (không phải .example) trong thư mục này
+#
+# Bước 5: Khởi động lại server
+#
+# ===================================================================
+# LƯU Ý BẢO MẬT:
+# - KHÔNG commit file cookies.txt lên git (đã thêm vào .gitignore)
+# - Cookies có thể hết hạn, cần cập nhật định kỳ
+# - Nên sử dụng tài khoản phụ, không phải tài khoản chính
+# ===================================================================
+#
+# Dưới đây là format mẫu (các dòng thực sự sẽ do extension tạo):
+#
+# .youtube.com	TRUE	/	TRUE	1735689600	GPS	1
+# .youtube.com	TRUE	/	TRUE	1735689600	PREF	tz=Asia.Ho_Chi_Minh
+# .youtube.com	TRUE	/	TRUE	1735689600	VISITOR_INFO1_LIVE	xxxxxxxxxxxx
+# .youtube.com	TRUE	/	TRUE	1735689600	YSC	xxxxxxxxxxxx
+# .youtube.com	TRUE	/	FALSE	1735689600	__Secure-1PAPISID	xxxxxxxxxxxx
+# .youtube.com	TRUE	/	FALSE	1735689600	__Secure-1PSID	xxxxxxxxxxxx
+# .youtube.com	TRUE	/	FALSE	1735689600	__Secure-3PAPISID	xxxxxxxxxxxx
+# .youtube.com	TRUE	/	FALSE	1735689600	__Secure-3PSID	xxxxxxxxxxxx
