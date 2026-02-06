@@ -188,6 +188,20 @@ class NewsController:
             # Remove meta refresh
             html = re.sub(r'<meta[^>]*http-equiv=["\']refresh["\'][^>]*>', '', html, flags=re.IGNORECASE)
             
+            # --- FIX LAZY LOADING IMAGES (Do đã tắt JS) ---
+            def fix_lazy_img(match):
+                img_tag = match.group(0)
+                # Tìm link ảnh thật trong data-src hoặc data-original
+                real_src_match = re.search(r'data-(?:src|original)=["\']([^"\']+)["\']', img_tag)
+                if real_src_match:
+                    real_url = real_src_match.group(1)
+                    # Trả về thẻ img mới với src chuẩn
+                    return f'<img src="{real_url}" style="max-width: 100%; height: auto; display: block; margin: 10px auto;">'
+                return img_tag
+
+            # Áp dụng fix cho toàn bộ thẻ img trong HTML
+            html = re.sub(r'<img\b[^>]*>', fix_lazy_img, html)
+            
             # Inject base tag để fix relative URLs
             base_tag = f'<base href="{url}">'
             html = html.replace('<head>', f'<head>{base_tag}')
