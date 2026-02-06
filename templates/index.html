@@ -336,10 +336,12 @@
             <section class="hero">
                 <div class="stats-badge" id="stats-badge" style="opacity: 0;">
                     <span class="stats-icon">🔥</span>
-                    <span id="total-downloads">0</span> lượt tải đã xử lý
+                    <span id="total-downloads">1,250+</span> <span data-i18n="stats_downloads">lượt tải đã xử lý</span>
                 </div>
-                <h1 class="hero-title"><span class="gradient-text">Tải Video</span> Nhanh Chóng</h1>
-                <p class="hero-subtitle">Chuyển đổi video từ YouTube & TikTok sang MP4, MP3 miễn phí</p>
+                <h1 class="hero-title"><span class="gradient-text" data-i18n="hero_title_prefix">Tải Video</span> <span
+                        data-i18n="hero_title_suffix">Nhanh Chóng</span></h1>
+                <p class="hero-subtitle" data-i18n="hero_subtitle">Chuyển đổi video từ YouTube & TikTok sang MP4, MP3
+                    miễn phí</p>
             </section>
 
             <div class="download-container">
@@ -352,8 +354,8 @@
                                 d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                         </svg>
                         <span class="tab-text">
-                            <strong>YouTube</strong>
-                            <small class="tab-hint">Tải video & nhạc từ YouTube</small>
+                            <strong data-i18n="tab_youtube">YouTube</strong>
+                            <small class="tab-hint" data-i18n="tab_youtube_hint">Tải video & nhạc từ YouTube</small>
                         </span>
                     </button>
                     <button class="tab-btn" data-tab="tiktok">
@@ -362,8 +364,8 @@
                         <img src="{{ url_for('static', filename='css/tiktok-6338432_960_720.webp') }}" alt="TikTok"
                             class="tab-icon tab-icon-img">
                         <span class="tab-text">
-                            <strong>TikTok</strong>
-                            <small class="tab-hint">Tải video & ảnh từ TikTok</small>
+                            <strong data-i18n="tab_tiktok">TikTok</strong>
+                            <small class="tab-hint" data-i18n="tab_tiktok_hint">Tải video & ảnh từ TikTok</small>
                         </span>
                     </button>
                 </div>
@@ -378,15 +380,16 @@
                                 </svg>
                             </div>
                             <div class="card-title">
-                                <h2>Tải Video YouTube</h2>
-                                <p>Dán link video YouTube để tải xuống</p>
+                                <h2 data-i18n="card_title_youtube">Tải Video YouTube</h2>
+                                <p data-i18n="card_desc_youtube">Dán link video YouTube để tải xuống</p>
                             </div>
                         </div>
                         <div class="input-group">
                             <div class="input-wrapper">
                                 <input type="text" id="youtube-url" class="url-input"
-                                    placeholder="Dán link YouTube tại đây...">
-                                <button class="paste-btn" onclick="pasteUrl('youtube-url')">Dán</button>
+                                    placeholder="Dán link YouTube tại đây..." data-i18n="input_placeholder_youtube">
+                                <button class="paste-btn" onclick="pasteUrl('youtube-url')"
+                                    data-i18n="btn_paste">Dán</button>
                             </div>
                         </div>
                         <div class="video-preview" id="youtube-preview" style="display:none;">
@@ -397,14 +400,14 @@
                             </div>
                         </div>
                         <div class="format-selector">
-                            <label class="format-label">Chọn định dạng:</label>
+                            <label class="format-label" data-i18n="quality_label">Chọn định dạng:</label>
                             <div class="format-options">
                                 <label class="format-option"><input type="radio" name="youtube-format" value="mp4"
                                         checked>
-                                    <div class="format-card"><span>MP4</span><small>Video</small></div>
+                                    <div class="format-card"><span data-i18n="format_video">Video (MP4)</span></div>
                                 </label>
                                 <label class="format-option"><input type="radio" name="youtube-format" value="mp3">
-                                    <div class="format-card"><span>Audio</span><small>Âm thanh</small></div>
+                                    <div class="format-card"><span data-i18n="format_audio">Audio (MP3)</span></div>
                                 </label>
                             </div>
                         </div>
@@ -426,14 +429,16 @@
                                 <option value="128" selected>128kbps (Chuẩn)</option>
                             </select>
                         </div>
-                        <button class="download-btn" id="youtube-download-btn" onclick="downloadYoutube()">Tải
+                        <button class="download-btn" id="youtube-download-btn" onclick="downloadYoutube()"
+                            data-i18n="btn_download">Tải
                             Xuống</button>
 
                         <div class="progress-container" id="youtube-progress" style="display:none;">
                             <div class="progress-bar">
                                 <div class="progress-fill" id="youtube-progress-fill"></div>
                             </div>
-                            <div class="progress-text"><span id="youtube-progress-status">Đang xử lý...</span><span
+                            <div class="progress-text"><span id="youtube-progress-status"
+                                    data-i18n="btn_downloading">Đang xử lý...</span><span
                                     id="youtube-progress-percent">0%</span></div>
                         </div>
                         <div class="download-complete" id="youtube-complete" style="display:none;">
@@ -451,15 +456,16 @@
                                     alt="TikTok" style="width: 100%; height: 100%; object-fit: contain;">
                             </div>
                             <div class="card-title">
-                                <h2>Tải Video TikTok</h2>
-                                <p>Dán link video TikTok để tải xuống</p>
+                                <h2 data-i18n="card_title_tiktok">Tải Video TikTok</h2>
+                                <p data-i18n="card_desc_tiktok">Dán link video TikTok để tải xuống</p>
                             </div>
                         </div>
                         <div class="input-group">
                             <div class="input-wrapper">
                                 <input type="text" id="tiktok-url" class="url-input"
-                                    placeholder="Dán link TikTok tại đây...">
-                                <button class="paste-btn" onclick="pasteUrl('tiktok-url')">Dán</button>
+                                    placeholder="Dán link TikTok tại đây..." data-i18n="input_placeholder_tiktok">
+                                <button class="paste-btn" onclick="pasteUrl('tiktok-url')"
+                                    data-i18n="btn_paste">Dán</button>
                             </div>
                         </div>
                         <div class="video-preview" id="tiktok-preview" style="display:none;">
@@ -472,14 +478,14 @@
 
                         <!-- Video Options (Ẩn khi là Photo) -->
                         <div class="format-selector" id="tiktok-video-options" style="display:none;">
-                            <label class="format-label">Chọn định dạng:</label>
+                            <label class="format-label" data-i18n="quality_label">Chọn định dạng:</label>
                             <div class="format-options">
                                 <label class="format-option"><input type="radio" name="tiktok-format" value="mp4"
                                         checked>
-                                    <div class="format-card"><span>MP4</span><small>Video</small></div>
+                                    <div class="format-card"><span data-i18n="format_video">MP4 (Video)</span></div>
                                 </label>
                                 <label class="format-option"><input type="radio" name="tiktok-format" value="mp3">
-                                    <div class="format-card"><span>Audio</span><small>Âm thanh</small></div>
+                                    <div class="format-card"><span data-i18n="format_audio">MP3 (Audio)</span></div>
                                 </label>
                             </div>
                         </div>
@@ -507,22 +513,25 @@
                         <!-- Gallery Container (Đã có, giữ nguyên) -->
                         <div id="tiktok-gallery" class="gallery-container" style="display:none;">
                             <div class="gallery-header">
-                                <span>Chọn ảnh để tải:</span>
-                                <button class="select-all-btn" onclick="toggleSelectAll()">Chọn tất cả</button>
+                                <span data-i18n="select_images_prompt">Chọn ảnh để tải:</span>
+                                <button class="select-all-btn" onclick="toggleSelectAll()" data-i18n="select_all">Chọn
+                                    tất cả</button>
                             </div>
                             <div class="gallery-grid" id="gallery-grid">
                                 <!-- Images will be injected here -->
                             </div>
                         </div>
 
-                        <button class="download-btn tiktok-btn" id="tiktok-download-btn" onclick="downloadTiktok()">Tải
+                        <button class="download-btn tiktok-btn" id="tiktok-download-btn" onclick="downloadTiktok()"
+                            data-i18n="btn_download">Tải
                             Xuống</button>
 
                         <div class="progress-container" id="tiktok-progress" style="display:none;">
                             <div class="progress-bar">
                                 <div class="progress-fill" id="tiktok-progress-fill"></div>
                             </div>
-                            <div class="progress-text"><span id="tiktok-progress-status">Đang xử lý...</span><span
+                            <div class="progress-text"><span id="tiktok-progress-status"
+                                    data-i18n="btn_downloading">Đang xử lý...</span><span
                                     id="tiktok-progress-percent">0%</span></div>
                         </div>
                         <div class="download-complete" id="tiktok-complete" style="display:none;">
@@ -535,17 +544,19 @@
 
             <!-- Features -->
             <section class="info-section">
-                <h2 class="section-title">✨ Tính Năng Nổi Bật</h2>
+                <h2 class="section-title" data-i18n="features_title">✨ Tính Năng Nổi Bật</h2>
 
                 <!-- TikTok No Watermark Banner -->
                 <div class="promo-banner">
                     <div class="promo-icon">🎬</div>
                     <div class="promo-content">
-                        <h3>🎉 Tải TikTok Không Logo!</h3>
-                        <p>Video chất lượng cao, không dính watermark. Hoàn toàn miễn phí!</p>
+                        <h3 data-i18n="promo_tiktok_title">🎉 Tải TikTok Không Logo!</h3>
+                        <p data-i18n="promo_tiktok_desc">Video chất lượng cao, không dính watermark. Hoàn toàn miễn phí!
+                        </p>
                     </div>
                     <button class="promo-btn"
-                        onclick="document.querySelector('[data-tab=tiktok]').click(); window.scrollTo({top: 0, behavior: 'smooth'});">
+                        onclick="document.querySelector('[data-tab=tiktok]').click(); window.scrollTo({top: 0, behavior: 'smooth'});"
+                        data-i18n="promo_tiktok_btn">
                         Thử Ngay →
                     </button>
                 </div>
@@ -553,115 +564,133 @@
                 <div class="features-grid">
                     <div class="feature-card glass-card">
                         <div class="feature-icon">⚡</div>
-                        <h3>Siêu Nhanh</h3>
-                        <p>Tải xuống video chất lượng cao chỉ trong vài giây</p>
+                        <h3 data-i18n="feature_fast">Siêu Nhanh</h3>
+                        <p data-i18n="feature_fast_desc">Tải xuống video chất lượng cao chỉ trong vài giây</p>
                     </div>
                     <div class="feature-card glass-card">
                         <div class="feature-icon">🛡️</div>
-                        <h3>An Toàn</h3>
-                        <p>Không lưu trữ dữ liệu cá nhân của người dùng</p>
+                        <h3 data-i18n="feature_secure">An Toàn</h3>
+                        <p data-i18n="feature_secure_desc">Không lưu trữ dữ liệu cá nhân của người dùng</p>
                     </div>
                     <div class="feature-card glass-card">
                         <div class="feature-icon">📱</div>
-                        <h3>Đa Nền Tảng</h3>
-                        <p>Hoạt động mượt mà trên cả PC, Tablet và Mobile</p>
+                        <h3 data-i18n="feature_crossplat">Đa Nền Tảng</h3>
+                        <p data-i18n="feature_crossplat_desc">Hoạt động mượt mà trên cả PC, Tablet và Mobile</p>
                     </div>
                     <div class="feature-card glass-card">
                         <div class="feature-icon">💎</div>
-                        <h3>Miễn Phí</h3>
-                        <p>Không giới hạn lượt tải, hoàn toàn miễn phí</p>
+                        <h3 data-i18n="feature_free">Miễn Phí</h3>
+                        <p data-i18n="feature_free_desc">Không giới hạn lượt tải, hoàn toàn miễn phí</p>
                     </div>
                 </div>
             </section>
 
             <!-- Guide -->
             <section class="info-section">
-                <h2 class="section-title">🚀 Hướng Dẫn Sử Dụng</h2>
+                <h2 class="section-title" data-i18n="guide_title">🚀 Hướng Dẫn Sử Dụng</h2>
                 <div class="steps-grid">
                     <div class="step-card glass-card">
                         <div class="step-number">1</div>
-                        <h3>Sao chép Link</h3>
-                        <p>Mở ứng dụng TikTok hoặc YouTube, chọn video bạn thích và sao chép liên kết chia sẻ.</p>
+                        <h3 data-i18n="step_1_title">Sao chép Link</h3>
+                        <p data-i18n="step_1_desc">Mở ứng dụng TikTok hoặc YouTube, chọn video bạn thích và sao chép
+                            liên kết chia sẻ.</p>
                     </div>
                     <div class="step-card glass-card">
                         <div class="step-number">2</div>
-                        <h3>Dán vào Tool</h3>
-                        <p>Quay lại đây, dán liên kết vào ô nhập liệu ở trên và hệ thống sẽ tự động xử lý.</p>
+                        <h3 data-i18n="step_2_title">Dán vào Tool</h3>
+                        <p data-i18n="step_2_desc">Quay lại đây, dán liên kết vào ô nhập liệu ở trên và hệ thống sẽ tự
+                            động xử lý.</p>
                     </div>
                     <div class="step-card glass-card">
                         <div class="step-number">3</div>
-                        <h3>Tải Xuống</h3>
-                        <p>Chọn định dạng (MP4/MP3) và chất lượng mong muốn, sau đó nhấn nút Tải Xuống.</p>
+                        <h3 data-i18n="step_3_title">Tải Xuống</h3>
+                        <p data-i18n="step_3_desc">Chọn định dạng (MP4/MP3) và chất lượng mong muốn, sau đó nhấn nút Tải
+                            Xuống.</p>
                     </div>
                 </div>
             </section>
 
             <!-- SEO Content Section -->
             <section class="info-section seo-content">
-                <h2 class="section-title">📖 Về Downloader Pro</h2>
+                <h2 class="section-title" data-i18n="about_downloader_pro_title">📖 Về Downloader Pro</h2>
                 <div class="seo-text glass-card">
-                    <h3>Công cụ tải video tốt nhất 2026</h3>
+                    <h3 data-i18n="about_title">Công cụ tải video tốt nhất 2026</h3>
                     <p>
-                        <strong>Downloader Pro</strong> hỗ trợ tải video TikTok không logo, YouTube Full HD/4K và chuyển
-                        đổi MP3 chất lượng cao. Miễn phí, không quảng cáo, không cần đăng ký.
+                        <strong data-i18n="about_desc">Downloader Pro</strong> <span data-i18n="about_desc_text">hỗ trợ
+                            tải video TikTok không logo, YouTube Full HD/4K và chuyển
+                            đổi MP3 chất lượng cao. Miễn phí, không quảng cáo, không cần đăng ký.</span>
                     </p>
 
-                    <h4>Tính năng chính</h4>
+                    <h4 data-i18n="main_features_title">Tính năng chính</h4>
                     <ul>
-                        <li>✅ <strong>TikTok:</strong> Tải video không logo, tải trọn bộ album ảnh, âm thanh MP3.</li>
-                        <li>✅ <strong>YouTube:</strong> Tải video 1080p, 4K, chuyển đổi MP3 320kbps.</li>
-                        <li>✅ <strong>Đa nền tảng:</strong> Hoạt động mượt mà trên iPhone, Android, PC, Tablet.</li>
-                        <li>✅ <strong>An toàn:</strong> Không lưu trữ video hay thông tin người dùng.</li>
+                        <li data-i18n="feat_tiktok_seo">✅ <strong>TikTok:</strong> Tải video không logo, tải trọn bộ
+                            album ảnh, âm thanh MP3.</li>
+                        <li data-i18n="feat_youtube_seo">✅ <strong>YouTube:</strong> Tải video 1080p, 4K, chuyển đổi MP3
+                            320kbps.</li>
+                        <li data-i18n="feat_platform_seo">✅ <strong>Đa nền tảng:</strong> Hoạt động mượt mà trên iPhone,
+                            Android, PC, Tablet.</li>
+                        <li data-i18n="feat_secure_seo">✅ <strong>An toàn:</strong> Không lưu trữ video hay thông tin
+                            người dùng.</li>
                     </ul>
 
-                    <h4>Hướng dẫn nhanh</h4>
-                    <p>
+                    <h4 data-i18n="quick_guide_title">Hướng dẫn nhanh</h4>
+                    <p data-i18n="qg_1">
                         1. <strong>Sao chép link:</strong> Lấy link video từ nút Chia sẻ trên ứng dụng
                         TikTok/YouTube.<br>
+                    </p>
+                    <p data-i18n="qg_2">
                         2. <strong>Dán link:</strong> Dán vào ô nhập liệu bên trên.<br>
+                    </p>
+                    <p data-i18n="qg_3">
                         3. <strong>Tải xuống:</strong> Chọn định dạng MP4/MP3 và nhấn Tải về.
                     </p>
 
-                    <h4>Câu hỏi thường gặp</h4>
+                    <h4 data-i18n="faq_title">Câu hỏi thường gặp</h4>
                     <p>
-                        <strong>Tải video có mất phí không?</strong><br>
-                        Hoàn toàn miễn phí và không giới hạn lượt tải.
+                        <strong data-i18n="faq_1_q">Tải video có mất phí không?</strong><br>
+                        <span data-i18n="faq_1_a">Hoàn toàn miễn phí và không giới hạn lượt tải.</span>
                     </p>
                     <p>
-                        <strong>File tải về lưu ở đâu?</strong><br>
-                        File sẽ nằm trong thư mục "Downloads" hoặc "Tệp" trên điện thoại/máy tính của bạn.
+                        <strong data-i18n="faq_2_q">File tải về lưu ở đâu?</strong><br>
+                        <span data-i18n="faq_2_a">File sẽ nằm trong thư mục "Downloads" hoặc "Tệp" trên điện thoại/máy
+                            tính của bạn.</span>
                     </p>
                     <p>
-                        <strong>Tại sao không tải được?</strong><br>
-                        Kiểm tra xem video có ở chế độ Riêng tư (Private) không. Chúng tôi chỉ hỗ trợ tải video Công
-                        khai (Public).
+                        <strong data-i18n="faq_3_q">Tại sao không tải được?</strong><br>
+                        <span data-i18n="faq_3_a">Kiểm tra xem video có ở chế độ Riêng tư (Private) không. Chúng tôi chỉ
+                            hỗ trợ tải video Công
+                            khai (Public).</span>
                     </p>
 
                     <p
                         style="margin-top: 20px; padding: 15px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; font-size: 0.9em;">
-                        <strong>Lưu ý:</strong> Công cụ chỉ dùng cho mục đích cá nhân. Vui lòng tôn trọng bản quyền tác
-                        giả.
+                        <strong data-i18n="legal_note">Lưu ý:</strong> <span data-i18n="legal_note_text">Công cụ chỉ
+                            dùng cho mục đích cá nhân. Vui lòng tôn trọng bản quyền tác
+                            giả.</span>
                     </p>
                 </div>
             </section>
 
             <!-- FAQ -->
             <section class="info-section">
-                <h2 class="section-title">❓ Câu Hỏi Thường Gặp</h2>
+                <h2 class="section-title" data-i18n="faq_section_title">❓ Câu Hỏi Thường Gặp</h2>
                 <div class="faq-grid">
                     <div class="faq-item glass-card">
-                        <h4>Công cụ này có an toàn không?</h4>
-                        <p>Chúng tôi cam kết bảo mật thông tin người dùng và không cài đặt bất kỳ phần mềm độc hại nào.
+                        <h4 data-i18n="faq_q1">Công cụ này có an toàn không?</h4>
+                        <p data-i18n="faq_a1">Chúng tôi cam kết bảo mật thông tin người dùng và không cài đặt bất kỳ
+                            phần mềm độc hại nào.
                         </p>
                     </div>
                     <div class="faq-item glass-card">
-                        <h4>Tại sao không tải được video?</h4>
-                        <p>Vui lòng kiểm tra lại liên kết (phải là công khai) hoặc thử lại sau vài phút nếu server đang
+                        <h4 data-i18n="faq_q2">Tại sao không tải được video?</h4>
+                        <p data-i18n="faq_a2">Vui lòng kiểm tra lại liên kết (phải là công khai) hoặc thử lại sau vài
+                            phút nếu server đang
                             bận.</p>
                     </div>
                     <div class="faq-item glass-card">
-                        <h4>Có hỗ trợ tải video TikTok không logo không?</h4>
-                        <p>Có, mặc định chúng tôi sẽ tải bản video gốc chất lượng cao nhất và không dính logo TikTok.
+                        <h4 data-i18n="faq_q3">Có hỗ trợ tải video TikTok không logo không?</h4>
+                        <p data-i18n="faq_a3">Có, mặc định chúng tôi sẽ tải bản video gốc chất lượng cao nhất và không
+                            dính logo TikTok.
                         </p>
                     </div>
                 </div>
@@ -669,8 +698,8 @@
 
             <!-- Blog Section -->
             <section class="info-section">
-                <h2 class="section-title">📚 Hướng Dẫn Chi Tiết</h2>
-                <p style="text-align: center; opacity: 0.8; margin-bottom: 30px;">
+                <h2 class="section-title" data-i18n="blog_section_title">📚 Hướng Dẫn Chi Tiết</h2>
+                <p style="text-align: center; opacity: 0.8; margin-bottom: 30px;" data-i18n="blog_desc">
                     Khám phá các bài viết hướng dẫn chi tiết về cách tải video YouTube, TikTok
                 </p>
                 <div class="features-grid">
@@ -680,7 +709,8 @@
                         <h3>Tải Video YouTube</h3>
                         <p>Hướng dẫn chi tiết cách tải video YouTube về máy tính, điện thoại với chất lượng HD, Full HD,
                             4K</p>
-                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;">Đọc
+                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;"
+                            data-i18n="blog_read_more">Đọc
                             thêm →</span>
                     </a>
                     <a href="/blog/tai-video-tiktok" class="feature-card glass-card"
@@ -688,7 +718,8 @@
                         <div class="feature-icon" style="background: rgba(0, 0, 0, 0.1);">🎬</div>
                         <h3>Tải TikTok Không Logo</h3>
                         <p>Cách tải video TikTok không có logo watermark, tải album ảnh slideshow chất lượng gốc</p>
-                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;">Đọc
+                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;"
+                            data-i18n="blog_read_more">Đọc
                             thêm →</span>
                     </a>
                     <a href="/blog/chuyen-youtube-sang-mp3" class="feature-card glass-card"
@@ -696,15 +727,18 @@
                         <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1);">🎵</div>
                         <h3>Chuyển YouTube Sang MP3</h3>
                         <p>Hướng dẫn chuyển đổi video YouTube sang file MP3 với chất lượng 128kbps, 192kbps, 320kbps</p>
-                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;">Đọc
+                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;"
+                            data-i18n="blog_read_more">Đọc
                             thêm →</span>
                     </a>
                     <a href="/blog" class="feature-card glass-card"
                         style="text-decoration: none; color: inherit; transition: transform 0.3s; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));">
                         <div class="feature-icon">📖</div>
-                        <h3>Xem Tất Cả Bài Viết</h3>
-                        <p>Khám phá thêm nhiều hướng dẫn, mẹo và thủ thuật về tải video YouTube, TikTok</p>
-                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;">Xem
+                        <h3 data-i18n="blog_view_all">Xem Tất Cả Bài Viết</h3>
+                        <p data-i18n="blog_view_all_desc">Khám phá thêm nhiều hướng dẫn, mẹo và thủ thuật về tải video
+                            YouTube, TikTok</p>
+                        <span style="color: #6366f1; font-weight: 500; margin-top: 10px; display: inline-block;"
+                            data-i18n="blog_view_blog">Xem
                             blog →</span>
                     </a>
                 </div>

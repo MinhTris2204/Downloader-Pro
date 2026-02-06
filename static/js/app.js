@@ -704,3 +704,66 @@ if (themeToggleBtn) {
     });
 }
 
+
+// ====== Language Two-Way Switcher ======
+const langToggleBtn = document.getElementById('lang-toggle');
+// Default to Vietnamese if no setting found
+let currentLang = localStorage.getItem('language') || 'vi';
+
+function updateContent() {
+    // Get correct dictionary
+    const t = translations[currentLang];
+    if (!t) return;
+
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) {
+            // Handle input placeholders specially
+            if (el.tagName === 'INPUT' && el.getAttribute('placeholder')) {
+                el.placeholder = t[key];
+            } else {
+                el.textContent = t[key];
+            }
+        }
+    });
+
+    // Update specific dynamic placeholders if needed
+    const youtubeInput = document.getElementById('youtube-url');
+    const tiktokInput = document.getElementById('tiktok-url');
+    if (youtubeInput) youtubeInput.placeholder = t['input_placeholder_youtube'];
+    if (tiktokInput) tiktokInput.placeholder = t['input_placeholder_tiktok'];
+
+    // Update toggle button appearance
+    const langIcon = document.querySelector('.lang-icon');
+    const langText = document.querySelector('.lang-text');
+
+    if (currentLang === 'vi') {
+        if (langIcon) langIcon.textContent = '🇻🇳';
+        if (langText) langText.textContent = 'Tiếng Việt';
+    } else {
+        if (langIcon) langIcon.textContent = '🇺🇸';
+        if (langText) langText.textContent = 'English';
+    }
+}
+
+function toggleLanguage() {
+    // Toggle between 'vi' and 'en'
+    currentLang = currentLang === 'vi' ? 'en' : 'vi';
+
+    // Save preference
+    localStorage.setItem('language', currentLang);
+
+    // Apply changes
+    updateContent();
+}
+
+// Initialize language
+if (typeof translations !== 'undefined') {
+    updateContent();
+}
+
+if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', toggleLanguage);
+}
+
