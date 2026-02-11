@@ -32,6 +32,22 @@
         gtag('config', 'AW-17935616298');
     </script>
 
+    <!-- Event snippet for Lượt xem trang (1) conversion page -->
+    <script>
+        function gtag_report_conversion(url) {
+            var callback = function () {
+                if (typeof(url) != 'undefined') {
+                    window.location = url;
+                }
+            };
+            gtag('event', 'conversion', {
+                'send_to': 'AW-17935616298/TlS7CJTx5fYbEKqSr-hC',
+                'event_callback': callback
+            });
+            return false;
+        }
+    </script>
+
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7227824042730456"
         crossorigin="anonymous"></script>

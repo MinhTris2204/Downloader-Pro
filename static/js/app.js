@@ -230,6 +230,11 @@ async function downloadYoutube() {
         return;
     }
 
+    // Track conversion event
+    if (typeof gtag_report_conversion === 'function') {
+        gtag_report_conversion();
+    }
+
     const btn = document.getElementById('youtube-download-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
@@ -385,6 +390,11 @@ async function downloadTiktok() {
     if (!isValidTikTokUrl(url)) {
         showToast('Link TikTok không đúng định dạng!', 'error');
         return;
+    }
+
+    // Track conversion event
+    if (typeof gtag_report_conversion === 'function') {
+        gtag_report_conversion();
     }
 
     // Get format & quality
