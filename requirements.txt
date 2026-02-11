@@ -5,3 +5,4 @@ waitress>=3.0.0
 psycopg2-binary>=2.9.9
 feedparser>=6.0.10
 bgutil-ytdlp-pot-provider>=1.2.0
+user-agents>=2.2.0

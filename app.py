@@ -20,6 +20,7 @@ from psycopg2 import pool
 from controllers.home_controller import HomeController
 from controllers.blog_controller import BlogController
 from controllers.news_controller import NewsController
+from utils.tracking import get_full_tracking_info
 
 app = Flask(__name__)
 # Fix for Proxy (Railway SSL)
@@ -176,7 +177,22 @@ def init_db():
                 format VARCHAR(10) NOT NULL,
                 quality VARCHAR(20),
                 download_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                success BOOLEAN DEFAULT TRUE
+                success BOOLEAN DEFAULT TRUE,
+                ip_address VARCHAR(45),
+                country VARCHAR(100),
+                country_code VARCHAR(5),
+                region VARCHAR(100),
+                city VARCHAR(100),
+                timezone VARCHAR(50),
+                latitude DECIMAL(10, 8),
+                longitude DECIMAL(11, 8),
+                device_type VARCHAR(50),
+                os VARCHAR(100),
+                browser VARCHAR(100),
+                is_mobile BOOLEAN,
+                is_tablet BOOLEAN,
+                is_pc BOOLEAN,
+                user_agent TEXT
             )
         """)
         
@@ -233,18 +249,47 @@ def get_stats():
     
     return {"total_downloads": 1250}
 
-def increment_stats(platform='unknown', format_type='mp4', quality='best', success=True):
-    """Increment download counter in DB"""
+def increment_stats(platform='unknown', format_type='mp4', quality='best', success=True, tracking_info=None):
+    """Increment download counter in DB with tracking info"""
     if db_pool:
         try:
             conn = db_pool.getconn()
             cursor = conn.cursor()
             
-            # Insert download record
-            cursor.execute("""
-                INSERT INTO downloads (platform, format, quality, success)
-                VALUES (%s, %s, %s, %s)
-            """, (platform, format_type, quality, success))
+            # Insert download record with tracking info
+            if tracking_info:
+                cursor.execute("""
+                    INSERT INTO downloads (
+                        platform, format, quality, success,
+                        ip_address, country, country_code, region, city, timezone,
+                        latitude, longitude, device_type, os, browser,
+                        is_mobile, is_tablet, is_pc, user_agent
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    platform, format_type, quality, success,
+                    tracking_info.get('ip_address'),
+                    tracking_info.get('country'),
+                    tracking_info.get('country_code'),
+                    tracking_info.get('region'),
+                    tracking_info.get('city'),
+                    tracking_info.get('timezone'),
+                    tracking_info.get('latitude'),
+                    tracking_info.get('longitude'),
+                    tracking_info.get('device_type'),
+                    tracking_info.get('os'),
+                    tracking_info.get('browser'),
+                    tracking_info.get('is_mobile'),
+                    tracking_info.get('is_tablet'),
+                    tracking_info.get('is_pc'),
+                    tracking_info.get('user_agent')
+                ))
+            else:
+                # Fallback without tracking
+                cursor.execute("""
+                    INSERT INTO downloads (platform, format, quality, success)
+                    VALUES (%s, %s, %s, %s)
+                """, (platform, format_type, quality, success))
             
             # Update total count
             cursor.execute("""
@@ -1198,6 +1243,11 @@ def blog_youtube_mp3():
 def news_index():
     return NewsController.index()
 
+@app.route('/admin/tracking')
+def admin_tracking():
+    """Admin page for tracking statistics"""
+    return render_template('admin_tracking.html')
+
 @app.route('/api/news')
 def api_news():
     return NewsController.get_news()
@@ -1317,11 +1367,18 @@ def download_file(download_id):
     if 'video' in data['mime_type']:
         as_attachment = True # Force attachment for videos on iOS
     
-    # Increment stats with metadata
+    # Get tracking info
+    tracking_info = None
+    try:
+        tracking_info = get_full_tracking_info()
+    except Exception as e:
+        print(f"[WARNING] Failed to get tracking info: {e}")
+    
+    # Increment stats with metadata and tracking
     platform = data.get('platform', 'unknown')
     format_type = data.get('format', data['ext'])
     quality = data.get('quality', 'best')
-    increment_stats(platform, format_type, quality, True)
+    increment_stats(platform, format_type, quality, True, tracking_info)
     
     return send_file(
         filepath,
@@ -1333,6 +1390,88 @@ def download_file(download_id):
 @app.route('/api/stats')
 def api_stats():
     return jsonify(get_stats())
+
+@app.route('/api/stats/tracking')
+def api_tracking_stats():
+    """Get tracking statistics"""
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 503
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Top countries
+        cursor.execute("""
+            SELECT country, country_code, COUNT(*) as count
+            FROM downloads
+            WHERE country IS NOT NULL AND country != 'Unknown'
+            GROUP BY country, country_code
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_countries = [
+            {'country': row[0], 'code': row[1], 'count': row[2]}
+            for row in cursor.fetchall()
+        ]
+        
+        # Device types
+        cursor.execute("""
+            SELECT 
+                SUM(CASE WHEN is_mobile THEN 1 ELSE 0 END) as mobile,
+                SUM(CASE WHEN is_tablet THEN 1 ELSE 0 END) as tablet,
+                SUM(CASE WHEN is_pc THEN 1 ELSE 0 END) as pc
+            FROM downloads
+            WHERE is_mobile IS NOT NULL
+        """)
+        device_stats = cursor.fetchone()
+        devices = {
+            'mobile': device_stats[0] or 0,
+            'tablet': device_stats[1] or 0,
+            'pc': device_stats[2] or 0
+        }
+        
+        # Top cities
+        cursor.execute("""
+            SELECT city, country, COUNT(*) as count
+            FROM downloads
+            WHERE city IS NOT NULL AND city != 'Unknown'
+            GROUP BY city, country
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_cities = [
+            {'city': row[0], 'country': row[1], 'count': row[2]}
+            for row in cursor.fetchall()
+        ]
+        
+        # Browser stats
+        cursor.execute("""
+            SELECT browser, COUNT(*) as count
+            FROM downloads
+            WHERE browser IS NOT NULL
+            GROUP BY browser
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        top_browsers = [
+            {'browser': row[0], 'count': row[1]}
+            for row in cursor.fetchall()
+        ]
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({
+            'top_countries': top_countries,
+            'devices': devices,
+            'top_cities': top_cities,
+            'top_browsers': top_browsers
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Tracking stats failed: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/debug/env')
 def debug_env():
