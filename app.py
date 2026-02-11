@@ -209,6 +209,34 @@ def init_db():
         if cursor.fetchone()[0] == 0:
             cursor.execute("INSERT INTO stats (total_downloads) VALUES (1250)")
         
+        # Auto-migration: Add tracking columns if they don't exist
+        print("[INFO] Checking for tracking columns...")
+        tracking_columns = [
+            ("ip_address", "VARCHAR(45)"),
+            ("country", "VARCHAR(100)"),
+            ("country_code", "VARCHAR(5)"),
+            ("region", "VARCHAR(100)"),
+            ("city", "VARCHAR(100)"),
+            ("timezone", "VARCHAR(50)"),
+            ("latitude", "DECIMAL(10, 8)"),
+            ("longitude", "DECIMAL(11, 8)"),
+            ("device_type", "VARCHAR(50)"),
+            ("os", "VARCHAR(100)"),
+            ("browser", "VARCHAR(100)"),
+            ("is_mobile", "BOOLEAN"),
+            ("is_tablet", "BOOLEAN"),
+            ("is_pc", "BOOLEAN"),
+            ("user_agent", "TEXT")
+        ]
+        
+        for col_name, col_type in tracking_columns:
+            try:
+                cursor.execute(f"ALTER TABLE downloads ADD COLUMN IF NOT EXISTS {col_name} {col_type}")
+                print(f"[INFO] Ensured column exists: {col_name}")
+            except Exception as e:
+                print(f"[WARNING] Column check failed for {col_name}: {e}")
+                conn.rollback()
+        
         conn.commit()
         cursor.close()
         db_pool.putconn(conn)
@@ -1259,6 +1287,10 @@ def api_news_proxy():
 @app.route('/robots.txt')
 def robots():
     return app.send_static_file('robots.txt')
+
+@app.route('/favicon.ico')
+def favicon():
+    return app.send_static_file('favicon.svg')
 
 @app.route('/ads.txt')
 def ads():
