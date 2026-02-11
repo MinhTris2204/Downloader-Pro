@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect
+from flask import Flask, render_template, request, jsonify, redirect, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 import re
@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 import functools
 import psycopg2
 from psycopg2 import pool
+import hashlib
 
 # Import controllers
 from controllers.home_controller import HomeController
@@ -23,8 +24,14 @@ from controllers.news_controller import NewsController
 from utils.tracking import get_full_tracking_info
 
 app = Flask(__name__)
+# Secret key for session (change this in production!)
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Admin credentials (use environment variables in production)
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD_HASH = hashlib.sha256(os.environ.get('ADMIN_PASSWORD', 'admin123').encode()).hexdigest()
 
 # ===== INVIDIOUS PROXY INSTANCES (Fallback when cookies fail) =====
 INVIDIOUS_INSTANCES = [
@@ -1272,9 +1279,46 @@ def news_index():
     return NewsController.index()
 
 @app.route('/admin/tracking')
-def admin_tracking():
-    """Admin page for tracking statistics"""
-    return render_template('admin_tracking.html')
+def admin_tracking_old():
+    """Old tracking page - redirect to new dashboard"""
+    return redirect('/admin/dashboard')
+
+@app.route('/admin/login')
+def admin_login_page():
+    """Admin login page"""
+    if 'admin_logged_in' in session:
+        return redirect('/admin/dashboard')
+    return render_template('admin_login.html')
+
+@app.route('/admin/login', methods=['POST'])
+def admin_login():
+    """Admin login handler"""
+    data = request.get_json()
+    username = data.get('username', '')
+    password = data.get('password', '')
+    
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    if username == ADMIN_USERNAME and password_hash == ADMIN_PASSWORD_HASH:
+        session['admin_logged_in'] = True
+        session['admin_username'] = username
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': 'Tên đăng nhập hoặc mật khẩu không đúng'}), 401
+
+@app.route('/admin/logout', methods=['POST'])
+def admin_logout():
+    """Admin logout"""
+    session.pop('admin_logged_in', None)
+    session.pop('admin_username', None)
+    return jsonify({'success': True})
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    """Admin dashboard - requires login"""
+    if 'admin_logged_in' not in session:
+        return redirect('/admin/login')
+    return render_template('admin_dashboard.html')
 
 @app.route('/api/news')
 def api_news():
