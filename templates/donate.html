@@ -29,12 +29,10 @@
                         </div>
                         
                         <div class="custom-amount">
-                            <input type="number" 
+                            <input type="text" 
                                    id="customAmount" 
                                    name="amount" 
                                    placeholder="Nhập số tiền (tối thiểu 1,000đ)"
-                                   min="1000"
-                                   step="1000"
                                    required>
                             <span class="currency">VNĐ</span>
                         </div>
@@ -440,23 +438,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 customAmountInput.value = '';
                 customAmountInput.focus();
             } else {
-                customAmountInput.value = amount;
+                // Format with thousand separator
+                customAmountInput.value = formatNumber(amount);
             }
         });
     });
     
-    // Handle custom amount input
-    customAmountInput.addEventListener('input', function() {
+    // Handle custom amount input with auto-formatting
+    customAmountInput.addEventListener('input', function(e) {
         amountBtns.forEach(b => b.classList.remove('active'));
         const customBtn = document.querySelector('[data-amount="custom"]');
         customBtn.classList.add('active');
+        
+        // Remove all non-digit characters
+        let value = this.value.replace(/\D/g, '');
+        
+        // Format with thousand separator
+        if (value) {
+            this.value = formatNumber(value);
+        }
+    });
+    
+    // Prevent non-numeric input
+    customAmountInput.addEventListener('keypress', function(e) {
+        // Allow only numbers
+        if (e.key && !/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+            e.preventDefault();
+        }
     });
     
     // Handle form submission
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const amount = parseInt(customAmountInput.value);
+        // Remove formatting to get raw number
+        const amountStr = customAmountInput.value.replace(/\./g, '');
+        const amount = parseInt(amountStr);
+        
         if (!amount || amount < 1000) {
             alert('Vui lòng nhập số tiền tối thiểu 1,000 VNĐ');
             return;
@@ -578,6 +596,14 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function formatNumber(num) {
+    // Convert to string and remove any existing formatting
+    const numStr = num.toString().replace(/\./g, '');
+    
+    // Add thousand separator (dot)
+    return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 </script>
 {% endblock %}
