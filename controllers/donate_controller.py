@@ -112,8 +112,41 @@ def create_donation():
                 'error': result.get('error', 'Lỗi tạo link thanh toán')
             }), 500
         
+        # Check if PayOS returned error in response
+        if result.get('code') != '00':
+            error_msg = result.get('desc', 'Lỗi từ PayOS')
+            print(f">>> PayOS Error: {error_msg}")
+            
+            # Update status to failed
+            if db_pool:
+                try:
+                    conn = db_pool.getconn()
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        UPDATE donations 
+                        SET payment_status = 'failed'
+                        WHERE order_code = %s
+                    """, (str(order_code),))
+                    conn.commit()
+                    cursor.close()
+                    db_pool.putconn(conn)
+                except:
+                    pass
+            
+            return jsonify({
+                'success': False,
+                'error': f'PayOS: {error_msg}'
+            }), 500
+        
         # Lấy checkout URL từ response
-        checkout_url = result.get('data', {}).get('checkoutUrl', '')
+        data = result.get('data')
+        if not data or not isinstance(data, dict):
+            return jsonify({
+                'success': False,
+                'error': 'Không nhận được dữ liệu từ PayOS'
+            }), 500
+        
+        checkout_url = data.get('checkoutUrl', '')
         
         if not checkout_url:
             return jsonify({

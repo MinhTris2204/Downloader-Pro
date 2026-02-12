@@ -69,7 +69,15 @@ class PayOS:
             return {"error": str(e), "code": "UNKNOWN_ERROR"}
     
     def _create_signature(self, data: Dict[str, Any]) -> str:
-        """Tạo signature cho request theo chuẩn PayOS"""
+        """Tạo signature cho request theo chuẩn PayOS
+        
+        Theo docs PayOS:
+        1. Loại bỏ field signature và các field null/empty
+        2. Sort keys alphabetically
+        3. Tạo query string: key1=value1&key2=value2
+        4. HMAC SHA256 với checksum key
+        """
+        # Loại bỏ signature và null/empty values
         payload_for_signature = {}
         for key, value in data.items():
             if key == "signature":
@@ -78,33 +86,30 @@ class PayOS:
                 continue
             payload_for_signature[key] = value
         
-        def convert_obj_to_query_str(obj: dict) -> str:
-            """Convert object to query string format như PayOS yêu cầu"""
-            query_string = []
-            sorted_items = sorted(obj.items())
-            
-            for key, value in sorted_items:
-                value_as_string = ""
-                if isinstance(value, (int, float, bool)):
-                    value_as_string = str(value)
-                elif value in [None, 'null', 'NULL']:
-                    value_as_string = ""
-                elif isinstance(value, list):
-                    sorted_array = [dict(sorted(item.items())) if isinstance(item, dict) else item for item in value]
-                    value_as_string = json.dumps(sorted_array, separators=(',', ':'), ensure_ascii=False).replace('None', 'null')
-                elif isinstance(value, dict):
-                    sorted_dict = dict(sorted(value.items()))
-                    value_as_string = json.dumps(sorted_dict, separators=(',', ':'), ensure_ascii=False).replace('None', 'null')
-                else:
-                    value_as_string = str(value)
-                
-                query_string.append(f"{key}={value_as_string}")
-            
-            return "&".join(query_string)
+        # Sort keys alphabetically và tạo query string
+        sorted_keys = sorted(payload_for_signature.keys())
+        query_parts = []
         
-        data_query_str = convert_obj_to_query_str(payload_for_signature)
-        print(f">>> Signature data (Query string, sorted): {data_query_str}")
+        for key in sorted_keys:
+            value = payload_for_signature[key]
+            # Convert value to string
+            if isinstance(value, bool):
+                value_str = 'true' if value else 'false'
+            elif isinstance(value, (int, float)):
+                value_str = str(value)
+            elif isinstance(value, str):
+                value_str = value
+            else:
+                # For complex types, use JSON
+                import json
+                value_str = json.dumps(value, separators=(',', ':'), ensure_ascii=False)
+            
+            query_parts.append(f"{key}={value_str}")
         
+        data_query_str = "&".join(query_parts)
+        print(f">>> Signature data (Query string): {data_query_str}")
+        
+        # Create HMAC SHA256 signature
         signature = hmac.new(
             self.checksum_key.encode("utf-8"),
             msg=data_query_str.encode("utf-8"),
