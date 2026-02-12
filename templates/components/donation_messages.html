@@ -1,0 +1,243 @@
+<!-- Donation Messages Widget -->
+<div class="donation-messages-widget" id="donationMessagesWidget">
+    <div class="widget-header">
+        <h3>💝 Lời nhắn từ những người ủng hộ</h3>
+        <p class="widget-subtitle">Cảm ơn sự hỗ trợ của các bạn!</p>
+    </div>
+    
+    <div class="messages-container" id="messagesContainer">
+        <div class="loading-messages">
+            <div class="spinner"></div>
+            <p>Đang tải...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.donation-messages-widget {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 30px;
+    margin: 40px 0;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.widget-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.widget-header h3 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.widget-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1em;
+}
+
+.messages-container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.messages-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.loading-messages {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.message-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.message-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.donor-name {
+    font-weight: 600;
+    font-size: 1.1em;
+    color: white;
+}
+
+.message-date {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.message-text {
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.6;
+    font-size: 0.95em;
+}
+
+.no-messages {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.no-messages-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+    .donation-messages-widget {
+        padding: 20px;
+        margin: 30px 0;
+    }
+    
+    .widget-header h3 {
+        font-size: 1.4em;
+    }
+    
+    .messages-container {
+        max-height: 400px;
+    }
+    
+    .message-card {
+        padding: 15px;
+    }
+    
+    .message-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDonationMessages();
+});
+
+async function loadDonationMessages() {
+    const container = document.getElementById('messagesContainer');
+    
+    try {
+        const response = await fetch('/api/donate/messages?limit=10');
+        const data = await response.json();
+        
+        if (data.success && data.messages && data.messages.length > 0) {
+            container.innerHTML = '';
+            
+            data.messages.forEach(msg => {
+                const card = createMessageCard(msg);
+                container.appendChild(card);
+            });
+        } else {
+            container.innerHTML = `
+                <div class="no-messages">
+                    <div class="no-messages-icon">💬</div>
+                    <p>Chưa có lời nhắn nào. Hãy là người đầu tiên ủng hộ!</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading messages:', error);
+        container.innerHTML = `
+            <div class="no-messages">
+                <p>Không thể tải lời nhắn. Vui lòng thử lại sau.</p>
+            </div>
+        `;
+    }
+}
+
+function createMessageCard(msg) {
+    const card = document.createElement('div');
+    card.className = 'message-card';
+    
+    const date = new Date(msg.created_at);
+    const formattedDate = formatDate(date);
+    
+    card.innerHTML = `
+        <div class="message-header">
+            <div class="donor-name">💝 ${escapeHtml(msg.donor_name)}</div>
+            <div class="message-date">${formattedDate}</div>
+        </div>
+        <div class="message-text">${escapeHtml(msg.message)}</div>
+    `;
+    
+    return card;
+}
+
+function formatDate(date) {
+    const now = new Date();
+    const diff = now - date;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 7) {
+        return date.toLocaleDateString('vi-VN');
+    } else if (days > 0) {
+        return `${days} ngày trước`;
+    } else if (hours > 0) {
+        return `${hours} giờ trước`;
+    } else if (minutes > 0) {
+        return `${minutes} phút trước`;
+    } else {
+        return 'Vừa xong';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>

@@ -1,0 +1,371 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kết quả thanh toán{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    {% if success %}
+    <div class="result-box success">
+        <div class="result-icon">✅</div>
+        <h1>Cảm ơn bạn rất nhiều!</h1>
+        <p>Giao dịch của bạn đã được xử lý thành công.</p>
+        <p class="order-code">Mã đơn hàng: <strong>{{ order_code }}</strong></p>
+        <p class="thank-you-message">
+            Sự ủng hộ của bạn giúp chúng tôi duy trì và phát triển website tốt hơn. 
+            Chúng tôi rất trân trọng điều đó! 💝
+        </p>
+        
+        {% if can_post_message %}
+        <div class="message-section" id="messageSection">
+            <h3>💬 Để lại lời nhắn của bạn</h3>
+            <p class="message-hint">Lời nhắn sẽ được hiển thị trên trang chủ (tùy chọn, 1 lần duy nhất)</p>
+            
+            <form id="messageForm" class="message-form">
+                <input type="hidden" id="orderCode" value="{{ order_code }}">
+                
+                <div class="form-group">
+                    <input type="text" 
+                           id="donorName" 
+                           placeholder="Tên của bạn (hoặc để Anonymous)"
+                           maxlength="100">
+                </div>
+                
+                <div class="form-group">
+                    <textarea id="donorMessage" 
+                              placeholder="Chia sẻ suy nghĩ của bạn..."
+                              rows="4"
+                              maxlength="500"
+                              required></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span>/500
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit" id="submitMessageBtn">
+                    <span class="btn-text">📤 Gửi lời nhắn</span>
+                    <span class="btn-loading" style="display: none;">⏳ Đang gửi...</span>
+                </button>
+            </form>
+            
+            <div id="messageSuccess" class="message-success" style="display: none;">
+                <div class="success-icon">🎉</div>
+                <p>Lời nhắn của bạn đã được gửi thành công!</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="result-box cancel">
+        <div class="result-icon">❌</div>
+        <h1>Giao dịch đã bị hủy</h1>
+        <p>Bạn đã hủy giao dịch hoặc có lỗi xảy ra.</p>
+        {% if order_code %}
+        <p class="order-code">Mã đơn hàng: <strong>{{ order_code }}</strong></p>
+        {% endif %}
+        <p>Nếu bạn muốn thử lại, vui lòng quay lại trang donate.</p>
+    </div>
+    {% endif %}
+    
+    <div class="action-buttons">
+        <a href="/" class="btn btn-primary">🏠 Về trang chủ</a>
+        {% if not success %}
+        <a href="/donate" class="btn btn-secondary">🔄 Thử lại</a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.result-container {
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.result-box {
+    background: white;
+    border-radius: 12px;
+    padding: 40px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.result-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+}
+
+.result-box h1 {
+    font-size: 2em;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.result-box p {
+    color: #7f8c8d;
+    line-height: 1.6;
+    margin: 10px 0;
+}
+
+.order-code {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    font-size: 14px;
+}
+
+.order-code strong {
+    color: #2c3e50;
+    font-family: monospace;
+}
+
+.thank-you-message {
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px solid #e0e0e0;
+    font-size: 16px;
+    color: #555;
+}
+
+.success {
+    border-top: 4px solid #27ae60;
+}
+
+.cancel {
+    border-top: 4px solid #e74c3c;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 30px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.2s;
+    display: inline-block;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.message-section {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px dashed #e0e0e0;
+}
+
+.message-section h3 {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.message-hint {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.message-form {
+    text-align: left;
+}
+
+.message-form .form-group {
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.message-form input,
+.message-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.message-form input:focus,
+.message-form textarea:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.message-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #95a5a6;
+    margin-top: 5px;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+}
+
+.btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.message-success {
+    text-align: center;
+    padding: 30px;
+    background: #d4edda;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.success-icon {
+    font-size: 50px;
+    margin-bottom: 10px;
+}
+
+.message-success p {
+    color: #155724;
+    font-weight: 600;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .result-container {
+        padding: 15px;
+    }
+    
+    .result-box {
+        padding: 30px 20px;
+    }
+    
+    .result-icon {
+        font-size: 60px;
+    }
+    
+    .result-box h1 {
+        font-size: 1.5em;
+    }
+    
+    .message-section h3 {
+        font-size: 1.1em;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageForm = document.getElementById('messageForm');
+    const messageSection = document.getElementById('messageSection');
+    const messageSuccess = document.getElementById('messageSuccess');
+    const submitBtn = document.getElementById('submitMessageBtn');
+    const messageTextarea = document.getElementById('donorMessage');
+    const charCount = document.getElementById('charCount');
+    
+    if (!messageForm) return;
+    
+    // Character counter
+    messageTextarea.addEventListener('input', function() {
+        const count = this.value.length;
+        charCount.textContent = count;
+        
+        if (count > 500) {
+            charCount.style.color = '#e74c3c';
+        } else {
+            charCount.style.color = '#95a5a6';
+        }
+    });
+    
+    // Form submission
+    messageForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const orderCode = document.getElementById('orderCode').value;
+        const donorName = document.getElementById('donorName').value.trim() || 'Anonymous';
+        const message = messageTextarea.value.trim();
+        
+        if (!message) {
+            alert('Vui lòng nhập lời nhắn');
+            return;
+        }
+        
+        if (message.length > 500) {
+            alert('Lời nhắn không được quá 500 ký tự');
+            return;
+        }
+        
+        // Disable button
+        submitBtn.disabled = true;
+        submitBtn.querySelector('.btn-text').style.display = 'none';
+        submitBtn.querySelector('.btn-loading').style.display = 'inline';
+        
+        try {
+            const response = await fetch('/api/donate/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_code: orderCode,
+                    donor_name: donorName,
+                    message: message
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Hide form, show success
+                messageForm.style.display = 'none';
+                messageSuccess.style.display = 'block';
+            } else {
+                alert('Lỗi: ' + (data.error || 'Không thể gửi lời nhắn'));
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.btn-text').style.display = 'inline';
+                submitBtn.querySelector('.btn-loading').style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại!');
+            submitBtn.disabled = false;
+            submitBtn.querySelector('.btn-text').style.display = 'inline';
+            submitBtn.querySelector('.btn-loading').style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

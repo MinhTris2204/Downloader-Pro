@@ -21,6 +21,7 @@ import hashlib
 from controllers.home_controller import HomeController
 from controllers.blog_controller import BlogController
 from controllers.news_controller import NewsController
+from controllers.donate_controller import donate_bp
 from utils.tracking import get_full_tracking_info
 
 app = Flask(__name__)
@@ -28,6 +29,9 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# Register blueprints
+app.register_blueprint(donate_bp)
 
 # Admin credentials (use environment variables in production)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -210,6 +214,40 @@ def init_db():
                 last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        
+        # Create donations table (payment tracking)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS donations (
+                id SERIAL PRIMARY KEY,
+                order_code VARCHAR(50) UNIQUE NOT NULL,
+                amount INTEGER NOT NULL,
+                donor_name VARCHAR(100) DEFAULT 'Anonymous',
+                donor_email VARCHAR(100),
+                message TEXT,
+                payment_status VARCHAR(20) DEFAULT 'pending',
+                payment_method VARCHAR(50),
+                transaction_id VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                paid_at TIMESTAMP,
+                ip_address VARCHAR(45),
+                user_agent TEXT
+            )
+        """)
+        
+        # Create donation_messages table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS donation_messages (
+                id SERIAL PRIMARY KEY,
+                order_code VARCHAR(50) UNIQUE NOT NULL,
+                donor_name VARCHAR(100) DEFAULT 'Anonymous',
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_approved BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (order_code) REFERENCES donations(order_code) ON DELETE CASCADE
+            )
+        """)
+        
+        print("[INFO] Donations and donation_messages tables created/verified")
         
         # Initialize stats if empty
         cursor.execute("SELECT COUNT(*) FROM stats")

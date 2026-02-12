@@ -10216,3 +10216,49 @@ body {
 #news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
 @media (max-width: 768px) { #news-grid { grid-template-columns: 1fr; } }
 
+
+
+/* Donate Button Styles */
+.nav-link.donate-link {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link.donate-link::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.nav-link.donate-link:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.nav-link.donate-link:hover {
+    background: linear-gradient(135deg, #ff5252 0%, #e04e5f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+    color: white !important;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+    }
+    50% {
+        box-shadow: 0 2px 15px rgba(255, 107, 107, 0.5);
+    }
+}

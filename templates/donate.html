@@ -1,0 +1,331 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Ủng hộ - Donate{% endblock %}
+
+{% block content %}
+<div class="donate-container">
+    <div class="donate-header">
+        <h1>☕ Ủng hộ duy trì website</h1>
+        <p>Nếu bạn thấy website hữu ích, hãy ủng hộ chúng tôi một ly cà phê để duy trì và phát triển thêm nhiều tính năng mới!</p>
+    </div>
+
+    <div class="donate-form-wrapper">
+        <form id="donateForm" class="donate-form">
+            <div class="amount-section">
+                <label>Chọn số tiền:</label>
+                <div class="amount-buttons">
+                    <button type="button" class="amount-btn" data-amount="10000">10,000đ</button>
+                    <button type="button" class="amount-btn" data-amount="20000">20,000đ</button>
+                    <button type="button" class="amount-btn" data-amount="50000">50,000đ</button>
+                    <button type="button" class="amount-btn" data-amount="100000">100,000đ</button>
+                    <button type="button" class="amount-btn" data-amount="200000">200,000đ</button>
+                    <button type="button" class="amount-btn active" data-amount="custom">Khác</button>
+                </div>
+                
+                <div class="custom-amount">
+                    <input type="number" 
+                           id="customAmount" 
+                           name="amount" 
+                           placeholder="Nhập số tiền (tối thiểu 1,000đ)"
+                           min="1000"
+                           step="1000"
+                           required>
+                    <span class="currency">VNĐ</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="donorName">Tên của bạn (tùy chọn):</label>
+                <input type="text" 
+                       id="donorName" 
+                       name="name" 
+                       placeholder="Anonymous"
+                       maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label for="donorEmail">Email (tùy chọn):</label>
+                <input type="email" 
+                       id="donorEmail" 
+                       name="email" 
+                       placeholder="your@email.com"
+                       maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label for="donorMessage">Lời nhắn (tùy chọn):</label>
+                <textarea id="donorMessage" 
+                          name="message" 
+                          rows="3" 
+                          placeholder="Cảm ơn bạn đã tạo ra công cụ hữu ích!"
+                          maxlength="200"></textarea>
+            </div>
+
+            <button type="submit" class="donate-btn" id="submitBtn">
+                <span class="btn-text">💝 Ủng hộ ngay</span>
+                <span class="btn-loading" style="display: none;">⏳ Đang xử lý...</span>
+            </button>
+        </form>
+
+        <div class="donate-info">
+            <p>✅ Thanh toán an toàn qua PayOS</p>
+            <p>✅ Hỗ trợ QR Banking, Ví điện tử</p>
+            <p>✅ Không lưu thông tin thẻ</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.donate-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.donate-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.donate-header h1 {
+    font-size: 2em;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.donate-header p {
+    color: #7f8c8d;
+    line-height: 1.6;
+}
+
+.donate-form-wrapper {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.amount-section {
+    margin-bottom: 25px;
+}
+
+.amount-section label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.amount-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.amount-btn {
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.amount-btn:hover {
+    border-color: #3498db;
+    background: #f8f9fa;
+}
+
+.amount-btn.active {
+    border-color: #3498db;
+    background: #3498db;
+    color: white;
+}
+
+.custom-amount {
+    position: relative;
+}
+
+.custom-amount input {
+    width: 100%;
+    padding: 12px 60px 12px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.custom-amount input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.custom-amount .currency {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #7f8c8d;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.donate-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.donate-btn:hover {
+    transform: translateY(-2px);
+}
+
+.donate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.donate-info {
+    margin-top: 25px;
+    padding-top: 25px;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.donate-info p {
+    margin: 8px 0;
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .donate-container {
+        padding: 15px;
+    }
+    
+    .donate-form-wrapper {
+        padding: 20px;
+    }
+    
+    .amount-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('donateForm');
+    const amountBtns = document.querySelectorAll('.amount-btn');
+    const customAmountInput = document.getElementById('customAmount');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Handle amount button clicks
+    amountBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            amountBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            const amount = this.dataset.amount;
+            if (amount === 'custom') {
+                customAmountInput.value = '';
+                customAmountInput.focus();
+            } else {
+                customAmountInput.value = amount;
+            }
+        });
+    });
+    
+    // Handle custom amount input
+    customAmountInput.addEventListener('input', function() {
+        amountBtns.forEach(b => b.classList.remove('active'));
+        const customBtn = document.querySelector('[data-amount="custom"]');
+        customBtn.classList.add('active');
+    });
+    
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const amount = parseInt(customAmountInput.value);
+        if (!amount || amount < 1000) {
+            alert('Vui lòng nhập số tiền tối thiểu 1,000 VNĐ');
+            return;
+        }
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.querySelector('.btn-text').style.display = 'none';
+        submitBtn.querySelector('.btn-loading').style.display = 'inline';
+        
+        try {
+            const response = await fetch('/api/donate/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount: amount,
+                    name: document.getElementById('donorName').value || 'Anonymous',
+                    email: document.getElementById('donorEmail').value,
+                    message: document.getElementById('donorMessage').value
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.checkoutUrl) {
+                // Redirect to PayOS checkout
+                window.location.href = data.checkoutUrl;
+            } else {
+                alert('Lỗi: ' + (data.error || 'Không thể tạo link thanh toán'));
+                submitBtn.disabled = false;
+                submitBtn.querySelector('.btn-text').style.display = 'inline';
+                submitBtn.querySelector('.btn-loading').style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại!');
+            submitBtn.disabled = false;
+            submitBtn.querySelector('.btn-text').style.display = 'inline';
+            submitBtn.querySelector('.btn-loading').style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
