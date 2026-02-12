@@ -10491,17 +10491,40 @@ body {
         display: flex;
     }
     
+    /* Show only first 3 nav items + hamburger on mobile */
     .header-nav {
+        display: flex !important;
+        gap: 8px;
+    }
+    
+    /* Hide items after Blog (Tin tức, Language dropdown, Theme toggle) */
+    .header-nav .nav-link:nth-child(4),
+    .header-nav .lang-dropdown,
+    .header-nav .lang-overlay,
+    .header-nav .theme-toggle {
         display: none !important;
     }
     
-    /* Show only first 3 nav items on mobile header if needed */
-    .header-nav.mobile-visible {
-        display: flex !important;
-        gap: 10px;
+    /* Make visible nav items more compact on mobile */
+    .header-nav .nav-link {
+        padding: 10px 12px;
+        font-size: 0.9em;
     }
     
-    .header-nav.mobile-visible .nav-link:nth-child(n+4) {
-        display: none;
+    .header-nav .nav-link svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .header-nav .nav-link span {
+        display: inline;
+    }
+    
+    /* Adjust donate button on mobile */
+    .donate-nav-link {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white !important;
+        border-radius: 8px;
+        padding: 10px 14px !important;
     }
 }
