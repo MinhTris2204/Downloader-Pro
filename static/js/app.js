@@ -861,3 +861,98 @@ document.addEventListener('DOMContentLoaded', () => {
     updateContent();
 });
 
+
+
+// ====== Mobile Menu ======
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    const mobileSidebarOverlay = document.getElementById('mobileSidebarOverlay');
+    const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+    const mobileLangBtns = document.querySelectorAll('.mobile-lang-btn');
+    
+    // Toggle mobile menu
+    function toggleMobileMenu() {
+        mobileMenuBtn.classList.toggle('active');
+        mobileSidebar.classList.toggle('active');
+        mobileSidebarOverlay.classList.toggle('active');
+        document.body.style.overflow = mobileSidebar.classList.contains('active') ? 'hidden' : '';
+    }
+    
+    // Close mobile menu
+    function closeMobileMenu() {
+        mobileMenuBtn.classList.remove('active');
+        mobileSidebar.classList.remove('active');
+        mobileSidebarOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    // Event listeners
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    }
+    
+    if (mobileSidebarOverlay) {
+        mobileSidebarOverlay.addEventListener('click', closeMobileMenu);
+    }
+    
+    // Close menu when clicking nav links
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('click', closeMobileMenu);
+    });
+    
+    // Mobile theme toggle
+    if (mobileThemeToggle) {
+        mobileThemeToggle.addEventListener('click', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.click();
+            }
+            
+            // Update mobile theme button icons
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const sunIcon = mobileThemeToggle.querySelector('.sun-icon');
+            const moonIcon = mobileThemeToggle.querySelector('.moon-icon');
+            
+            if (currentTheme === 'light') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        });
+    }
+    
+    // Mobile language buttons
+    mobileLangBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const lang = this.dataset.lang;
+            const langOptions = document.querySelectorAll('.lang-option');
+            
+            // Find and click the corresponding desktop lang option
+            langOptions.forEach(option => {
+                if (option.dataset.lang === lang) {
+                    option.click();
+                }
+            });
+            
+            closeMobileMenu();
+        });
+    });
+    
+    // Update mobile theme icons on page load
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    if (mobileThemeToggle) {
+        const sunIcon = mobileThemeToggle.querySelector('.sun-icon');
+        const moonIcon = mobileThemeToggle.querySelector('.moon-icon');
+        
+        if (currentTheme === 'light') {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        } else {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        }
+    }
+});
