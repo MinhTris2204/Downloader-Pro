@@ -72,21 +72,21 @@ class PayOS:
         """Tạo signature cho request theo chuẩn PayOS
         
         Theo docs PayOS:
-        1. Loại bỏ field signature và các field null/empty
-        2. Sort keys alphabetically  
-        3. Tạo query string: key1=value1&key2=value2 (KHÔNG URL encode)
-        4. HMAC SHA256 với checksum key
+        - Payment request signature chỉ dùng 5 fields: 
+          amount, cancelUrl, description, orderCode, returnUrl
+        - Sort alphabetically
+        - Format: key1=value1&key2=value2
+        - HMAC SHA256
         """
-        # Loại bỏ signature và null/empty values
-        payload_for_signature = {}
-        for key, value in data.items():
-            if key == "signature":
-                continue
-            if value is None or value == "":
-                continue
-            payload_for_signature[key] = value
+        # Chỉ lấy 5 fields cho payment request signature
+        signature_fields = ["amount", "cancelUrl", "description", "orderCode", "returnUrl"]
         
-        # Sort keys alphabetically và tạo query string
+        payload_for_signature = {}
+        for key in signature_fields:
+            if key in data and data[key] is not None and data[key] != "":
+                payload_for_signature[key] = data[key]
+        
+        # Sort keys alphabetically
         sorted_keys = sorted(payload_for_signature.keys())
         query_parts = []
         
@@ -103,11 +103,10 @@ class PayOS:
                 # For complex types, use JSON
                 value_str = json.dumps(value, separators=(',', ':'), ensure_ascii=False)
             
-            # KHÔNG URL encode - chỉ nối trực tiếp
             query_parts.append(f"{key}={value_str}")
         
         data_query_str = "&".join(query_parts)
-        print(f">>> Signature data (Query string, NO encoding): {data_query_str}")
+        print(f">>> Signature data (5 fields only): {data_query_str}")
         
         # Create HMAC SHA256 signature
         signature = hmac.new(
