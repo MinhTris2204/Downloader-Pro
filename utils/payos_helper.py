@@ -74,9 +74,11 @@ class PayOS:
         Theo docs PayOS:
         1. Loại bỏ field signature và các field null/empty
         2. Sort keys alphabetically
-        3. Tạo query string: key1=value1&key2=value2
+        3. Tạo query string với URL encoding: key1=value1&key2=value2
         4. HMAC SHA256 với checksum key
         """
+        from urllib.parse import quote
+        
         # Loại bỏ signature và null/empty values
         payload_for_signature = {}
         for key, value in data.items():
@@ -101,13 +103,15 @@ class PayOS:
                 value_str = value
             else:
                 # For complex types, use JSON
-                import json
                 value_str = json.dumps(value, separators=(',', ':'), ensure_ascii=False)
             
-            query_parts.append(f"{key}={value_str}")
+            # URL encode both key and value (matching JavaScript encodeURIComponent)
+            encoded_key = quote(str(key), safe='')
+            encoded_value = quote(str(value_str), safe='')
+            query_parts.append(f"{encoded_key}={encoded_value}")
         
         data_query_str = "&".join(query_parts)
-        print(f">>> Signature data (Query string): {data_query_str}")
+        print(f">>> Signature data (Query string, URL encoded): {data_query_str}")
         
         # Create HMAC SHA256 signature
         signature = hmac.new(
