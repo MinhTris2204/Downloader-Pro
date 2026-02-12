@@ -877,6 +877,11 @@ document.addEventListener('DOMContentLoaded', function() {
         mobileSidebar.classList.toggle('active');
         mobileSidebarOverlay.classList.toggle('active');
         document.body.style.overflow = mobileSidebar.classList.contains('active') ? 'hidden' : '';
+        
+        // Update active language when opening sidebar
+        if (mobileSidebar.classList.contains('active')) {
+            updateActiveMobileLang();
+        }
     }
     
     // Close mobile menu
@@ -937,9 +942,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            // Update active state
+            updateActiveMobileLang();
+            
             closeMobileMenu();
         });
     });
+    
+    // Function to update active mobile language button
+    function updateActiveMobileLang() {
+        const currentLang = localStorage.getItem('language') || 'vi';
+        
+        mobileLangBtns.forEach(btn => {
+            if (btn.dataset.lang === currentLang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
     
     // Update mobile theme icons on page load
     const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -955,4 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
             moonIcon.style.display = 'none';
         }
     }
+    
+    // Initialize active language on page load
+    updateActiveMobileLang();
 });
