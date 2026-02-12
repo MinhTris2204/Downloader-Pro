@@ -784,23 +784,40 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 0
+                'delay': 0,
+                'use_cookies': False  # Android client doesn't need cookies
             },
-            # Strategy 1: TV Client (Low bot detection)
+            # Strategy 1: Android Music (Alternative Android client)
             {
-                'name': 'tv',
+                'name': 'android_music',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['tv'],
+                            'player_client': ['android_music'],
                         }
                     },
                 },
-                'delay': 2
+                'delay': 2,
+                'use_cookies': False
             },
-            # Strategy 2: iOS (Using cookies)
+            # Strategy 2: TV Embedded (Low bot detection)
+            {
+                'name': 'tv_embed',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['tv_embedded'],
+                        }
+                    },
+                },
+                'delay': 3,
+                'use_cookies': False
+            },
+            # Strategy 3: iOS (Using cookies)
             {
                 'name': 'ios_classic',
                 'opts': {
@@ -812,9 +829,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 3
+                'delay': 4
             },
-            # Strategy 3: bgutil POT Provider (Requires bgutil server)
+            # Strategy 4: bgutil POT Provider (Requires bgutil server)
             {
                 'name': 'bgutil_pot',
                 'opts': {
@@ -830,9 +847,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 5
+                'delay': 6
             },
-            # Strategy 4: PO Token with Web Client (Deno auto-generation)
+            # Strategy 5: PO Token with Web Client (Deno auto-generation)
             {
                 'name': 'po_token_web',
                 'opts': {
@@ -845,9 +862,9 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 7
+                'delay': 8
             },
-            # Strategy 5: Web Mobile with cleanup
+            # Strategy 6: Web Mobile with cleanup
             {
                 'name': 'mweb_clean',
                 'opts': {
@@ -1068,8 +1085,13 @@ def download_youtube_video(url, format_type, quality, download_id):
         # Friendly error messages
         if 'Failed to extract any player response' in error_msg:
             download_progress[download_id]['error'] = '🔧 YouTube đã thay đổi API.\n\n💡 Giải pháp:\n1. Cập nhật yt-dlp: pip install -U yt-dlp\n2. Khởi động lại server\n3. Thử video khác hoặc đợi vài giờ'
+        elif 'not made this video available in your country' in error_msg or 'not available in your country' in error_msg:
+            # Extract available countries if mentioned
+            available_match = re.search(r'available in (.+?)\.', error_msg)
+            available_countries = available_match.group(1) if available_match else 'một số quốc gia khác'
+            download_progress[download_id]['error'] = f'🌍 Video bị chặn theo khu vực.\n\n📍 Video chỉ khả dụng tại: {available_countries}\n\n💡 Giải pháp:\n🔹 Sử dụng VPN để đổi vị trí\n🔹 Thử video khác không bị chặn vùng\n\n⚙️ Nếu có VPN, thêm --proxy vào cấu hình yt-dlp'
         elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg or 'confirm you' in error_msg.lower():
-            download_progress[download_id]['error'] = '⏳ YouTube phát hiện tải tự động.\n\n✅ Đã thử 5 phương pháp bypass khác nhau.\n\n💡 Giải pháp:\n🔹 Đợi 5-10 phút rồi thử lại\n🔹 Thử video ngắn hơn (<10 phút)\n🔹 Thử video từ kênh khác\n\n🍪 Mẹo nâng cao: Thêm file cookies.txt để bypass hoàn toàn'
+            download_progress[download_id]['error'] = '⏳ YouTube phát hiện tải tự động.\n\n✅ Đã thử 6 phương pháp bypass khác nhau.\n\n💡 Giải pháp:\n🔹 Đợi 5-10 phút rồi thử lại\n🔹 Thử video ngắn hơn (<10 phút)\n🔹 Thử video từ kênh khác\n\n🍪 Mẹo nâng cao: Thêm file cookies.txt để bypass hoàn toàn'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
