@@ -10262,3 +10262,44 @@ body {
         box-shadow: 0 2px 15px rgba(255, 107, 107, 0.5);
     }
 }
+
+/* Donate Header Button */
+.donate-header-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    transition: all 0.3s ease;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.donate-header-btn:hover {
+    background: linear-gradient(135deg, #ff5252 0%, #e04e5f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    color: white;
+}
+
+.donate-header-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 768px) {
+    .donate-header-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    .donate-header-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
