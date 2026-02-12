@@ -1571,6 +1571,336 @@ def api_tracking_stats():
         print(f"[ERROR] Tracking stats failed: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/admin/downloads/recent')
+def api_recent_downloads():
+    """Get recent downloads with full details"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 503
+    
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                id, platform, format, quality, download_time,
+                ip_address, country, city, device_type, os, browser,
+                is_mobile, is_tablet, is_pc, success
+            FROM downloads
+            ORDER BY download_time DESC
+            LIMIT %s
+        """, (limit,))
+        
+        downloads = []
+        for row in cursor.fetchall():
+            downloads.append({
+                'id': row[0],
+                'platform': row[1],
+                'format': row[2],
+                'quality': row[3],
+                'download_time': row[4].isoformat() if row[4] else None,
+                'ip_address': row[5],
+                'country': row[6],
+                'city': row[7],
+                'device_type': row[8],
+                'os': row[9],
+                'browser': row[10],
+                'is_mobile': row[11],
+                'is_tablet': row[12],
+                'is_pc': row[13],
+                'success': row[14]
+            })
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({'downloads': downloads})
+        
+    except Exception as e:
+        print(f"[ERROR] Recent downloads failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/analytics/daily')
+def api_daily_analytics():
+    """Get daily download statistics for last 30 days"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 503
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Daily downloads for last 30 days
+        cursor.execute("""
+            SELECT 
+                DATE(download_time) as date,
+                COUNT(*) as total,
+                SUM(CASE WHEN platform = 'youtube' THEN 1 ELSE 0 END) as youtube,
+                SUM(CASE WHEN platform = 'tiktok' THEN 1 ELSE 0 END) as tiktok,
+                SUM(CASE WHEN is_mobile THEN 1 ELSE 0 END) as mobile,
+                SUM(CASE WHEN is_pc THEN 1 ELSE 0 END) as desktop
+            FROM downloads
+            WHERE download_time >= CURRENT_DATE - INTERVAL '30 days'
+            GROUP BY DATE(download_time)
+            ORDER BY date DESC
+        """)
+        
+        daily_stats = []
+        for row in cursor.fetchall():
+            daily_stats.append({
+                'date': row[0].isoformat() if row[0] else None,
+                'total': row[1],
+                'youtube': row[2],
+                'tiktok': row[3],
+                'mobile': row[4],
+                'desktop': row[5]
+            })
+        
+        # Platform distribution
+        cursor.execute("""
+            SELECT platform, COUNT(*) as count
+            FROM downloads
+            GROUP BY platform
+            ORDER BY count DESC
+        """)
+        platforms = [{'platform': row[0], 'count': row[1]} for row in cursor.fetchall()]
+        
+        # Format distribution
+        cursor.execute("""
+            SELECT format, COUNT(*) as count
+            FROM downloads
+            GROUP BY format
+            ORDER BY count DESC
+        """)
+        formats = [{'format': row[0], 'count': row[1]} for row in cursor.fetchall()]
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({
+            'daily_stats': daily_stats,
+            'platforms': platforms,
+            'formats': formats
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Daily analytics failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/env-vars')
+def api_env_vars():
+    """Get list of configured environment variables (names only)"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    important_vars = [
+        'DATABASE_URL', 'SECRET_KEY', 'ADMIN_USERNAME', 'ADMIN_PASSWORD',
+        'YOUTUBE_COOKIES', 'YOUTUBE_OAUTH_REFRESH_TOKEN', 
+        'YOUTUBE_PO_TOKEN', 'YOUTUBE_VISITOR_DATA', 'MAX_WORKERS'
+    ]
+    
+    configured = [var for var in important_vars if os.environ.get(var)]
+    
+    return jsonify({'env_vars': configured})
+
+@app.route('/api/admin/db-stats')
+def api_db_stats():
+    """Get database statistics"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 503
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Total records
+        cursor.execute("SELECT COUNT(*) FROM downloads")
+        total_records = cursor.fetchone()[0]
+        
+        # Oldest and newest records
+        cursor.execute("SELECT MIN(download_time), MAX(download_time) FROM downloads")
+        oldest, newest = cursor.fetchone()
+        
+        # Database size (PostgreSQL specific)
+        cursor.execute("SELECT pg_size_pretty(pg_database_size(current_database()))")
+        db_size = cursor.fetchone()[0]
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({
+            'total_records': total_records,
+            'database_size': db_size,
+            'oldest_record': oldest.isoformat() if oldest else None,
+            'newest_record': newest.isoformat() if newest else None
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] DB stats failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/export-data')
+def api_export_data():
+    """Export tracking data as CSV"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 503
+    
+    try:
+        import io
+        import csv
+        from flask import Response
+        
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT 
+                id, platform, format, quality, download_time,
+                ip_address, country, country_code, city, timezone,
+                device_type, os, browser, is_mobile, is_tablet, is_pc
+            FROM downloads
+            ORDER BY download_time DESC
+        """)
+        
+        # Create CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Header
+        writer.writerow([
+            'ID', 'Platform', 'Format', 'Quality', 'Download Time',
+            'IP Address', 'Country', 'Country Code', 'City', 'Timezone',
+            'Device Type', 'OS', 'Browser', 'Is Mobile', 'Is Tablet', 'Is PC'
+        ])
+        
+        # Data
+        for row in cursor.fetchall():
+            writer.writerow(row)
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=tracking_data.csv'}
+        )
+        
+    except Exception as e:
+        print(f"[ERROR] Export failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/clear-old-data', methods=['POST'])
+def api_clear_old_data():
+    """Clear old tracking data"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 503
+    
+    try:
+        data = request.get_json()
+        days = data.get('days', 90)
+        
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            DELETE FROM downloads
+            WHERE download_time < CURRENT_DATE - INTERVAL '%s days'
+        """, (days,))
+        
+        deleted_count = cursor.rowcount
+        conn.commit()
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({'success': True, 'deleted_count': deleted_count})
+        
+    except Exception as e:
+        print(f"[ERROR] Clear old data failed: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/clear-cache', methods=['POST'])
+def api_clear_cache():
+    """Clear cache files"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        cache_type = data.get('type', 'temp')
+        
+        if cache_type == 'temp':
+            # Clear temp directory
+            temp_dir = tempfile.gettempdir()
+            count = 0
+            for file in os.listdir(temp_dir):
+                if file.startswith('tmp') or file.endswith('.tmp'):
+                    try:
+                        os.remove(os.path.join(temp_dir, file))
+                        count += 1
+                    except:
+                        pass
+            return jsonify({'success': True, 'message': f'Đã xóa {count} temp files'})
+        
+        elif cache_type == 'downloads':
+            # Clear download cache
+            global download_data, download_progress
+            count = len(download_data)
+            download_data.clear()
+            download_progress.clear()
+            return jsonify({'success': True, 'message': f'Đã xóa {count} download cache entries'})
+        
+        return jsonify({'success': False, 'error': 'Invalid cache type'}), 400
+        
+    except Exception as e:
+        print(f"[ERROR] Clear cache failed: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/change-password', methods=['POST'])
+def api_change_password():
+    """Change admin password"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        current_password = data.get('current_password', '')
+        new_password = data.get('new_password', '')
+        
+        # Verify current password
+        current_hash = hashlib.sha256(current_password.encode()).hexdigest()
+        if current_hash != ADMIN_PASSWORD_HASH:
+            return jsonify({'success': False, 'error': 'Mật khẩu hiện tại không đúng'}), 401
+        
+        # Note: In production, you should update the password in database or env vars
+        # For now, just return success (password change requires restart with new env var)
+        return jsonify({
+            'success': True,
+            'message': 'Để thay đổi mật khẩu vĩnh viễn, vui lòng cập nhật biến môi trường ADMIN_PASSWORD trên Railway'
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Change password failed: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/debug/env')
 def debug_env():
     """Debug endpoint to check server environment"""

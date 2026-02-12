@@ -322,6 +322,9 @@
         <div class="content-section" id="tracking">
             <div class="section-header">
                 <h2>Thống kê Tracking</h2>
+                <button onclick="loadTrackingData()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
             </div>
             
             <div class="stats-grid">
@@ -361,6 +364,7 @@
                         <th>Quốc gia</th>
                         <th>Mã</th>
                         <th>Số lượt tải</th>
+                        <th>Cập nhật</th>
                     </tr>
                 </thead>
                 <tbody id="countriesTable"></tbody>
@@ -377,22 +381,87 @@
                 </thead>
                 <tbody id="citiesTable"></tbody>
             </table>
+            
+            <h3 style="margin: 30px 0 15px; color: #2c3e50;">🌐 Top 10 Trình duyệt</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trình duyệt</th>
+                        <th>Số lượt tải</th>
+                    </tr>
+                </thead>
+                <tbody id="browsersTable"></tbody>
+            </table>
+            
+            <p style="margin-top: 20px; color: #7f8c8d; font-size: 13px;">
+                <i class="fas fa-clock"></i> Cập nhật lần cuối: <span id="lastUpdate">-</span>
+            </p>
         </div>
 
         <!-- Downloads Section -->
         <div class="content-section" id="downloads">
             <div class="section-header">
                 <h2>Lịch sử tải xuống</h2>
+                <button onclick="loadDownloadsHistory()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
             </div>
-            <div class="loading">Tính năng đang phát triển...</div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="margin-right: 10px; color: #2c3e50; font-weight: 600;">Hiển thị:</label>
+                <select id="limitSelect" onchange="loadDownloadsHistory()" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    <option value="50">50 gần nhất</option>
+                    <option value="100">100 gần nhất</option>
+                    <option value="200">200 gần nhất</option>
+                </select>
+            </div>
+            
+            <div id="downloadsTable" class="loading">Đang tải...</div>
         </div>
 
         <!-- Analytics Section -->
         <div class="content-section" id="analytics">
             <div class="section-header">
                 <h2>Phân tích chi tiết</h2>
+                <button onclick="loadAnalytics()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
             </div>
-            <div class="loading">Tính năng đang phát triển...</div>
+            
+            <h3 style="margin: 20px 0 15px; color: #2c3e50;">📊 Thống kê 30 ngày gần đây</h3>
+            <div id="dailyChart" class="chart-container"></div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+                <div>
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">📱 Phân bổ Platform</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Platform</th>
+                                <th>Số lượt</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="platformsTable"></tbody>
+                    </table>
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">🎬 Phân bổ Format</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Format</th>
+                                <th>Số lượt</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="formatsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="analyticsLoading" class="loading" style="display: none;">Đang tải...</div>
         </div>
 
         <!-- Settings Section -->
@@ -400,7 +469,75 @@
             <div class="section-header">
                 <h2>Cài đặt hệ thống</h2>
             </div>
-            <div class="loading">Tính năng đang phát triển...</div>
+            
+            <!-- System Info -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">🖥️ Thông tin hệ thống</h3>
+                <div id="systemInfo" class="loading">Đang tải...</div>
+            </div>
+            
+            <!-- Database Management -->
+            <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #ffc107;">
+                <h3 style="color: #856404; margin-bottom: 15px;">🗄️ Quản lý Database</h3>
+                <p style="color: #856404; margin-bottom: 15px;">Các thao tác này có thể ảnh hưởng đến dữ liệu. Hãy cẩn thận!</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="exportData()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-download"></i> Export dữ liệu
+                    </button>
+                    <button onclick="showDatabaseStats()" style="padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-chart-bar"></i> Thống kê DB
+                    </button>
+                    <button onclick="clearOldData()" style="padding: 10px 20px; background: #ffc107; color: #000; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-broom"></i> Xóa dữ liệu cũ
+                    </button>
+                </div>
+                <div id="dbStatsResult" style="margin-top: 15px;"></div>
+            </div>
+            
+            <!-- Admin Account -->
+            <div style="background: white; padding: 25px; border-radius: 10px; margin-bottom: 30px; border: 2px solid #e0e0e0;">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">👤 Tài khoản Admin</h3>
+                <form id="changePasswordForm" style="max-width: 500px;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #2c3e50; font-weight: 600; margin-bottom: 8px;">Mật khẩu hiện tại</label>
+                        <input type="password" id="currentPassword" required style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #2c3e50; font-weight: 600; margin-bottom: 8px;">Mật khẩu mới</label>
+                        <input type="password" id="newPassword" required minlength="6" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #2c3e50; font-weight: 600; margin-bottom: 8px;">Xác nhận mật khẩu mới</label>
+                        <input type="password" id="confirmPassword" required minlength="6" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <button type="submit" style="padding: 12px 24px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-key"></i> Đổi mật khẩu
+                    </button>
+                    <div id="passwordChangeResult" style="margin-top: 15px;"></div>
+                </form>
+            </div>
+            
+            <!-- Environment Variables -->
+            <div style="background: white; padding: 25px; border-radius: 10px; margin-bottom: 30px; border: 2px solid #e0e0e0;">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">🔧 Biến môi trường</h3>
+                <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 14px;">Các biến môi trường quan trọng (chỉ hiển thị tên, không hiển thị giá trị)</p>
+                <div id="envVars" class="loading">Đang tải...</div>
+            </div>
+            
+            <!-- Cache Management -->
+            <div style="background: white; padding: 25px; border-radius: 10px; border: 2px solid #e0e0e0;">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">🗑️ Quản lý Cache</h3>
+                <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 14px;">Xóa cache để giải phóng bộ nhớ và làm mới dữ liệu</p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="clearCache('temp')" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-trash"></i> Xóa temp files
+                    </button>
+                    <button onclick="clearCache('downloads')" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-trash"></i> Xóa downloads cache
+                    </button>
+                </div>
+                <div id="cacheResult" style="margin-top: 15px;"></div>
+            </div>
         </div>
     </div>
 
