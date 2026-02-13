@@ -242,6 +242,10 @@
                 <i class="fas fa-map-marker-alt"></i>
                 <span>Tracking</span>
             </a>
+            <a class="menu-item" data-section="donations">
+                <i class="fas fa-heart"></i>
+                <span>Ủng hộ</span>
+            </a>
             <a class="menu-item" data-section="downloads">
                 <i class="fas fa-download"></i>
                 <span>Lịch sử tải</span>
@@ -396,6 +400,78 @@
             <p style="margin-top: 20px; color: #7f8c8d; font-size: 13px;">
                 <i class="fas fa-clock"></i> Cập nhật lần cuối: <span id="lastUpdate">-</span>
             </p>
+        </div>
+
+        <!-- Donations Section -->
+        <div class="content-section" id="donations">
+            <div class="section-header">
+                <h2>Quản lý Ủng hộ</h2>
+                <button onclick="loadDonations()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="donationSuccessCount">0</h3>
+                        <p>Thành công</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="donationTotalAmount">0đ</h3>
+                        <p>Tổng tiền</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="donationPendingCount">0</h3>
+                        <p>Đang chờ</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="donationFailedCount">0</h3>
+                        <p>Thất bại</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div style="margin: 20px 0; display: flex; gap: 15px; align-items: center;">
+                <label style="color: #2c3e50; font-weight: 600;">Trạng thái:</label>
+                <select id="donationStatusFilter" onchange="loadDonations()" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    <option value="all">Tất cả</option>
+                    <option value="success">Thành công</option>
+                    <option value="pending">Đang chờ</option>
+                    <option value="failed">Thất bại</option>
+                    <option value="cancelled">Đã hủy</option>
+                </select>
+                
+                <label style="color: #2c3e50; font-weight: 600; margin-left: 20px;">Hiển thị:</label>
+                <select id="donationLimitSelect" onchange="loadDonations()" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    <option value="20">20 gần nhất</option>
+                    <option value="50">50 gần nhất</option>
+                    <option value="100">100 gần nhất</option>
+                </select>
+            </div>
+            
+            <!-- Donations Table -->
+            <div id="donationsTable" class="loading">Đang tải...</div>
         </div>
 
         <!-- Downloads Section -->

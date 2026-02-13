@@ -17,6 +17,7 @@ document.querySelectorAll('.menu-item').forEach(item => {
         const titles = {
             'overview': 'Tổng quan',
             'tracking': 'Thống kê Tracking',
+            'donations': 'Quản lý Ủng hộ',
             'downloads': 'Lịch sử tải xuống',
             'analytics': 'Phân tích chi tiết',
             'settings': 'Cài đặt hệ thống'
@@ -26,6 +27,8 @@ document.querySelectorAll('.menu-item').forEach(item => {
         // Load data for section
         if (section === 'tracking') {
             loadTrackingData();
+        } else if (section === 'donations') {
+            loadDonations();
         } else if (section === 'downloads') {
             loadDownloadsHistory();
         } else if (section === 'analytics') {
@@ -113,6 +116,117 @@ async function loadTrackingData() {
     } catch (error) {
         console.error('Error loading tracking:', error);
     }
+}
+
+// Load donations
+async function loadDonations() {
+    const statusFilter = document.getElementById('donationStatusFilter')?.value || 'all';
+    const limit = document.getElementById('donationLimitSelect')?.value || 20;
+    const container = document.getElementById('donationsTable');
+    
+    if (container) {
+        container.innerHTML = '<div class="loading">Đang tải...</div>';
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/donations?status=${statusFilter}&limit=${limit}&page=1`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            if (container) {
+                container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu</p>';
+            }
+            return;
+        }
+        
+        // Update stats
+        const stats = calculateDonationStats(data.donations);
+        document.getElementById('donationSuccessCount').textContent = stats.successCount.toLocaleString();
+        document.getElementById('donationTotalAmount').textContent = stats.totalAmount.toLocaleString() + 'đ';
+        document.getElementById('donationPendingCount').textContent = stats.pendingCount.toLocaleString();
+        document.getElementById('donationFailedCount').textContent = stats.failedCount.toLocaleString();
+        
+        // Display table
+        if (data.donations && data.donations.length > 0) {
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Số tiền</th>
+                            <th>Người ủng hộ</th>
+                            <th>Email</th>
+                            <th>Trạng thái</th>
+                            <th>Phương thức</th>
+                            <th>Mã GD</th>
+                            <th>Thời gian tạo</th>
+                            <th>Thời gian thanh toán</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.donations.map(d => `
+                            <tr>
+                                <td style="font-family: monospace; font-weight: bold;">${d.order_code}</td>
+                                <td style="color: #e74c3c; font-weight: bold;">${d.amount.toLocaleString()}đ</td>
+                                <td>${d.donor_name || 'Anonymous'}</td>
+                                <td style="font-size: 12px;">${d.donor_email || '-'}</td>
+                                <td>${getStatusBadge(d.payment_status)}</td>
+                                <td style="font-size: 12px;">${d.payment_method || '-'}</td>
+                                <td style="font-family: monospace; font-size: 11px;">${d.transaction_id || '-'}</td>
+                                <td style="white-space: nowrap; font-size: 12px;">${formatDateTime(d.created_at)}</td>
+                                <td style="white-space: nowrap; font-size: 12px;">${d.paid_at ? formatDateTime(d.paid_at) : '-'}</td>
+                                <td style="font-family: monospace; font-size: 11px;">${d.ip_address || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <p style="margin-top: 15px; color: #7f8c8d; font-size: 13px;">
+                    <i class="fas fa-info-circle"></i> Hiển thị ${data.donations.length} / ${data.total} donations
+                </p>
+            `;
+        } else {
+            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</p>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading donations:', error);
+        if (container) {
+            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu</p>';
+        }
+    }
+}
+
+// Calculate donation statistics
+function calculateDonationStats(donations) {
+    let successCount = 0;
+    let totalAmount = 0;
+    let pendingCount = 0;
+    let failedCount = 0;
+    
+    donations.forEach(d => {
+        if (d.payment_status === 'success') {
+            successCount++;
+            totalAmount += d.amount;
+        } else if (d.payment_status === 'pending') {
+            pendingCount++;
+        } else if (d.payment_status === 'failed' || d.payment_status === 'cancelled') {
+            failedCount++;
+        }
+    });
+    
+    return { successCount, totalAmount, pendingCount, failedCount };
+}
+
+// Get status badge HTML
+function getStatusBadge(status) {
+    const badges = {
+        'success': '<span style="padding: 4px 10px; background: #4caf50; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">✓ Thành công</span>',
+        'pending': '<span style="padding: 4px 10px; background: #ff9800; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">⏳ Đang chờ</span>',
+        'failed': '<span style="padding: 4px 10px; background: #f44336; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">✗ Thất bại</span>',
+        'cancelled': '<span style="padding: 4px 10px; background: #9e9e9e; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">⊘ Đã hủy</span>'
+    };
+    return badges[status] || status;
 }
 
 // Load downloads history
