@@ -84,6 +84,57 @@ const translations = {
         faq_3_q: 'Có cần đăng ký tài khoản không?',
         faq_3_a: 'Không cần đăng ký, sử dụng ngay lập tức.',
         
+        // SEO Content
+        about_downloader_pro_title: '📖 Về Downloader Pro',
+        about_title: 'Công cụ tải video tốt nhất 2026',
+        about_desc: 'Downloader Pro',
+        about_desc_text: 'hỗ trợ tải video TikTok không logo, YouTube Full HD/4K và chuyển đổi MP3 chất lượng cao. Miễn phí, không quảng cáo, không cần đăng ký.',
+        main_features_title: 'Tính năng chính',
+        feat_tiktok_seo: '✅ TikTok: Tải video không logo, tải trọn bộ album ảnh, âm thanh MP3.',
+        feat_youtube_seo: '✅ YouTube: Tải video 1080p, 4K, chuyển đổi MP3 320kbps.',
+        feat_platform_seo: '✅ Đa nền tảng: Hoạt động mượt mà trên iPhone, Android, PC, Tablet.',
+        feat_secure_seo: '✅ An toàn: Không lưu trữ video hay thông tin người dùng.',
+        quick_guide_title: 'Hướng dẫn nhanh',
+        qg_1: '1. Sao chép link: Lấy link video từ nút Chia sẻ trên ứng dụng TikTok/YouTube.',
+        qg_2: '2. Dán link: Dán vào ô nhập liệu bên trên.',
+        qg_3: '3. Tải xuống: Chọn định dạng MP4/MP3 và nhấn Tải về.',
+        faq_2_q_alt: 'File tải về lưu ở đâu?',
+        faq_2_a_alt: 'File sẽ nằm trong thư mục "Downloads" hoặc "Tệp" trên điện thoại/máy tính của bạn.',
+        faq_3_q_alt: 'Tại sao không tải được?',
+        faq_3_a_alt: 'Kiểm tra xem video có ở chế độ Riêng tư (Private) không. Chúng tôi chỉ hỗ trợ tải video Công khai (Public).',
+        legal_note: 'Lưu ý:',
+        legal_note_text: 'Công cụ chỉ dùng cho mục đích cá nhân. Vui lòng tôn trọng bản quyền tác giả.',
+        
+        // FAQ Section
+        faq_section_title: '❓ Câu Hỏi Thường Gặp',
+        faq_q1: 'Công cụ này có an toàn không?',
+        faq_a1: 'Chúng tôi cam kết bảo mật thông tin người dùng và không cài đặt bất kỳ phần mềm độc hại nào.',
+        faq_q2: 'Tại sao không tải được video?',
+        faq_a2: 'Vui lòng kiểm tra lại liên kết (phải là công khai) hoặc thử lại sau vài phút nếu server đang bận.',
+        faq_q3: 'Có giới hạn số lượng tải không?',
+        faq_a3: 'Miễn phí 2 lượt/tuần. Nâng cấp Premium để tải không giới hạn.',
+        
+        // Guide Section
+        guide_title: '🚀 Hướng Dẫn Sử Dụng',
+        
+        // Blog Section
+        blog_section_title: '📚 Hướng Dẫn Chi Tiết',
+        blog_desc: 'Khám phá các bài viết hướng dẫn chi tiết về cách tải video YouTube, TikTok',
+        blog_youtube_title: 'Tải Video YouTube',
+        blog_youtube_desc: 'Hướng dẫn chi tiết cách tải video YouTube về máy tính, điện thoại với chất lượng HD, Full HD, 4K',
+        blog_tiktok_title: 'Tải TikTok Không Logo',
+        blog_tiktok_desc: 'Cách tải video TikTok không có logo watermark, tải album ảnh slideshow chất lượng gốc',
+        blog_mp3_title: 'Chuyển YouTube Sang MP3',
+        blog_mp3_desc: 'Hướng dẫn chuyển đổi video YouTube sang file MP3 với chất lượng 128kbps, 192kbps, 320kbps',
+        blog_read_more: 'Đọc thêm →',
+        
+        // Promo Section
+        promo_tiktok_title: '🎉 Tải TikTok Không Logo!',
+        promo_tiktok_desc: 'Video chất lượng cao, không dính watermark. Hoàn toàn miễn phí!',
+        
+        // Footer
+        footer_rights: '© 2026 Downloader Pro. All rights reserved.',
+        
         // Donate
         donate_title: 'Ủng hộ duy trì website',
         donate_subtitle: 'Nếu bạn thấy website hữu ích, hãy ủng hộ chúng tôi một ly cà phê để duy trì và phát triển thêm nhiều tính năng mới!',
@@ -198,6 +249,57 @@ const translations = {
         faq_3_q: 'Do I need to register an account?',
         faq_3_a: 'No registration required, use immediately.',
         
+        // SEO Content
+        about_downloader_pro_title: '📖 About Downloader Pro',
+        about_title: 'Best Video Downloader Tool 2026',
+        about_desc: 'Downloader Pro',
+        about_desc_text: 'supports downloading TikTok videos without watermark, YouTube Full HD/4K and high quality MP3 conversion. Free, no ads, no registration required.',
+        main_features_title: 'Main Features',
+        feat_tiktok_seo: '✅ TikTok: Download videos without watermark, download full photo albums, MP3 audio.',
+        feat_youtube_seo: '✅ YouTube: Download 1080p, 4K videos, convert to 320kbps MP3.',
+        feat_platform_seo: '✅ Cross-platform: Works smoothly on iPhone, Android, PC, Tablet.',
+        feat_secure_seo: '✅ Secure: No video storage or user information.',
+        quick_guide_title: 'Quick Guide',
+        qg_1: '1. Copy link: Get video link from Share button on TikTok/YouTube app.',
+        qg_2: '2. Paste link: Paste into the input field above.',
+        qg_3: '3. Download: Choose MP4/MP3 format and click Download.',
+        faq_2_q_alt: 'Where is the downloaded file saved?',
+        faq_2_a_alt: 'The file will be in the "Downloads" or "Files" folder on your phone/computer.',
+        faq_3_q_alt: 'Why can\'t I download?',
+        faq_3_a_alt: 'Check if the video is in Private mode. We only support downloading Public videos.',
+        legal_note: 'Note:',
+        legal_note_text: 'This tool is for personal use only. Please respect copyright.',
+        
+        // FAQ Section
+        faq_section_title: '❓ Frequently Asked Questions',
+        faq_q1: 'Is this tool safe?',
+        faq_a1: 'We are committed to protecting user information and do not install any malware.',
+        faq_q2: 'Why can\'t I download videos?',
+        faq_a2: 'Please check the link (must be public) or try again in a few minutes if the server is busy.',
+        faq_q3: 'Is there a download limit?',
+        faq_a3: 'Free 2 downloads/week. Upgrade to Premium for unlimited downloads.',
+        
+        // Guide Section
+        guide_title: '🚀 How to Use',
+        
+        // Blog Section
+        blog_section_title: '📚 Detailed Guides',
+        blog_desc: 'Explore detailed guides on how to download YouTube, TikTok videos',
+        blog_youtube_title: 'Download YouTube Videos',
+        blog_youtube_desc: 'Detailed guide on how to download YouTube videos to computer, phone in HD, Full HD, 4K quality',
+        blog_tiktok_title: 'Download TikTok Without Watermark',
+        blog_tiktok_desc: 'How to download TikTok videos without watermark logo, download original quality photo slideshow albums',
+        blog_mp3_title: 'Convert YouTube to MP3',
+        blog_mp3_desc: 'Guide to convert YouTube videos to high quality 320kbps MP3 music files',
+        blog_read_more: 'Read more →',
+        
+        // Promo Section
+        promo_tiktok_title: '🎉 Download TikTok Without Watermark!',
+        promo_tiktok_desc: 'High quality videos, no watermark. Completely free!',
+        
+        // Footer
+        footer_rights: '© 2026 Downloader Pro. All rights reserved.',
+        
         // Donate
         donate_title: 'Support Our Website',
         donate_subtitle: 'If you find our website useful, please support us with a coffee to maintain and develop more new features!',
@@ -311,6 +413,57 @@ const translations = {
         faq_2_a: 'Поддержка всех качеств от 360p до 4K в зависимости от оригинального видео.',
         faq_3_q: 'Нужна ли регистрация аккаунта?',
         faq_3_a: 'Регистрация не требуется, используйте сразу.',
+        
+        // SEO Content
+        about_downloader_pro_title: '📖 О Downloader Pro',
+        about_title: 'Лучший инструмент для загрузки видео 2026',
+        about_desc: 'Downloader Pro',
+        about_desc_text: 'поддерживает загрузку видео TikTok без водяного знака, YouTube Full HD/4K и высококачественное преобразование MP3. Бесплатно, без рекламы, без регистрации.',
+        main_features_title: 'Основные функции',
+        feat_tiktok_seo: '✅ TikTok: Загрузка видео без водяного знака, загрузка полных фотоальбомов, аудио MP3.',
+        feat_youtube_seo: '✅ YouTube: Загрузка видео 1080p, 4K, конвертация в MP3 320kbps.',
+        feat_platform_seo: '✅ Кроссплатформенность: Работает на iPhone, Android, ПК, планшетах.',
+        feat_secure_seo: '✅ Безопасность: Без хранения видео или информации пользователя.',
+        quick_guide_title: 'Краткое руководство',
+        qg_1: '1. Скопировать ссылку: Получите ссылку на видео из кнопки "Поделиться" в приложении TikTok/YouTube.',
+        qg_2: '2. Вставить ссылку: Вставьте в поле ввода выше.',
+        qg_3: '3. Скачать: Выберите формат MP4/MP3 и нажмите "Скачать".',
+        faq_2_q_alt: 'Где сохраняется загруженный файл?',
+        faq_2_a_alt: 'Файл будет в папке "Загрузки" или "Файлы" на вашем телефоне/компьютере.',
+        faq_3_q_alt: 'Почему не могу скачать?',
+        faq_3_a_alt: 'Проверьте, не находится ли видео в режиме "Приватное". Мы поддерживаем только публичные видео.',
+        legal_note: 'Примечание:',
+        legal_note_text: 'Этот инструмент предназначен только для личного использования. Пожалуйста, уважайте авторские права.',
+        
+        // FAQ Section
+        faq_section_title: '❓ Часто Задаваемые Вопросы',
+        faq_q1: 'Безопасен ли этот инструмент?',
+        faq_a1: 'Мы обязуемся защищать информацию пользователей и не устанавливаем вредоносное ПО.',
+        faq_q2: 'Почему не могу скачать видео?',
+        faq_a2: 'Проверьте ссылку (должна быть публичной) или попробуйте снова через несколько минут, если сервер занят.',
+        faq_q3: 'Есть ли ограничение на загрузки?',
+        faq_a3: 'Бесплатно 2 загрузки/неделю. Обновитесь до Premium для неограниченных загрузок.',
+        
+        // Guide Section
+        guide_title: '🚀 Как использовать',
+        
+        // Blog Section
+        blog_section_title: '📚 Подробные руководства',
+        blog_desc: 'Изучите подробные руководства по загрузке видео YouTube, TikTok',
+        blog_youtube_title: 'Скачать видео YouTube',
+        blog_youtube_desc: 'Подробное руководство по загрузке видео YouTube на компьютер, телефон в качестве HD, Full HD, 4K',
+        blog_tiktok_title: 'Скачать TikTok без водяного знака',
+        blog_tiktok_desc: 'Как скачать видео TikTok без водяного знака, загрузить фотоальбомы слайд-шоу в оригинальном качестве',
+        blog_mp3_title: 'Конвертировать YouTube в MP3',
+        blog_mp3_desc: 'Руководство по конвертации видео YouTube в высококачественные музыкальные файлы MP3 320kbps',
+        blog_read_more: 'Читать далее →',
+        
+        // Promo Section
+        promo_tiktok_title: '🎉 Скачать TikTok без водяного знака!',
+        promo_tiktok_desc: 'Видео высокого качества, без водяного знака. Совершенно бесплатно!',
+        
+        // Footer
+        footer_rights: '© 2026 Downloader Pro. Все права защищены.',
         
         // Donate
         donate_title: 'Поддержите наш сайт',
