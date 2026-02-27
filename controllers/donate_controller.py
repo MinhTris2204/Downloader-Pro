@@ -34,6 +34,8 @@ def create_donation():
         name = data.get('name', 'Anonymous')
         email = data.get('email', '')
         message = data.get('message', '')
+        is_premium = data.get('is_premium', False)  # Flag for premium purchase
+        user_id = data.get('user_id', '')  # User ID for premium activation
         
         if amount < 1000:
             return jsonify({
@@ -56,6 +58,11 @@ def create_donation():
                 conn = db_pool.getconn()
                 cursor = conn.cursor()
                 
+                # Store user_id in message field if premium purchase
+                stored_message = message
+                if is_premium and user_id:
+                    stored_message = f"PREMIUM:{user_id}|{message}" if message else f"PREMIUM:{user_id}"
+                
                 cursor.execute("""
                     INSERT INTO donations 
                     (order_code, amount, donor_name, donor_email, message, 
@@ -63,20 +70,20 @@ def create_donation():
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                 """, (
                     str(order_code), amount, name, email if email else None, 
-                    message if message else None, 'pending', ip_address, user_agent
+                    stored_message if stored_message else None, 'pending', ip_address, user_agent
                 ))
                 
                 conn.commit()
                 cursor.close()
                 db_pool.putconn(conn)
-                print(f">>> Donation record created: {order_code}")
+                print(f">>> Donation record created: {order_code} (Premium: {is_premium})")
             except Exception as e:
                 print(f">>> Error saving donation: {e}")
                 # Continue anyway, payment link is more important
         
         # Tạo description
-        description = f"Donate {amount:,} VND"
-        if message:
+        description = f"{'Premium Access' if is_premium else 'Donate'} {amount:,} VND"
+        if message and not is_premium:
             description += f" - {message[:50]}"
         
         # Tạo payment link
@@ -173,16 +180,40 @@ def create_donation():
 def payos_return():
     """Xử lý khi thanh toán thành công"""
     from app import db_pool
+    from utils.download_limit import activate_premium
     
     order_code = request.args.get('orderCode', '')
     status = request.args.get('status', '')
     
-    # Update donation status to success
+    # Update donation status to success and activate premium if applicable
     if db_pool and order_code:
         try:
             conn = db_pool.getconn()
             cursor = conn.cursor()
             
+            # Get donation info
+            cursor.execute("""
+                SELECT message, amount FROM donations
+                WHERE order_code = %s
+            """, (order_code,))
+            
+            result = cursor.fetchone()
+            if result:
+                message = result[0] or ''
+                amount = result[1]
+                
+                # Check if this is a premium purchase
+                if message.startswith('PREMIUM:'):
+                    # Extract user_id
+                    parts = message.split('|')[0]
+                    user_id = parts.replace('PREMIUM:', '')
+                    
+                    # Activate premium
+                    success = activate_premium(db_pool, user_id, order_code, amount)
+                    if success:
+                        print(f">>> Premium activated for user {user_id[:8]}... (order: {order_code})")
+            
+            # Update donation status
             cursor.execute("""
                 UPDATE donations 
                 SET payment_status = 'success',

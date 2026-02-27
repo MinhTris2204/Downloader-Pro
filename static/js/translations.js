@@ -18,7 +18,20 @@ const translations = {
         donate_messages_title: '💬 Lời nhắn từ những người ủng hộ',
         donate_messages_subtitle: 'Cảm ơn sự hỗ trợ của các bạn!',
         footer_desc: 'Công cụ tải video YouTube, TikTok miễn phí tốt nhất Việt Nam. Hỗ trợ chuyển đổi MP4, MP3 chất lượng cao.',
-        footer_contact: 'Liên hệ hỗ trợ'
+        footer_contact: 'Liên hệ hỗ trợ',
+        // Download limit messages
+        limit_title: '⚠️ Đã hết lượt tải miễn phí',
+        limit_message: 'Bạn đã sử dụng hết 2 lượt tải miễn phí trong tuần này.',
+        limit_explanation: 'Để duy trì và phát triển website, chúng tôi cần chi phí cho server, băng thông và bảo trì. Mong bạn thông cảm!',
+        limit_premium_title: '✨ Nâng cấp Premium',
+        limit_premium_benefits: '• Tải xuống không giới hạn trong 30 ngày\n• Không quảng cáo\n• Ưu tiên hỗ trợ',
+        limit_amount_label: 'Chọn hoặc nhập số tiền:',
+        limit_amount_custom: 'Số tiền khác',
+        limit_name_label: 'Tên của bạn (tùy chọn):',
+        limit_button_pay: '💳 Thanh toán',
+        limit_button_cancel: 'Để sau',
+        premium_status: 'Premium đến',
+        downloads_remaining: 'Còn {count} lượt tải'
     },
     en: {
         nav_home: 'Home',
@@ -38,7 +51,20 @@ const translations = {
         donate_messages_title: '💬 Messages from Supporters',
         donate_messages_subtitle: 'Thank you for your support!',
         footer_desc: 'Best free YouTube, TikTok video downloader in Vietnam. Support high quality MP4, MP3 conversion.',
-        footer_contact: 'Contact Support'
+        footer_contact: 'Contact Support',
+        // Download limit messages
+        limit_title: '⚠️ Free Downloads Limit Reached',
+        limit_message: 'You have used all 2 free downloads this week.',
+        limit_explanation: 'To maintain and develop the website, we need costs for servers, bandwidth and maintenance. Thank you for understanding!',
+        limit_premium_title: '✨ Upgrade to Premium',
+        limit_premium_benefits: '• Unlimited downloads for 30 days\n• No ads\n• Priority support',
+        limit_amount_label: 'Choose or enter amount:',
+        limit_amount_custom: 'Custom amount',
+        limit_name_label: 'Your name (optional):',
+        limit_button_pay: '💳 Pay Now',
+        limit_button_cancel: 'Later',
+        premium_status: 'Premium until',
+        downloads_remaining: '{count} downloads left'
     },
     ru: {
         nav_home: 'Главная',
@@ -58,7 +84,20 @@ const translations = {
         donate_messages_title: '💬 Сообщения от спонсоров',
         donate_messages_subtitle: 'Спасибо за вашу поддержку!',
         footer_desc: 'Лучший бесплатный загрузчик видео YouTube, TikTok во Вьетнаме. Поддержка высококачественного преобразования MP4, MP3.',
-        footer_contact: 'Связаться с поддержкой'
+        footer_contact: 'Связаться с поддержкой',
+        // Download limit messages
+        limit_title: '⚠️ Лимит бесплатных загрузок исчерпан',
+        limit_message: 'Вы использовали все 2 бесплатные загрузки на этой неделе.',
+        limit_explanation: 'Для поддержания и развития сайта нам нужны средства на серверы, трафик и обслуживание. Спасибо за понимание!',
+        limit_premium_title: '✨ Обновить до Premium',
+        limit_premium_benefits: '• Неограниченные загрузки на 30 дней\n• Без рекламы\n• Приоритетная поддержка',
+        limit_amount_label: 'Выберите или введите сумму:',
+        limit_amount_custom: 'Другая сумма',
+        limit_name_label: 'Ваше имя (необязательно):',
+        limit_button_pay: '💳 Оплатить',
+        limit_button_cancel: 'Позже',
+        premium_status: 'Premium до',
+        downloads_remaining: 'Осталось {count} загрузок'
     }
 };
 

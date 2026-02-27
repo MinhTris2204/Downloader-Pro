@@ -252,10 +252,23 @@ async function downloadYoutube() {
         const data = await response.json();
 
         if (data.success) {
+            // Update user status
+            if (typeof fetchUserStatus === 'function') {
+                fetchUserStatus();
+            }
             showProgress('youtube', data.download_id);
         } else {
+            // Check if limit exceeded
+            if (response.status === 403 && data.error === 'limit_exceeded') {
+                resetButton('youtube');
+                if (typeof showLimitModal === 'function') {
+                    showLimitModal();
+                } else {
+                    showToast(data.message || 'Bạn đã hết lượt tải miễn phí', 'error');
+                }
+            }
             // Check if it's a rate limit error (429)
-            if (response.status === 429 && data.error) {
+            else if (response.status === 429 && data.error) {
                 // Extract wait time from error message
                 const match = data.error.match(/đợi (\d+) giây/);
                 if (match) {
@@ -440,10 +453,24 @@ async function downloadTiktok() {
         const data = await response.json();
 
         if (data.success) {
+            // Update user status
+            if (typeof fetchUserStatus === 'function') {
+                fetchUserStatus();
+            }
             showProgress('tiktok', data.download_id);
         } else {
-            showToast(data.error || 'Có lỗi xảy ra', 'error');
-            resetButton('tiktok');
+            // Check if limit exceeded
+            if (response.status === 403 && data.error === 'limit_exceeded') {
+                resetButton('tiktok');
+                if (typeof showLimitModal === 'function') {
+                    showLimitModal();
+                } else {
+                    showToast(data.message || 'Bạn đã hết lượt tải miễn phí', 'error');
+                }
+            } else {
+                showToast(data.error || 'Có lỗi xảy ra', 'error');
+                resetButton('tiktok');
+            }
         }
     } catch (err) {
         showToast('Lỗi kết nối server', 'error');

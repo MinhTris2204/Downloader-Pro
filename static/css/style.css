@@ -10535,3 +10535,243 @@ body {
         padding: 10px 14px !important;
     }
 }
+
+
+/* ====== Download Limit Modal ====== */
+.limit-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.limit-modal {
+    background: var(--card-bg);
+    border-radius: 16px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.limit-modal-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.limit-modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: var(--text-color);
+}
+
+.limit-modal-body {
+    padding: 24px;
+}
+
+.limit-message {
+    font-size: 16px;
+    color: var(--text-color);
+    margin-bottom: 12px;
+}
+
+.limit-explanation {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.premium-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    color: white;
+}
+
+.premium-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+}
+
+.premium-benefits {
+    margin: 0;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.8;
+    white-space: pre-line;
+}
+
+.payment-form label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+}
+
+.amount-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.amount-btn {
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.amount-btn:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.amount-btn.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.custom-amount-input,
+.donor-name-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    background: var(--input-bg);
+    color: var(--text-color);
+    margin-bottom: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.custom-amount-input:focus,
+.donor-name-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.limit-modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-pay {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-cancel {
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+}
+
+.btn-cancel:hover {
+    background: var(--hover-bg);
+}
+
+.btn-pay {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-pay:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-pay:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Download Status Badge */
+.download-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 12px;
+}
+
+.download-status.free {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.download-status.premium {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .limit-modal {
+        max-width: 100%;
+        margin: 0 10px;
+    }
+    
+    .amount-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .limit-modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn-cancel,
+    .btn-pay {
+        width: 100%;
+    }
+}
