@@ -38,7 +38,7 @@ def check_download_limit(db_pool):
         
         # Check if user is premium
         cursor.execute("""
-            SELECT expires_at, downloads_used
+            SELECT expires_at
             FROM premium_users
             WHERE user_id = %s AND expires_at > NOW()
             ORDER BY expires_at DESC
