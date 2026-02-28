@@ -2140,14 +2140,28 @@ def tiktok_info():
         
         print(f"[DEBUG] Processing TikTok URL: {url}")
         
-        # Check if it's a photo URL
-        is_photo = '/photo/' in url
-        print(f"[DEBUG] Is photo URL: {is_photo}")
+        # Try to resolve short URLs first to get the real URL
+        resolved_url = url
+        try:
+            if 'vm.tiktok.com' in url or 'vt.tiktok.com' in url or '/t/' in url:
+                print(f"[DEBUG] Resolving short URL: {url}")
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
+                response = requests.head(url, allow_redirects=True, headers=headers, timeout=10)
+                resolved_url = response.url
+                print(f"[DEBUG] Resolved to: {resolved_url}")
+        except Exception as e:
+            print(f"[DEBUG] URL resolution failed: {e}")
+        
+        # Check if it's a photo URL (check both original and resolved URL)
+        is_photo = '/photo/' in url or '/photo/' in resolved_url
+        print(f"[DEBUG] Is photo URL: {is_photo} (original: {'/photo/' in url}, resolved: {'/photo/' in resolved_url})")
         
         if is_photo:
             # Extract images immediately for preview and selection
             print(f"[DEBUG] Extracting images for preview...")
-            images = extract_tiktok_images(url)
+            # Use resolved URL for better extraction
+            extract_url = resolved_url if resolved_url != url else url
+            images = extract_tiktok_images(extract_url)
             print(f"[DEBUG] Extracted {len(images)} images")
             
             if images:
@@ -2172,23 +2186,50 @@ def tiktok_info():
                 })
         
         # Regular video processing
+        print(f"[DEBUG] Processing as regular video")
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
             'socket_timeout': 10,
         }
         
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            
-        return jsonify({
-            'success': True,
-            'title': info.get('title', 'Video'),
-            'thumbnail': info.get('thumbnail', ''),
-            'duration': info.get('duration', 0),
-            'author': info.get('uploader', ''),
-            'likes': info.get('like_count', 0),
-        })
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # Try resolved URL first, fallback to original
+                extract_url = resolved_url if resolved_url != url else url
+                print(f"[DEBUG] Extracting video info from: {extract_url}")
+                info = ydl.extract_info(extract_url, download=False)
+                
+            return jsonify({
+                'success': True,
+                'title': info.get('title', 'Video'),
+                'thumbnail': info.get('thumbnail', ''),
+                'duration': info.get('duration', 0),
+                'author': info.get('uploader', ''),
+                'likes': info.get('like_count', 0),
+            })
+        except Exception as video_error:
+            print(f"[DEBUG] Video extraction failed with resolved URL: {video_error}")
+            # Try original URL as fallback
+            if resolved_url != url:
+                try:
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        print(f"[DEBUG] Fallback: trying original URL: {url}")
+                        info = ydl.extract_info(url, download=False)
+                        
+                    return jsonify({
+                        'success': True,
+                        'title': info.get('title', 'Video'),
+                        'thumbnail': info.get('thumbnail', ''),
+                        'duration': info.get('duration', 0),
+                        'author': info.get('uploader', ''),
+                        'likes': info.get('like_count', 0),
+                    })
+                except Exception as fallback_error:
+                    print(f"[DEBUG] Fallback also failed: {fallback_error}")
+                    raise video_error  # Raise original error
+            else:
+                raise video_error
         
     except Exception as e:
         print(f"TikTok info error: {e}")

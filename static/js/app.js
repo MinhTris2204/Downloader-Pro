@@ -346,7 +346,7 @@ function renderGallery() {
             gallery.style.margin = '15px 0';
             
             // iOS Safari specific fixes
-            if (isIOSSafari) {
+            if (isIOS) {
                 gallery.style.webkitTransform = 'translateZ(0)';
                 gallery.style.transform = 'translateZ(0)';
                 gallery.style.webkitBackfaceVisibility = 'hidden';
@@ -361,8 +361,8 @@ function renderGallery() {
         grid.style.opacity = '1';
         grid.style.width = '100%';
         
-        // iOS Safari: Use flexbox instead of grid
-        if (isIOSSafari && isMobile) {
+        // iOS (all browsers): Use flexbox instead of grid
+        if (isIOS && isMobile) {
             grid.style.display = 'flex';
             grid.style.flexWrap = 'wrap';
             grid.style.justifyContent = 'space-between';
@@ -404,8 +404,8 @@ function renderGallery() {
         item.style.overflow = 'hidden';
         item.style.border = '2px solid var(--primary)';
         
-        // iOS Safari specific item styling
-        if (isIOSSafari && isMobile) {
+        // iOS specific item styling
+        if (isIOS && isMobile) {
             item.style.width = 'calc(33.333% - 4px)';
             item.style.height = '0';
             item.style.paddingBottom = 'calc(33.333% - 4px)';
@@ -429,8 +429,8 @@ function renderGallery() {
         img.style.objectFit = 'cover';
         img.style.webkitObjectFit = 'cover';
         
-        // iOS Safari specific image styling
-        if (isIOSSafari && isMobile) {
+        // iOS specific image styling
+        if (isIOS && isMobile) {
             img.style.position = 'absolute';
             img.style.top = '0';
             img.style.left = '0';
@@ -471,8 +471,8 @@ function renderGallery() {
         overlay.style.border = '2px solid var(--primary)';
         overlay.style.zIndex = '10';
         
-        // iOS Safari flexbox prefixes
-        if (isIOSSafari) {
+        // iOS flexbox prefixes
+        if (isIOS) {
             overlay.style.webkitAlignItems = 'center';
             overlay.style.webkitJustifyContent = 'center';
         }
@@ -496,7 +496,7 @@ function renderGallery() {
                 display: gallery.style.display,
                 visibility: gallery.style.visibility,
                 opacity: gallery.style.opacity,
-                isIOSSafari: isIOSSafari
+                isIOS: isIOS
             });
         }
     }, 100);
