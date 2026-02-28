@@ -15,7 +15,20 @@
             Chúng tôi rất trân trọng điều đó! 💝
         </p>
         
-        {% if can_post_message %}
+        {% if donation_info and donation_info.message %}
+        <div class="message-section">
+            <h3>💬 Lời nhắn của bạn</h3>
+            <div class="submitted-message">
+                <div class="message-card">
+                    <div class="message-header">
+                        <div class="donor-name">💝 {{ donation_info.donor_name }}</div>
+                    </div>
+                    <div class="message-text">{{ donation_info.message }}</div>
+                </div>
+                <p class="message-note">✅ Lời nhắn của bạn đã được gửi và sẽ hiển thị trên trang chủ!</p>
+            </div>
+        </div>
+        {% elif can_post_message %}
         <div class="message-section" id="messageSection">
             <h3>💬 Để lại lời nhắn của bạn</h3>
             <p class="message-hint">Lời nhắn sẽ được hiển thị trên trang chủ (tùy chọn, 1 lần duy nhất)</p>
@@ -27,7 +40,8 @@
                     <input type="text" 
                            id="donorName" 
                            placeholder="Tên của bạn (hoặc để Anonymous)"
-                           maxlength="100">
+                           maxlength="100"
+                           value="{{ donation_info.donor_name if donation_info else '' }}">
                 </div>
                 
                 <div class="form-group">
@@ -262,6 +276,42 @@
     color: #155724;
     font-weight: 600;
     margin: 0;
+}
+
+.submitted-message {
+    text-align: left;
+}
+
+.submitted-message .message-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-left: 4px solid #27ae60;
+}
+
+.submitted-message .message-header {
+    margin-bottom: 12px;
+}
+
+.submitted-message .donor-name {
+    font-weight: 600;
+    font-size: 1.05em;
+    color: #2c3e50;
+}
+
+.submitted-message .message-text {
+    color: #555;
+    line-height: 1.6;
+    font-size: 0.95em;
+}
+
+.message-note {
+    text-align: center;
+    color: #27ae60;
+    font-weight: 600;
+    margin: 0;
+    font-size: 14px;
 }
 
 @media (max-width: 768px) {

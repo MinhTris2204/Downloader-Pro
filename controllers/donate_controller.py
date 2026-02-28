@@ -184,7 +184,9 @@ def payos_return():
     order_code = request.args.get('orderCode', '')
     status = request.args.get('status', '')
     
-    # Update donation status to success
+    donation_info = None
+    
+    # Update donation status to success and get info
     if db_pool and order_code:
         try:
             conn = db_pool.getconn()
@@ -201,6 +203,12 @@ def payos_return():
                 message = result[0] or ''
                 amount = result[1]
                 donor_name = result[2] or 'Người ủng hộ'
+                
+                donation_info = {
+                    'donor_name': donor_name,
+                    'message': message,
+                    'amount': amount
+                }
                 
                 # Auto-create donation message for regular donations
                 if message and message.strip():
@@ -233,11 +241,28 @@ def payos_return():
     # Lưu order_code vào session để cho phép post message
     session['pending_donation'] = order_code
     
+    # Check if message already exists
+    message_exists = False
+    if db_pool and order_code:
+        try:
+            conn = db_pool.getconn()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) FROM donation_messages 
+                WHERE order_code = %s
+            """, (order_code,))
+            message_exists = cursor.fetchone()[0] > 0
+            cursor.close()
+            db_pool.putconn(conn)
+        except:
+            pass
+    
     return render_template('donate_result.html', 
                          success=True,
                          order_code=order_code,
                          status=status,
-                         can_post_message=True)
+                         can_post_message=not message_exists,
+                         donation_info=donation_info)
 
 @donate_bp.route('/payos/cancel')
 def payos_cancel():

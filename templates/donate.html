@@ -48,15 +48,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="donorEmail" data-i18n="donate_email">Email (tùy chọn):</label>
-                        <input type="email" 
-                               id="donorEmail" 
-                               name="email" 
-                               placeholder="your@email.com"
-                               maxlength="100">
-                    </div>
-
-                    <div class="form-group">
                         <label for="donorMessage" data-i18n="donate_message">Lời nhắn (tùy chọn):</label>
                         <textarea id="donorMessage" 
                                   name="message" 
@@ -493,7 +484,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({
                     amount: amount,
                     name: document.getElementById('donorName').value || 'Anonymous',
-                    email: document.getElementById('donorEmail').value,
                     message: document.getElementById('donorMessage').value
                 })
             });
