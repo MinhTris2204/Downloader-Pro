@@ -177,6 +177,8 @@ const translations = {
         promo_donate: '💝 Ủng hộ',
         promo_custom_amount: 'Hoặc nhập số tiền khác:',
         promo_amount_placeholder: 'Nhập số tiền (VND)',
+        promo_name_label: 'Tên của bạn:',
+        promo_name_placeholder: 'Nhập tên để hiển thị...',
         promo_message_label: 'Lời nhắn (tùy chọn):',
         promo_message_placeholder: 'Viết lời nhắn để hiển thị trong phần ủng hộ...'
     },
@@ -357,6 +359,8 @@ const translations = {
         promo_donate: '💝 Donate',
         promo_custom_amount: 'Or enter custom amount:',
         promo_amount_placeholder: 'Enter amount (VND)',
+        promo_name_label: 'Your name:',
+        promo_name_placeholder: 'Enter name to display...',
         promo_message_label: 'Message (optional):',
         promo_message_placeholder: 'Write a message to display in supporters section...'
     },
@@ -537,6 +541,8 @@ const translations = {
         promo_donate: '💝 Поддержать',
         promo_custom_amount: 'Или введите другую сумму:',
         promo_amount_placeholder: 'Введите сумму (VND)',
+        promo_name_label: 'Ваше имя:',
+        promo_name_placeholder: 'Введите имя для отображения...',
         promo_message_label: 'Сообщение (необязательно):',
         promo_message_placeholder: 'Напишите сообщение для отображения в разделе поддержки...'
     }

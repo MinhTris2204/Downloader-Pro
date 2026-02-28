@@ -35,18 +35,25 @@ function showDonationPromo() {
                     </div>
                     
                     <div class="promo-right">
+                        <div class="name-section">
+                            <label for="donorName" class="name-label">${t.promo_name_label || 'Tên của bạn:'}</label>
+                            <input type="text" id="donorName" class="name-input" 
+                                   placeholder="${t.promo_name_placeholder || 'Nhập tên để hiển thị...'}" 
+                                   maxlength="50">
+                        </div>
+                        
                         <div class="promo-amounts">
-                            <button class="amount-btn-promo" data-amount="10000">10,000₫</button>
-                            <button class="amount-btn-promo" data-amount="20000">20,000₫</button>
-                            <button class="amount-btn-promo" data-amount="50000">50,000₫</button>
-                            <button class="amount-btn-promo" data-amount="100000">100,000₫</button>
+                            <button class="amount-btn-promo" data-amount="10000">10.000₫</button>
+                            <button class="amount-btn-promo" data-amount="20000">20.000₫</button>
+                            <button class="amount-btn-promo" data-amount="50000">50.000₫</button>
+                            <button class="amount-btn-promo" data-amount="100000">100.000₫</button>
                         </div>
                         
                         <div class="custom-amount-section">
                             <label for="customAmountInput" class="custom-amount-label">${t.promo_custom_amount || 'Hoặc nhập số tiền khác:'}</label>
-                            <input type="number" id="customAmountInput" class="custom-amount-input" 
+                            <input type="text" id="customAmountInput" class="custom-amount-input" 
                                    placeholder="${t.promo_amount_placeholder || 'Nhập số tiền (VND)'}" 
-                                   min="5000" step="1000">
+                                   inputmode="numeric">
                         </div>
                         
                         <div class="message-section">
@@ -75,6 +82,16 @@ function showDonationPromo() {
     // Add event listeners
     let selectedAmount = 20000; // Default
     
+    // Format number with dots (VD: 50000 -> 50.000)
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    
+    // Parse formatted number back to integer (VD: 50.000 -> 50000)
+    function parseFormattedNumber(str) {
+        return parseInt(str.replace(/\./g, '')) || 0;
+    }
+    
     // Handle preset amount buttons
     document.querySelectorAll('.amount-btn-promo').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -85,12 +102,40 @@ function showDonationPromo() {
         });
     });
     
-    // Handle custom amount input
-    document.getElementById('customAmountInput').addEventListener('input', function() {
-        document.querySelectorAll('.amount-btn-promo').forEach(b => b.classList.remove('selected'));
-        const customValue = parseInt(this.value);
-        if (customValue >= 5000) {
-            selectedAmount = customValue;
+    // Handle custom amount input with formatting
+    const customAmountInput = document.getElementById('customAmountInput');
+    customAmountInput.addEventListener('input', function() {
+        // Remove all non-digits
+        let value = this.value.replace(/\D/g, '');
+        
+        // Format with dots
+        if (value) {
+            this.value = formatNumber(value);
+            const numValue = parseInt(value);
+            if (numValue >= 5000) {
+                selectedAmount = numValue;
+                // Deselect preset buttons
+                document.querySelectorAll('.amount-btn-promo').forEach(b => b.classList.remove('selected'));
+            }
+        } else {
+            selectedAmount = 20000; // Reset to default
+        }
+    });
+    
+    // Prevent non-numeric input
+    customAmountInput.addEventListener('keypress', function(e) {
+        // Allow backspace, delete, tab, escape, enter
+        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+            return;
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
         }
     });
     
@@ -107,14 +152,15 @@ function showDonationPromo() {
     // Donate handler - create payment directly
     document.getElementById('promoDonateBtn').addEventListener('click', async function() {
         // Get amount from custom input or selected button
-        const customAmount = document.getElementById('customAmountInput').value;
-        const amount = customAmount ? parseInt(customAmount) : selectedAmount;
+        const customAmountValue = document.getElementById('customAmountInput').value;
+        const amount = customAmountValue ? parseFormattedNumber(customAmountValue) : selectedAmount;
         
-        // Get donation message
+        // Get donor name and message
+        const donorName = document.getElementById('donorName').value.trim() || 'Người ủng hộ';
         const message = document.getElementById('donationMessage').value.trim() || 'Cảm ơn bạn đã ủng hộ!';
         
         if (amount < 5000) {
-            showToast('Số tiền tối thiểu là 5,000₫', 'error');
+            showToast('Số tiền tối thiểu là 5.000₫', 'error');
             return;
         }
         
@@ -129,7 +175,7 @@ function showDonationPromo() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: amount,
-                    name: 'Người ủng hộ',
+                    name: donorName,
                     email: '',
                     message: message,
                     is_premium: false
