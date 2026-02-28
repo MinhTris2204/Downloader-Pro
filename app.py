@@ -2121,12 +2121,21 @@ def tiktok_info():
         import yt_dlp
         
         data = request.get_json()
+        print(f"[DEBUG] Received data: {data}")
+        
         if not data:
+            print("[DEBUG] No data received")
             return jsonify({'success': False, 'error': 'No data'}), 400
             
         url = data.get('url', '').strip()
+        print(f"[DEBUG] Original URL: {url}")
         
-        if not url or not is_valid_tiktok_url(url):
+        if not url:
+            print("[DEBUG] Empty URL")
+            return jsonify({'success': False, 'error': 'URL trống'}), 400
+            
+        if not is_valid_tiktok_url(url):
+            print(f"[DEBUG] Invalid TikTok URL: {url}")
             return jsonify({'success': False, 'error': 'URL không hợp lệ'}), 400
         
         print(f"[DEBUG] Processing TikTok URL: {url}")
