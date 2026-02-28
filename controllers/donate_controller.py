@@ -180,12 +180,11 @@ def create_donation():
 def payos_return():
     """Xử lý khi thanh toán thành công"""
     from app import db_pool
-    from utils.download_limit import activate_premium
     
     order_code = request.args.get('orderCode', '')
     status = request.args.get('status', '')
     
-    # Update donation status to success and activate premium if applicable
+    # Update donation status to success
     if db_pool and order_code:
         try:
             conn = db_pool.getconn()
@@ -203,19 +202,8 @@ def payos_return():
                 amount = result[1]
                 donor_name = result[2] or 'Người ủng hộ'
                 
-                # Check if this is a premium purchase
-                if message.startswith('PREMIUM:'):
-                    # Extract user_id
-                    parts = message.split('|')[0]
-                    user_id = parts.replace('PREMIUM:', '')
-                    
-                    # Activate premium
-                    success = activate_premium(db_pool, user_id, order_code, amount)
-                    if success:
-                        print(f">>> Premium activated for user {user_id[:8]}... (order: {order_code})")
-                else:
-                    # Auto-create donation message for regular donations
-                    if message and message.strip():
+                # Auto-create donation message for regular donations
+                if message and message.strip():
                         try:
                             cursor.execute("""
                                 INSERT INTO donation_messages 

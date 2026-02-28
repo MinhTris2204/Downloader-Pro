@@ -23,13 +23,6 @@ from controllers.blog_controller import BlogController
 from controllers.news_controller import NewsController
 from controllers.donate_controller import donate_bp
 from utils.tracking import get_full_tracking_info
-from utils.download_limit import (
-    check_download_limit, 
-    record_download as record_user_download,
-    get_user_identifier,
-    get_premium_status,
-    activate_premium
-)
 
 app = Flask(__name__)
 # Secret key for session (change this in production!)
@@ -269,25 +262,7 @@ def init_db():
             ON user_downloads(user_id, download_time)
         """)
         
-        # Create premium_users table for paid users
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS premium_users (
-                id SERIAL PRIMARY KEY,
-                user_id VARCHAR(64) NOT NULL,
-                order_code VARCHAR(50) NOT NULL,
-                amount INTEGER NOT NULL,
-                activated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL,
-                UNIQUE(user_id, order_code)
-            )
-        """)
-        
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_premium_users_user_expires 
-            ON premium_users(user_id, expires_at)
-        """)
-        
-        print("[INFO] Donations, donation_messages, user_downloads, and premium_users tables created/verified")
+        print("[INFO] Donations and donation_messages tables created/verified")
         
         # Initialize stats if empty
         cursor.execute("SELECT COUNT(*) FROM stats")
@@ -2158,58 +2133,6 @@ def tiktok_info():
     except Exception as e:
         print(f"TikTok info error: {e}")
         return jsonify({'success': False, 'error': 'Không thể lấy thông tin video'}), 200
-
-@app.route('/api/user/status')
-def api_user_status():
-    """Get user download status and premium info"""
-    user_id = get_user_identifier()
-    
-    # Get download limit info
-    can_download, remaining, is_premium, premium_expires = check_download_limit(db_pool)
-    
-    # Get premium details if applicable
-    premium_info = None
-    if is_premium:
-        premium_info = get_premium_status(db_pool, user_id)
-    
-    return jsonify({
-        'can_download': can_download,
-        'remaining_downloads': remaining,
-        'is_premium': is_premium,
-        'premium_expires': premium_expires.isoformat() if premium_expires else None,
-        'premium_info': premium_info
-    })
-
-@app.route('/api/donate/for-premium', methods=['POST'])
-def donate_for_premium():
-    """Create donation payment for premium access"""
-    from controllers.donate_controller import create_payment_link
-    
-    data = request.get_json()
-    amount = data.get('amount')
-    donor_name = data.get('donor_name', 'Anonymous')
-    donor_email = data.get('donor_email', '')
-    
-    # Validate amount
-    if not amount or not isinstance(amount, int) or amount < 10000:
-        return jsonify({
-            'success': False,
-            'error': 'Số tiền tối thiểu là 10,000 VNĐ'
-        }), 400
-    
-    # Get user identifier for premium activation later
-    user_id = get_user_identifier()
-    
-    # Create payment with user_id in metadata
-    result = create_payment_link(
-        amount=amount,
-        donor_name=donor_name,
-        donor_email=donor_email,
-        message=f"Premium access - User: {user_id[:8]}",
-        user_id=user_id  # Pass user_id for later activation
-    )
-    
-    return jsonify(result)
 
 # Donation API endpoints are handled by donate_controller.py blueprint
 # No duplicate endpoints needed here
