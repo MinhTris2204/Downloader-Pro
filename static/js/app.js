@@ -314,6 +314,8 @@ function renderGallery() {
     console.log('renderGallery called, images:', currentTiktokImages.length);
     console.log('Gallery element:', gallery);
     console.log('Grid element:', grid);
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Is iOS Safari:', /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
     
     if (!grid) {
         console.error('Gallery grid not found!');
@@ -322,6 +324,10 @@ function renderGallery() {
     
     grid.innerHTML = '';
     selectedImageIndices.clear();
+
+    // Detect iOS Safari
+    const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isMobile = window.innerWidth <= 768;
 
     // Force gallery to be visible - especially important on mobile
     if (gallery) {
@@ -332,33 +338,51 @@ function renderGallery() {
         gallery.style.boxSizing = 'border-box';
         
         // Mobile specific fixes
-        if (window.innerWidth <= 768) {
+        if (isMobile) {
             gallery.style.background = 'rgba(0, 0, 0, 0.2)';
             gallery.style.border = '1px solid rgba(255, 255, 255, 0.1)';
             gallery.style.borderRadius = '8px';
             gallery.style.padding = '12px';
             gallery.style.margin = '15px 0';
+            
+            // iOS Safari specific fixes
+            if (isIOSSafari) {
+                gallery.style.webkitTransform = 'translateZ(0)';
+                gallery.style.transform = 'translateZ(0)';
+                gallery.style.webkitBackfaceVisibility = 'hidden';
+                gallery.style.backfaceVisibility = 'hidden';
+            }
         }
     }
     
-    // Force grid visibility
+    // Force grid visibility with iOS Safari fallback
     if (grid) {
-        grid.style.display = 'grid';
         grid.style.visibility = 'visible';
         grid.style.opacity = '1';
         grid.style.width = '100%';
         
-        // Mobile specific grid fixes
-        if (window.innerWidth <= 768) {
-            if (window.innerWidth <= 480) {
-                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                grid.style.gap = '6px';
-            } else {
-                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(90px, 1fr))';
-                grid.style.gap = '8px';
+        // iOS Safari: Use flexbox instead of grid
+        if (isIOSSafari && isMobile) {
+            grid.style.display = 'flex';
+            grid.style.flexWrap = 'wrap';
+            grid.style.justifyContent = 'space-between';
+            grid.style.webkitFlexWrap = 'wrap';
+            grid.style.webkitJustifyContent = 'space-between';
+        } else {
+            // Regular browsers: use grid
+            grid.style.display = 'grid';
+            
+            if (isMobile) {
+                if (window.innerWidth <= 480) {
+                    grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                    grid.style.gap = '6px';
+                } else {
+                    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(90px, 1fr))';
+                    grid.style.gap = '8px';
+                }
+                grid.style.maxHeight = '280px';
+                grid.style.overflowY = 'auto';
             }
-            grid.style.maxHeight = '280px';
-            grid.style.overflowY = 'auto';
         }
     }
 
@@ -375,11 +399,22 @@ function renderGallery() {
         item.style.visibility = 'visible';
         item.style.opacity = '1';
         item.style.position = 'relative';
-        item.style.aspectRatio = '1';
         item.style.cursor = 'pointer';
         item.style.borderRadius = '8px';
         item.style.overflow = 'hidden';
         item.style.border = '2px solid var(--primary)';
+        
+        // iOS Safari specific item styling
+        if (isIOSSafari && isMobile) {
+            item.style.width = 'calc(33.333% - 4px)';
+            item.style.height = '0';
+            item.style.paddingBottom = 'calc(33.333% - 4px)';
+            item.style.marginBottom = '6px';
+            item.style.flex = '0 0 calc(33.333% - 4px)';
+            item.style.webkitFlex = '0 0 calc(33.333% - 4px)';
+        } else {
+            item.style.aspectRatio = '1';
+        }
 
         const img = document.createElement('img');
         // Use proxy for TikTok images to avoid CORS
@@ -391,9 +426,20 @@ function renderGallery() {
         img.style.display = 'block';
         img.style.visibility = 'visible';
         img.style.opacity = '1';
-        img.style.width = '100%';
-        img.style.height = '100%';
         img.style.objectFit = 'cover';
+        img.style.webkitObjectFit = 'cover';
+        
+        // iOS Safari specific image styling
+        if (isIOSSafari && isMobile) {
+            img.style.position = 'absolute';
+            img.style.top = '0';
+            img.style.left = '0';
+            img.style.width = '100%';
+            img.style.height = '100%';
+        } else {
+            img.style.width = '100%';
+            img.style.height = '100%';
+        }
         
         img.onerror = () => {
             console.log('Image failed to load via proxy, trying direct:', url);
@@ -423,6 +469,13 @@ function renderGallery() {
         overlay.style.alignItems = 'center';
         overlay.style.justifyContent = 'center';
         overlay.style.border = '2px solid var(--primary)';
+        overlay.style.zIndex = '10';
+        
+        // iOS Safari flexbox prefixes
+        if (isIOSSafari) {
+            overlay.style.webkitAlignItems = 'center';
+            overlay.style.webkitJustifyContent = 'center';
+        }
 
         item.appendChild(img);
         item.appendChild(overlay);
@@ -435,14 +488,15 @@ function renderGallery() {
     
     // Force a reflow to ensure visibility on mobile
     setTimeout(() => {
-        if (gallery && window.innerWidth <= 768) {
+        if (gallery && isMobile) {
             gallery.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             
             // Double check visibility
             console.log('Gallery final styles:', {
                 display: gallery.style.display,
                 visibility: gallery.style.visibility,
-                opacity: gallery.style.opacity
+                opacity: gallery.style.opacity,
+                isIOSSafari: isIOSSafari
             });
         }
     }, 100);
