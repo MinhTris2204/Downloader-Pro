@@ -2199,11 +2199,6 @@ def tiktok_info():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': 'Không thể lấy thông tin video'}), 200
-        })
-        
-    except Exception as e:
-        print(f"TikTok info error: {e}")
-        return jsonify({'success': False, 'error': 'Không thể lấy thông tin video'}), 200
 
 # Donation API endpoints are handled by donate_controller.py blueprint
 # No duplicate endpoints needed here
