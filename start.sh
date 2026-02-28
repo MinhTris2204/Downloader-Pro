@@ -22,6 +22,14 @@ fi
 
 echo ""
 echo "========================================="
+echo "Cleaning up premium tables..."
+echo "========================================="
+
+# Run premium cleanup (ignore errors if tables don't exist)
+python drop_premium_users.py || true
+
+echo ""
+echo "========================================="
 echo "Starting Flask app..."
 echo "========================================="
 
