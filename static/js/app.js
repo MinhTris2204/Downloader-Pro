@@ -181,13 +181,16 @@ async function fetchTiktokInfo(url) {
             if (data.is_photo) {
                 // PHOTO MODE - always show gallery for photo URLs
                 console.log('Entering PHOTO MODE');
+                console.log('Images received:', data.images);
                 videoOptions.style.display = 'none';
                 gallery.style.display = 'block';
 
                 if (data.images && data.images.length > 0) {
                     currentTiktokImages = data.images;
                     console.log('Setting currentTiktokImages:', currentTiktokImages);
+                    console.log('About to call renderGallery...');
                     renderGallery();
+                    console.log('renderGallery completed');
                     showToast(`Tìm thấy ${data.images.length} ảnh! Chọn ảnh để tải.`, 'success');
                 } else {
                     // Show empty gallery with loading message
@@ -387,6 +390,8 @@ function renderGallery() {
     }
 
     currentTiktokImages.forEach((url, index) => {
+        console.log(`Creating gallery item ${index + 1}/${currentTiktokImages.length}:`, url);
+        
         // Default select all
         selectedImageIndices.add(index);
 
@@ -417,10 +422,10 @@ function renderGallery() {
         }
 
         const img = document.createElement('img');
-        // Use proxy for TikTok images to avoid CORS
-        const proxyUrl = `/proxy/image?url=${encodeURIComponent(url)}`;
-        img.src = proxyUrl;
+        // Try direct URL first for better compatibility
+        img.src = url;
         img.loading = 'lazy';
+        img.crossOrigin = 'anonymous';
         
         // Force image visibility
         img.style.display = 'block';
@@ -441,12 +446,17 @@ function renderGallery() {
             img.style.height = '100%';
         }
         
+        img.onload = () => {
+            console.log(`Image ${index + 1} loaded successfully:`, url);
+        };
+        
         img.onerror = () => {
-            console.log('Image failed to load via proxy, trying direct:', url);
-            // Fallback to direct URL
-            img.src = url;
+            console.log(`Image ${index + 1} failed to load, trying proxy:`, url);
+            // Fallback to proxy URL
+            const proxyUrl = `/proxy/image?url=${encodeURIComponent(url)}`;
+            img.src = proxyUrl;
             img.onerror = () => {
-                console.log('Direct image also failed:', url);
+                console.log(`Proxy also failed for image ${index + 1}:`, url);
                 img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD48L3N2Zz4=';
             };
         };
@@ -480,6 +490,8 @@ function renderGallery() {
         item.appendChild(img);
         item.appendChild(overlay);
         grid.appendChild(item);
+        
+        console.log(`Gallery item ${index + 1} added to grid`);
     });
 
     isSelectAll = true;
