@@ -1569,8 +1569,8 @@ def download_file(download_id):
     quality = data.get('quality', 'best')
     increment_stats(platform, format_type, quality, True, tracking_info)
     
-    # Record download for limit tracking (only count when file is actually downloaded)
-    record_user_download(db_pool, platform)
+    # Download tracking removed (premium feature was removed)
+    # record_user_download(db_pool, platform)
     
     return send_file(
         filepath,
