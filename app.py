@@ -1461,18 +1461,6 @@ def youtube_download():
     if not is_valid_youtube_url(url):
         return jsonify({'success': False, 'error': 'URL YouTube không hợp lệ'}), 400
     
-    # Check download limit
-    can_download, remaining, is_premium, premium_expires = check_download_limit(db_pool)
-    
-    if not can_download:
-        return jsonify({
-            'success': False,
-            'error': 'limit_exceeded',
-            'remaining': remaining,
-            'is_premium': is_premium,
-            'message': 'Bạn đã hết lượt tải miễn phí tuần này'
-        }), 403
-    
     # Check cooldown per IP
     client_ip = request.remote_addr
     current_time = time.time()
@@ -1497,8 +1485,7 @@ def youtube_download():
     return jsonify({
         'success': True, 
         'download_id': download_id,
-        'remaining': remaining if not is_premium else -1,
-        'is_premium': is_premium
+        'show_promo': True  # Always show promo opportunity
     })
 
 @app.route('/api/tiktok/download', methods=['POST'])
@@ -1513,18 +1500,6 @@ def tiktok_download():
     if not is_valid_tiktok_url(url):
         return jsonify({'success': False, 'error': 'URL TikTok không hợp lệ'}), 400
     
-    # Check download limit
-    can_download, remaining, is_premium, premium_expires = check_download_limit(db_pool)
-    
-    if not can_download:
-        return jsonify({
-            'success': False,
-            'error': 'limit_exceeded',
-            'remaining': remaining,
-            'is_premium': is_premium,
-            'message': 'Bạn đã hết lượt tải miễn phí tuần này'
-        }), 403
-    
     download_id = str(uuid.uuid4())
     
     # Check if photo
@@ -1537,13 +1512,10 @@ def tiktok_download():
         quality = data.get('quality', 'best')
         executor.submit(download_tiktok_video, url, format_type, download_id, quality)
         
-    # thread.start()
-    
     return jsonify({
         'success': True, 
         'download_id': download_id,
-        'remaining': remaining if not is_premium else -1,
-        'is_premium': is_premium
+        'show_promo': True  # Always show promo opportunity
     })
 
 @app.route('/api/progress/<download_id>')

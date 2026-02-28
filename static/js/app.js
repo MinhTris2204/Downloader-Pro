@@ -235,6 +235,11 @@ async function downloadYoutube() {
         gtag_report_conversion();
     }
 
+    // Show donation promo immediately when download starts
+    if (typeof showDonationPromoOnDownload === 'function') {
+        showDonationPromoOnDownload();
+    }
+
     const btn = document.getElementById('youtube-download-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
@@ -252,23 +257,10 @@ async function downloadYoutube() {
         const data = await response.json();
 
         if (data.success) {
-            // Update user status
-            if (typeof fetchUserStatus === 'function') {
-                fetchUserStatus();
-            }
             showProgress('youtube', data.download_id);
         } else {
-            // Check if limit exceeded
-            if (response.status === 403 && data.error === 'limit_exceeded') {
-                resetButton('youtube');
-                if (typeof showLimitModal === 'function') {
-                    showLimitModal();
-                } else {
-                    showToast(data.message || 'Bạn đã hết lượt tải miễn phí', 'error');
-                }
-            }
             // Check if it's a rate limit error (429)
-            else if (response.status === 429 && data.error) {
+            if (response.status === 429 && data.error) {
                 // Extract wait time from error message
                 const match = data.error.match(/đợi (\d+) giây/);
                 if (match) {
@@ -421,6 +413,11 @@ async function downloadTiktok() {
         quality = document.getElementById('tiktok-audio-quality').value;
     }
 
+    // Show donation promo immediately when download starts
+    if (typeof showDonationPromoOnDownload === 'function') {
+        showDonationPromoOnDownload();
+    }
+
     // UI Loading
     const btn = document.getElementById('tiktok-download-btn');
     btn.disabled = true;
@@ -453,24 +450,10 @@ async function downloadTiktok() {
         const data = await response.json();
 
         if (data.success) {
-            // Update user status
-            if (typeof fetchUserStatus === 'function') {
-                fetchUserStatus();
-            }
             showProgress('tiktok', data.download_id);
         } else {
-            // Check if limit exceeded
-            if (response.status === 403 && data.error === 'limit_exceeded') {
-                resetButton('tiktok');
-                if (typeof showLimitModal === 'function') {
-                    showLimitModal();
-                } else {
-                    showToast(data.message || 'Bạn đã hết lượt tải miễn phí', 'error');
-                }
-            } else {
-                showToast(data.error || 'Có lỗi xảy ra', 'error');
-                resetButton('tiktok');
-            }
+            showToast(data.error || 'Có lỗi xảy ra', 'error');
+            resetButton('tiktok');
         }
     } catch (err) {
         showToast('Lỗi kết nối server', 'error');

@@ -163,7 +163,20 @@ const translations = {
         limit_button_pay: '💳 Thanh toán',
         limit_button_cancel: 'Để sau',
         premium_status: 'Premium đến',
-        downloads_remaining: 'Còn {count} lượt tải'
+        downloads_remaining: 'Còn {count} lượt tải',
+        
+        // Donation Promo Modal
+        promo_title: 'Ủng hộ duy trì website',
+        promo_message: 'Bạn vừa tải thành công! 🎉',
+        promo_explanation: 'Nếu thấy hữu ích, hãy ủng hộ chúng tôi một ly cà phê để duy trì server và phát triển thêm tính năng mới.',
+        promo_benefits_title: 'Sự ủng hộ của bạn giúp:',
+        promo_benefit_1: 'Duy trì server 24/7',
+        promo_benefit_2: 'Phát triển tính năng mới',
+        promo_benefit_3: 'Giữ website miễn phí cho mọi người',
+        promo_skip: 'Bỏ qua',
+        promo_donate: '💝 Ủng hộ',
+        promo_custom_amount: 'Hoặc nhập số tiền khác:',
+        promo_amount_placeholder: 'Nhập số tiền (VND)'
     },
     en: {
         // Navigation
@@ -328,7 +341,20 @@ const translations = {
         limit_button_pay: '💳 Pay Now',
         limit_button_cancel: 'Later',
         premium_status: 'Premium until',
-        downloads_remaining: '{count} downloads left'
+        downloads_remaining: '{count} downloads left',
+        
+        // Donation Promo Modal
+        promo_title: 'Support Our Website',
+        promo_message: 'Download successful! 🎉',
+        promo_explanation: 'If you find it useful, please support us with a coffee to maintain servers and develop new features.',
+        promo_benefits_title: 'Your support helps:',
+        promo_benefit_1: 'Keep servers running 24/7',
+        promo_benefit_2: 'Develop new features',
+        promo_benefit_3: 'Keep website free for everyone',
+        promo_skip: 'Skip',
+        promo_donate: '💝 Donate',
+        promo_custom_amount: 'Or enter custom amount:',
+        promo_amount_placeholder: 'Enter amount (VND)'
     },
     ru: {
         // Navigation
@@ -493,7 +519,20 @@ const translations = {
         limit_button_pay: '💳 Оплатить',
         limit_button_cancel: 'Позже',
         premium_status: 'Premium до',
-        downloads_remaining: 'Осталось {count} загрузок'
+        downloads_remaining: 'Осталось {count} загрузок',
+        
+        // Donation Promo Modal
+        promo_title: 'Поддержите наш сайт',
+        promo_message: 'Загрузка успешна! 🎉',
+        promo_explanation: 'Если вам полезно, поддержите нас чашкой кофе для поддержания серверов и разработки новых функций.',
+        promo_benefits_title: 'Ваша поддержка помогает:',
+        promo_benefit_1: 'Поддерживать серверы 24/7',
+        promo_benefit_2: 'Разрабатывать новые функции',
+        promo_benefit_3: 'Сохранять сайт бесплатным для всех',
+        promo_skip: 'Пропустить',
+        promo_donate: '💝 Поддержать',
+        promo_custom_amount: 'Или введите другую сумму:',
+        promo_amount_placeholder: 'Введите сумму (VND)'
     }
 };
 
