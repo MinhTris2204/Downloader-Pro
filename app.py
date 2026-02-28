@@ -2256,3 +2256,25 @@ def proxy_image():
     except Exception as e:
         print(f"Proxy error: {e}")
         return 'Error loading image', 500
+
+@app.route('/test/tiktok-images')
+def test_tiktok_images():
+    """Test endpoint for TikTok image extraction"""
+    url = request.args.get('url', 'https://vt.tiktok.com/ZSmnMdPXG/')
+    
+    print(f"[TEST] Testing with URL: {url}")
+    
+    try:
+        images = extract_tiktok_images(url)
+        return jsonify({
+            'success': True,
+            'url': url,
+            'images_count': len(images),
+            'images': images[:3] if images else []  # Only show first 3 for brevity
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'url': url
+        })
