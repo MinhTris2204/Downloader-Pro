@@ -284,9 +284,27 @@ async function downloadYoutube() {
 // ====== TikTok Gallery Helpers ======
 function renderGallery() {
     const grid = document.getElementById('gallery-grid');
+    const gallery = document.getElementById('tiktok-gallery');
+    
+    // Debug logging for mobile
+    console.log('renderGallery called, images:', currentTiktokImages.length);
+    console.log('Gallery element:', gallery);
+    console.log('Grid element:', grid);
+    
+    if (!grid) {
+        console.error('Gallery grid not found!');
+        return;
+    }
+    
     grid.innerHTML = '';
-
     selectedImageIndices.clear();
+
+    // Force gallery to be visible
+    if (gallery) {
+        gallery.style.display = 'block';
+        gallery.style.visibility = 'visible';
+        gallery.style.opacity = '1';
+    }
 
     currentTiktokImages.forEach((url, index) => {
         // Default select all
@@ -299,6 +317,10 @@ function renderGallery() {
         const img = document.createElement('img');
         img.src = url;
         img.loading = 'lazy';
+        img.onerror = () => {
+            console.log('Image failed to load:', url);
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD48L3N2Zz4=';
+        };
 
         const overlay = document.createElement('div');
         overlay.className = 'gallery-overlay';
@@ -312,6 +334,13 @@ function renderGallery() {
     isSelectAll = true;
     updateSelectAllButton();
     updateDownloadButtonText();
+    
+    // Force a reflow to ensure visibility
+    setTimeout(() => {
+        if (gallery) {
+            gallery.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, 100);
 }
 
 function toggleImageSelection(index, element) {
