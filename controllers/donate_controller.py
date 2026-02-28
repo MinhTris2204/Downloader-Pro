@@ -163,8 +163,7 @@ def create_donation():
         
         return jsonify({
             'success': True,
-            'checkoutUrl': checkout_url,
-            'orderCode': order_code
+            'order_code': order_code
         })
         
     except Exception as e:

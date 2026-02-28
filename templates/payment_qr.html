@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán ủng hộ - Downloader Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .payment-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .payment-header {
+            margin-bottom: 30px;
+        }
+        
+        .payment-header h1 {
+            color: #059669;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .payment-info {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .info-value {
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .qr-section {
+            margin: 30px 0;
+        }
+        
+        .qr-code {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            border: 3px solid #059669;
+            border-radius: 12px;
+            padding: 10px;
+            background: white;
+        }
+        
+        .bank-info {
+            background: linear-gradient(135deg, #059669, #0d9488);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        .bank-logo {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .transfer-note {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .transfer-note strong {
+            color: #92400e;
+        }
+        
+        .copy-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 12px;
+        }
+        
+        .copy-btn:hover {
+            background: #047857;
+        }
+        
+        .status-check {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border: 2px solid #0ea5e9;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #059669;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success-message {
+            background: #dcfce7;
+            border: 2px solid #16a34a;
+            color: #15803d;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .payment-container {
+                margin: 20px;
+                padding: 20px;
+            }
+            
+            .qr-code {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="payment-header">
+            <h1>💚 Ủng hộ Downloader Pro</h1>
+            <p>Cảm ơn bạn đã ủng hộ chúng tôi duy trì website miễn phí!</p>
+        </div>
+        
+        <div class="payment-info">
+            <div class="info-row">
+                <span class="info-label">Tên người ủng hộ:</span>
+                <span class="info-value">{{ donation.donor_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Số tiền:</span>
+                <span class="info-value">{{ "{:,}".format(donation.amount) }}₫</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Lời nhắn:</span>
+                <span class="info-value">{{ donation.message }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Mã đơn hàng:</span>
+                <span class="info-value">{{ donation.order_code }}</span>
+            </div>
+        </div>
+        
+        <div class="qr-section">
+            <h3>Quét mã QR để chuyển khoản</h3>
+            <div class="qr-code">
+                <img src="https://img.vietqr.io/image/{{ bank_code }}-{{ account_number }}-compact2.jpg?amount={{ donation.amount }}&addInfo={{ donation.order_code }}&accountName={{ account_name }}" 
+                     alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+        </div>
+        
+        <div class="bank-info">
+            <div class="bank-logo">🏦</div>
+            <h4>Thông tin chuyển khoản</h4>
+            <div style="text-align: left; margin-top: 15px;">
+                <div style="margin: 8px 0;">
+                    <strong>Ngân hàng:</strong> {{ bank_name }}
+                    <button class="copy-btn" onclick="copyToClipboard('{{ bank_name }}')">Sao chép</button>
+                </div>
+                <div style="margin: 8px 0;">
+                    <strong>Số tài khoản:</strong> {{ account_number }}
+                    <button class="copy-btn" onclick="copyToClipboard('{{ account_number }}')">Sao chép</button>
+                </div>
+                <div style="margin: 8px 0;">
+                    <strong>Chủ tài khoản:</strong> {{ account_name }}
+                    <button class="copy-btn" onclick="copyToClipboard('{{ account_name }}')">Sao chép</button>
+                </div>
+                <div style="margin: 8px 0;">
+                    <strong>Số tiền:</strong> {{ "{:,}".format(donation.amount) }}₫
+                    <button class="copy-btn" onclick="copyToClipboard('{{ donation.amount }}')">Sao chép</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="transfer-note">
+            <strong>⚠️ Lưu ý quan trọng:</strong><br>
+            Vui lòng nhập chính xác nội dung: <strong>{{ donation.order_code }}</strong> khi chuyển khoản để hệ thống tự động xác nhận thanh toán.
+            <button class="copy-btn" onclick="copyToClipboard('{{ donation.order_code }}')">Sao chép</button>
+        </div>
+        
+        <div class="status-check" id="statusCheck">
+            <div class="loading-spinner"></div>
+            <span>Đang chờ xác nhận thanh toán...</span>
+        </div>
+        
+        <div class="success-message" id="successMessage">
+            <h3>🎉 Thanh toán thành công!</h3>
+            <p>Cảm ơn bạn đã ủng hộ Downloader Pro. Lời nhắn của bạn sẽ xuất hiện trong phần "💬 Lời nhắn từ những người ủng hộ".</p>
+            <button onclick="window.close()" style="background: #16a34a; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 10px;">
+                Đóng cửa sổ
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show temporary success message
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Đã sao chép!';
+                btn.style.background = '#16a34a';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#059669';
+                }, 2000);
+            });
+        }
+        
+        // Check payment status every 10 seconds
+        const orderCode = '{{ donation.order_code }}';
+        let checkInterval;
+        
+        function checkPaymentStatus() {
+            fetch('/api/donate/check-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderCode: orderCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.status === 'paid') {
+                    clearInterval(checkInterval);
+                    document.getElementById('statusCheck').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Add message to display
+                    fetch('/api/donate/add-message', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderCode: orderCode })
+                    });
+                }
+            })
+            .catch(error => console.error('Error checking status:', error));
+        }
+        
+        // Start checking every 10 seconds
+        checkInterval = setInterval(checkPaymentStatus, 10000);
+        
+        // Check immediately
+        checkPaymentStatus();
+    </script>
+</body>
+</html>

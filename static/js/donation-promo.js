@@ -204,10 +204,10 @@ function showDonationPromo() {
             
             const data = await response.json();
             
-            if (data.success && data.checkoutUrl) {
-                // Close modal and redirect to payment
+            if (data.success && data.order_code) {
+                // Close modal and redirect to QR payment page
                 closeDonationPromo();
-                window.open(data.checkoutUrl, '_blank');
+                window.open(`/payment/${data.order_code}`, '_blank');
             } else {
                 showToast(data.error || 'Lỗi tạo thanh toán', 'error');
                 this.disabled = false;
