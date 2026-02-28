@@ -163,7 +163,8 @@ def create_donation():
         
         return jsonify({
             'success': True,
-            'order_code': order_code
+            'checkoutUrl': checkout_url,
+            'orderCode': order_code
         })
         
     except Exception as e:
@@ -192,7 +193,7 @@ def payos_return():
             
             # Get donation info
             cursor.execute("""
-                SELECT message, amount FROM donations
+                SELECT message, amount, donor_name FROM donations
                 WHERE order_code = %s
             """, (order_code,))
             
@@ -200,6 +201,7 @@ def payos_return():
             if result:
                 message = result[0] or ''
                 amount = result[1]
+                donor_name = result[2] or 'Người ủng hộ'
                 
                 # Check if this is a premium purchase
                 if message.startswith('PREMIUM:'):
@@ -211,6 +213,19 @@ def payos_return():
                     success = activate_premium(db_pool, user_id, order_code, amount)
                     if success:
                         print(f">>> Premium activated for user {user_id[:8]}... (order: {order_code})")
+                else:
+                    # Auto-create donation message for regular donations
+                    if message and message.strip():
+                        try:
+                            cursor.execute("""
+                                INSERT INTO donation_messages 
+                                (order_code, donor_name, message, created_at, is_approved)
+                                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, TRUE)
+                                ON CONFLICT (order_code) DO NOTHING
+                            """, (order_code, donor_name, message.strip()))
+                            print(f">>> Auto-created donation message for {order_code}")
+                        except Exception as msg_err:
+                            print(f">>> Error creating donation message: {msg_err}")
             
             # Update donation status
             cursor.execute("""
@@ -295,6 +310,15 @@ def payos_webhook():
                 conn = db_pool.getconn()
                 cursor = conn.cursor()
                 
+                # Get donation details first
+                cursor.execute("""
+                    SELECT donor_name, message FROM donations
+                    WHERE order_code = %s
+                """, (str(order_code),))
+                
+                donation_info = cursor.fetchone()
+                
+                # Update donation status
                 cursor.execute("""
                     UPDATE donations 
                     SET payment_status = 'success',
@@ -303,6 +327,24 @@ def payos_webhook():
                         payment_method = %s
                     WHERE order_code = %s
                 """, (transaction_id, payment_method, str(order_code)))
+                
+                # Auto-create donation message if donor provided name and message
+                if donation_info:
+                    donor_name = donation_info[0] or 'Người ủng hộ'
+                    message = donation_info[1]
+                    
+                    # Only create message if there's actual content
+                    if message and message.strip() and not message.startswith('PREMIUM:'):
+                        try:
+                            cursor.execute("""
+                                INSERT INTO donation_messages 
+                                (order_code, donor_name, message, created_at, is_approved)
+                                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, TRUE)
+                                ON CONFLICT (order_code) DO NOTHING
+                            """, (str(order_code), donor_name, message.strip()))
+                            print(f">>> Auto-created donation message for {order_code}")
+                        except Exception as msg_err:
+                            print(f">>> Error creating donation message: {msg_err}")
                 
                 conn.commit()
                 cursor.close()
