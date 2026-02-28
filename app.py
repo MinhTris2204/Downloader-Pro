@@ -1489,9 +1489,6 @@ def youtube_download():
     # Update last download time
     last_youtube_download[client_ip] = current_time
     
-    # Record download for limit tracking
-    record_user_download(db_pool, 'youtube')
-    
     download_id = str(uuid.uuid4())
     
     # Use ThreadPool to prevent server crash
@@ -1527,9 +1524,6 @@ def tiktok_download():
             'is_premium': is_premium,
             'message': 'Bạn đã hết lượt tải miễn phí tuần này'
         }), 403
-    
-    # Record download for limit tracking
-    record_user_download(db_pool, 'tiktok')
     
     download_id = str(uuid.uuid4())
     
@@ -1595,6 +1589,9 @@ def download_file(download_id):
     format_type = data.get('format', data['ext'])
     quality = data.get('quality', 'best')
     increment_stats(platform, format_type, quality, True, tracking_info)
+    
+    # Record download for limit tracking (only count when file is actually downloaded)
+    record_user_download(db_pool, platform)
     
     return send_file(
         filepath,
