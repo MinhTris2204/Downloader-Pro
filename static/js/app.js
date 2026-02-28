@@ -1451,8 +1451,8 @@ function renderGalleryWithTryCatch() {
             // Desktop: use CSS Grid (natural layout)
             grid.style.cssText = `
                 display: grid !important;
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
-                gap: 15px !important;
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+                gap: 8px !important;
                 visibility: visible !important;
                 opacity: 1 !important;
                 width: 100% !important;
