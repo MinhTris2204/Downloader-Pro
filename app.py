@@ -2136,43 +2136,17 @@ def tiktok_info():
         print(f"[DEBUG] Is photo URL: {is_photo}")
         
         if is_photo:
-            # Fetch images for preview
-            print(f"[DEBUG] Extracting images...")
-            images = extract_tiktok_images(url)
-            print(f"[DEBUG] Extracted {len(images)} images")
-            
-            if not images:
-                print(f"[DEBUG] No images found, falling back to yt-dlp")
-                # Fallback to yt-dlp for basic info
-                try:
-                    ydl_opts = {
-                        'quiet': True,
-                        'no_warnings': True,
-                        'socket_timeout': 10,
-                    }
-                    
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        info = ydl.extract_info(url, download=False)
-                    
-                    return jsonify({
-                        'success': True,
-                        'title': '📷 TikTok Photo/Slideshow',
-                        'thumbnail': info.get('thumbnail', ''),
-                        'author': info.get('uploader', ''),
-                        'is_photo': True,
-                        'images': []
-                    })
-                except Exception as e:
-                    print(f"[DEBUG] yt-dlp fallback failed: {e}")
-                    return jsonify({'success': False, 'error': 'Không thể lấy thông tin ảnh'}), 400
+            # For photo URLs, return basic info without images for now
+            # This will allow the UI to show the gallery container
+            print(f"[DEBUG] Returning basic photo info")
             
             return jsonify({
                 'success': True,
                 'title': '📷 TikTok Photo/Slideshow',
-                'thumbnail': images[0] if images else '',
-                'author': f'Tìm thấy {len(images)} ảnh',
+                'thumbnail': '',
+                'author': 'Album ảnh TikTok',
                 'is_photo': True,
-                'images': images
+                'images': []  # Empty for now, will be populated by download function
             })
         
         # Regular video processing

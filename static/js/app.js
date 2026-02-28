@@ -178,16 +178,27 @@ async function fetchTiktokInfo(url) {
             console.log('Is photo:', data.is_photo);
             console.log('Images count:', data.images ? data.images.length : 0);
 
-            if (data.is_photo && data.images && data.images.length > 0) {
-                // PHOTO MODE
+            if (data.is_photo) {
+                // PHOTO MODE - always show gallery for photo URLs
                 console.log('Entering PHOTO MODE');
                 videoOptions.style.display = 'none';
                 gallery.style.display = 'block';
 
-                currentTiktokImages = data.images;
-                console.log('Setting currentTiktokImages:', currentTiktokImages);
-                renderGallery(); // This will auto-update button text
-                showToast(`Tìm thấy ${data.images.length} ảnh!`, 'success');
+                if (data.images && data.images.length > 0) {
+                    currentTiktokImages = data.images;
+                    console.log('Setting currentTiktokImages:', currentTiktokImages);
+                    renderGallery();
+                    showToast(`Tìm thấy ${data.images.length} ảnh!`, 'success');
+                } else {
+                    // Show empty gallery with message
+                    currentTiktokImages = [];
+                    const grid = document.getElementById('gallery-grid');
+                    if (grid) {
+                        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Ảnh sẽ được hiển thị khi tải xuống</div>';
+                    }
+                    updateDownloadButtonText();
+                    showToast('Album ảnh TikTok sẵn sàng tải!', 'success');
+                }
             } else {
                 // VIDEO MODE
                 videoOptions.style.display = 'block';
