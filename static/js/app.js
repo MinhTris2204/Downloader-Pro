@@ -1190,3 +1190,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize active language on page load
     updateActiveMobileLang();
 });
+// Debug function to test gallery rendering
+function testGallery() {
+    console.log('Testing gallery with sample images...');
+    
+    // Set test images
+    currentTiktokImages = [
+        'https://via.placeholder.com/150/FF0000/FFFFFF?text=1',
+        'https://via.placeholder.com/150/00FF00/FFFFFF?text=2',
+        'https://via.placeholder.com/150/0000FF/FFFFFF?text=3'
+    ];
+    
+    // Show gallery
+    const gallery = document.getElementById('tiktok-gallery');
+    if (gallery) {
+        gallery.style.display = 'block';
+        renderGallery();
+        console.log('Test gallery rendered');
+    } else {
+        console.error('Gallery element not found!');
+    }
+}
+
+// Auto-test gallery on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, gallery elements check:');
+    console.log('Gallery:', document.getElementById('tiktok-gallery'));
+    console.log('Grid:', document.getElementById('gallery-grid'));
+    
+    // Test gallery after 2 seconds
+    setTimeout(() => {
+        console.log('Running gallery test...');
+        // Uncomment next line to test gallery
+        // testGallery();
+    }, 2000);
+});
