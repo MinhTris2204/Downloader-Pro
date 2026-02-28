@@ -490,6 +490,18 @@ def extract_tiktok_images(url):
     """Extract image URLs using external script for stability"""
     print(f"[DEBUG] extract_tiktok_images called with: {url}")
     
+    # Try direct method first (faster and more reliable)
+    try:
+        images = extract_tiktok_images_direct(url)
+        if images:
+            print(f"[DEBUG] Direct method success: {len(images)} images")
+            return images
+    except Exception as e:
+        print(f"[DEBUG] Direct method failed: {e}")
+    
+    # Fallback to subprocess method
+    print(f"[DEBUG] Falling back to subprocess method")
+    
     # Create temp file for output
     fd, output_path = tempfile.mkstemp(suffix='.json')
     os.close(fd)
@@ -2278,3 +2290,60 @@ def test_tiktok_images():
             'error': str(e),
             'url': url
         })
+def extract_tiktok_images_direct(url):
+    """Direct extraction without subprocess"""
+    print(f"[DEBUG] Direct extraction for: {url}")
+    
+    try:
+        # Resolve short link first
+        if 'vm.tiktok.com' in url or 'vt.tiktok.com' in url or '/t/' in url:
+            try:
+                h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
+                r = requests.head(url, allow_redirects=True, headers=h, timeout=10)
+                url = r.url
+                if 'tiktok.com' not in url:
+                    r = requests.get(url, allow_redirects=True, headers=h, timeout=10)
+                    url = r.url
+                print(f"[DEBUG] Resolved URL: {url}")
+            except Exception as e:
+                print(f"[DEBUG] Resolve Error: {e}")
+            
+        # Clean URL
+        if '?' in url: 
+            url = url.split('?')[0]
+
+        image_urls = []
+        
+        # 1. TikWM
+        try:
+            print("[DEBUG] Trying TikWM...")
+            resp = requests.post("https://www.tikwm.com/api/", data={'url': url}, timeout=10)
+            data = resp.json()
+            print(f"[DEBUG] TikWM Code: {data.get('code')}")
+            if 'data' in data and 'images' in data['data']:
+                image_urls = data['data']['images']
+                print(f"[DEBUG] TikWM Success: {len(image_urls)} images")
+        except Exception as e:
+            print(f"[DEBUG] TikWM Error: {e}")
+        
+        # 2. LoveTik
+        if not image_urls:
+            try:
+                print("[DEBUG] Trying LoveTik...")
+                payload = {'query': url}
+                headers = {'User-Agent': 'Mozilla/5.0', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+                resp = requests.post("https://lovetik.com/api/ajax/search", data=payload, headers=headers, timeout=10)
+                data = resp.json()
+                if data.get('status') == 'ok' and 'images' in data:
+                    image_urls = [img['url'] for img in data['images']]
+                    print(f"[DEBUG] LoveTik Success: {len(image_urls)} images")
+            except Exception as e:
+                print(f"[DEBUG] LoveTik Error: {e}")
+
+        return list(dict.fromkeys(image_urls))
+        
+    except Exception as e:
+        print(f"[ERROR] Direct extraction error: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
