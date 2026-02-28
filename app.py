@@ -488,7 +488,7 @@ def force_https():
 # Helper function to extract images (Shared logic)
 def extract_tiktok_images(url):
     """Extract image URLs using external script for stability"""
-    print(f"Subprocess extracting: {url}")
+    print(f"[DEBUG] extract_tiktok_images called with: {url}")
     
     # Create temp file for output
     fd, output_path = tempfile.mkstemp(suffix='.json')
@@ -497,12 +497,17 @@ def extract_tiktok_images(url):
     try:
         # Resolve script path
         script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fetch_tiktok.py')
+        print(f"[DEBUG] Script path: {script_path}")
+        print(f"[DEBUG] Script exists: {os.path.exists(script_path)}")
+        
         if not os.path.exists(script_path):
-            print(f"Error: Script not found at {script_path}")
+            print(f"[ERROR] Script not found at {script_path}")
             return []
 
         # Run external script
         cmd = [sys.executable, script_path, url, output_path]
+        print(f"[DEBUG] Running command: {' '.join(cmd)}")
+        
         result = subprocess.run(
             cmd,
             capture_output=True,
@@ -511,23 +516,38 @@ def extract_tiktok_images(url):
             cwd=os.path.dirname(os.path.abspath(__file__))
         )
         
-        # print(f"STDOUT: {result.stdout}")
+        print(f"[DEBUG] Return code: {result.returncode}")
+        print(f"[DEBUG] STDOUT: {result.stdout}")
+        print(f"[DEBUG] STDERR: {result.stderr}")
         
-        if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-            with open(output_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+        if os.path.exists(output_path):
+            print(f"[DEBUG] Output file exists, size: {os.path.getsize(output_path)}")
+            if os.path.getsize(output_path) > 0:
+                with open(output_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    print(f"[DEBUG] Loaded {len(data)} images from file")
+                    return data
+            else:
+                print(f"[DEBUG] Output file is empty")
         else:
-            print(f"Subprocess failed output not found/empty. Code: {result.returncode} Err: {result.stderr}")
-            return []
+            print(f"[DEBUG] Output file does not exist")
+            
+        print(f"[ERROR] Subprocess failed. Code: {result.returncode}")
+        return []
                      
     except Exception as e:
-        print(f"Subprocess Error: {e}")
+        print(f"[ERROR] Subprocess Error: {e}")
+        import traceback
+        traceback.print_exc()
         return []
     finally:
         # Cleanup
         if os.path.exists(output_path):
-            try: os.remove(output_path)
-            except: pass
+            try: 
+                os.remove(output_path)
+                print(f"[DEBUG] Cleaned up temp file: {output_path}")
+            except: 
+                pass
 def download_tiktok_photos(url, download_id, selected_indices=None):
     """Download TikTok photos using Multi-Source approach"""
     try:
@@ -2097,11 +2117,42 @@ def tiktok_info():
         if not url or not is_valid_tiktok_url(url):
             return jsonify({'success': False, 'error': 'URL không hợp lệ'}), 400
         
+        print(f"[DEBUG] Processing TikTok URL: {url}")
+        
         # Check if it's a photo URL
         is_photo = '/photo/' in url
+        print(f"[DEBUG] Is photo URL: {is_photo}")
+        
         if is_photo:
             # Fetch images for preview
+            print(f"[DEBUG] Extracting images...")
             images = extract_tiktok_images(url)
+            print(f"[DEBUG] Extracted {len(images)} images")
+            
+            if not images:
+                print(f"[DEBUG] No images found, falling back to yt-dlp")
+                # Fallback to yt-dlp for basic info
+                try:
+                    ydl_opts = {
+                        'quiet': True,
+                        'no_warnings': True,
+                        'socket_timeout': 10,
+                    }
+                    
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(url, download=False)
+                    
+                    return jsonify({
+                        'success': True,
+                        'title': '📷 TikTok Photo/Slideshow',
+                        'thumbnail': info.get('thumbnail', ''),
+                        'author': info.get('uploader', ''),
+                        'is_photo': True,
+                        'images': []
+                    })
+                except Exception as e:
+                    print(f"[DEBUG] yt-dlp fallback failed: {e}")
+                    return jsonify({'success': False, 'error': 'Không thể lấy thông tin ảnh'}), 400
             
             return jsonify({
                 'success': True,
@@ -2112,6 +2163,7 @@ def tiktok_info():
                 'images': images
             })
         
+        # Regular video processing
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
@@ -2128,6 +2180,13 @@ def tiktok_info():
             'duration': info.get('duration', 0),
             'author': info.get('uploader', ''),
             'likes': info.get('like_count', 0),
+        })
+        
+    except Exception as e:
+        print(f"TikTok info error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': 'Không thể lấy thông tin video'}), 200
         })
         
     except Exception as e:
