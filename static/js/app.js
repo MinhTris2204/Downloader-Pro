@@ -188,16 +188,21 @@ async function fetchTiktokInfo(url) {
                     currentTiktokImages = data.images;
                     console.log('Setting currentTiktokImages:', currentTiktokImages);
                     renderGallery();
-                    showToast(`Tìm thấy ${data.images.length} ảnh!`, 'success');
+                    showToast(`Tìm thấy ${data.images.length} ảnh! Chọn ảnh để tải.`, 'success');
                 } else {
-                    // Show empty gallery with message
+                    // Show empty gallery with loading message
                     currentTiktokImages = [];
                     const grid = document.getElementById('gallery-grid');
                     if (grid) {
-                        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Ảnh sẽ được hiển thị khi tải xuống</div>';
+                        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Đang tải ảnh...</div>';
                     }
                     updateDownloadButtonText();
-                    showToast('Album ảnh TikTok sẵn sàng tải!', 'success');
+                    showToast('Đang tải album ảnh...', 'info');
+                    
+                    // Try to reload images after a short delay
+                    setTimeout(() => {
+                        fetchTiktokInfo(url);
+                    }, 2000);
                 }
             } else {
                 // VIDEO MODE

@@ -2145,18 +2145,31 @@ def tiktok_info():
         print(f"[DEBUG] Is photo URL: {is_photo}")
         
         if is_photo:
-            # For photo URLs, return basic info without images for now
-            # This will allow the UI to show the gallery container
-            print(f"[DEBUG] Returning basic photo info")
+            # Extract images immediately for preview and selection
+            print(f"[DEBUG] Extracting images for preview...")
+            images = extract_tiktok_images(url)
+            print(f"[DEBUG] Extracted {len(images)} images")
             
-            return jsonify({
-                'success': True,
-                'title': '📷 TikTok Photo/Slideshow',
-                'thumbnail': '',
-                'author': 'Album ảnh TikTok',
-                'is_photo': True,
-                'images': []  # Empty for now, will be populated by download function
-            })
+            if images:
+                return jsonify({
+                    'success': True,
+                    'title': '📷 TikTok Photo/Slideshow',
+                    'thumbnail': images[0] if images else '',
+                    'author': f'Tìm thấy {len(images)} ảnh',
+                    'is_photo': True,
+                    'images': images
+                })
+            else:
+                # If extraction failed, still show as photo but with empty gallery
+                print(f"[DEBUG] No images extracted, showing empty gallery")
+                return jsonify({
+                    'success': True,
+                    'title': '📷 TikTok Photo/Slideshow',
+                    'thumbnail': '',
+                    'author': 'Album ảnh TikTok',
+                    'is_photo': True,
+                    'images': []
+                })
         
         # Regular video processing
         ydl_opts = {
@@ -2278,10 +2291,10 @@ def extract_tiktok_images_direct(url):
         if 'vm.tiktok.com' in url or 'vt.tiktok.com' in url or '/t/' in url:
             try:
                 h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
-                r = requests.head(url, allow_redirects=True, headers=h, timeout=10)
+                r = requests.head(url, allow_redirects=True, headers=h, timeout=15)
                 url = r.url
                 if 'tiktok.com' not in url:
-                    r = requests.get(url, allow_redirects=True, headers=h, timeout=10)
+                    r = requests.get(url, allow_redirects=True, headers=h, timeout=15)
                     url = r.url
                 print(f"[DEBUG] Resolved URL: {url}")
             except Exception as e:
@@ -2293,26 +2306,38 @@ def extract_tiktok_images_direct(url):
 
         image_urls = []
         
-        # 1. TikWM
+        # 1. TikWM API
         try:
             print("[DEBUG] Trying TikWM...")
-            resp = requests.post("https://www.tikwm.com/api/", data={'url': url}, timeout=10)
+            resp = requests.post("https://www.tikwm.com/api/", 
+                               data={'url': url}, 
+                               timeout=15,
+                               headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'})
             data = resp.json()
-            print(f"[DEBUG] TikWM Code: {data.get('code')}")
-            if 'data' in data and 'images' in data['data']:
+            print(f"[DEBUG] TikWM Response Code: {data.get('code')}")
+            
+            if data.get('code') == 0 and 'data' in data and 'images' in data['data']:
                 image_urls = data['data']['images']
                 print(f"[DEBUG] TikWM Success: {len(image_urls)} images")
+                return list(dict.fromkeys(image_urls))  # Remove duplicates and return immediately
         except Exception as e:
             print(f"[DEBUG] TikWM Error: {e}")
         
-        # 2. LoveTik
+        # 2. LoveTik API (fallback)
         if not image_urls:
             try:
                 print("[DEBUG] Trying LoveTik...")
                 payload = {'query': url}
-                headers = {'User-Agent': 'Mozilla/5.0', 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-                resp = requests.post("https://lovetik.com/api/ajax/search", data=payload, headers=headers, timeout=10)
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0', 
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                }
+                resp = requests.post("https://lovetik.com/api/ajax/search", 
+                                   data=payload, 
+                                   headers=headers, 
+                                   timeout=15)
                 data = resp.json()
+                
                 if data.get('status') == 'ok' and 'images' in data:
                     image_urls = [img['url'] for img in data['images']]
                     print(f"[DEBUG] LoveTik Success: {len(image_urls)} images")
