@@ -11412,6 +11412,10 @@ body {
         min-height: 80px !important;
         min-width: 80px !important;
         touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -webkit-touch-callout: none !important;
     }
     
     .select-all-btn {

@@ -548,10 +548,26 @@ function toggleSelectAll() {
 
     if (isSelectAll) {
         currentTiktokImages.forEach((_, i) => selectedImageIndices.add(i));
-        items.forEach(item => item.classList.add('selected'));
+        items.forEach(item => {
+            item.classList.add('selected');
+            item.style.border = '2px solid #00f2ea';
+            const overlay = item.querySelector('div:last-child');
+            if (overlay) {
+                overlay.style.background = '#00f2ea';
+                overlay.style.border = '2px solid #00f2ea';
+            }
+        });
     } else {
         selectedImageIndices.clear();
-        items.forEach(item => item.classList.remove('selected'));
+        items.forEach(item => {
+            item.classList.remove('selected');
+            item.style.border = '2px solid transparent';
+            const overlay = item.querySelector('div:last-child');
+            if (overlay) {
+                overlay.style.background = 'rgba(0, 0, 0, 0.5)';
+                overlay.style.border = '2px solid white';
+            }
+        });
     }
 
     updateSelectAllButton();
@@ -1245,31 +1261,31 @@ function renderGalleryWithTryCatch() {
     try {
         console.log('=== renderGalleryWithTryCatch START ===');
         console.log('currentTiktokImages:', currentTiktokImages);
-        
+
         const grid = document.getElementById('gallery-grid');
         const gallery = document.getElementById('tiktok-gallery');
-        
+
         if (!grid) {
             console.error('Grid not found!');
             return;
         }
-        
+
         if (!gallery) {
             console.error('Gallery not found!');
             return;
         }
-        
+
         console.log('Elements found, clearing grid...');
         grid.innerHTML = '';
         selectedImageIndices.clear();
-        
+
         console.log('About to loop through images...');
-        
+
         for (let i = 0; i < currentTiktokImages.length; i++) {
             console.log(`Processing image ${i + 1}:`, currentTiktokImages[i]);
-            
+
             selectedImageIndices.add(i);
-            
+
             const item = document.createElement('div');
             item.className = 'gallery-item selected';
             item.style.cssText = `
@@ -1286,8 +1302,12 @@ function renderGalleryWithTryCatch() {
                 overflow: hidden !important;
                 cursor: pointer !important;
                 flex: 0 0 calc(33.333% - 4px) !important;
+                touch-action: manipulation !important;
+                -webkit-tap-highlight-color: transparent !important;
+                user-select: none !important;
+                -webkit-user-select: none !important;
             `;
-            
+
             const img = document.createElement('img');
             img.src = currentTiktokImages[i];
             img.style.cssText = `
@@ -1300,8 +1320,9 @@ function renderGalleryWithTryCatch() {
                 display: block !important;
                 visibility: visible !important;
                 opacity: 1 !important;
+                pointer-events: none !important;
             `;
-            
+
             const overlay = document.createElement('div');
             overlay.innerHTML = '✓';
             overlay.style.cssText = `
@@ -1318,15 +1339,64 @@ function renderGalleryWithTryCatch() {
                 color: white !important;
                 font-size: 12px !important;
                 z-index: 10 !important;
+                border: 2px solid #00f2ea !important;
+                pointer-events: none !important;
             `;
+
+            // Add click handler for selection (now overlay is defined)
+            const handleSelection = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const imageIndex = parseInt(item.dataset.imageIndex);
+                console.log(`Event type: ${e.type}, Image ${imageIndex + 1} clicked/touched`);
+                console.log('Event target:', e.target);
+                console.log('Current item:', item);
+
+                if (selectedImageIndices.has(imageIndex)) {
+                    selectedImageIndices.delete(imageIndex);
+                    item.classList.remove('selected');
+                    item.style.border = '2px solid transparent';
+                    overlay.style.background = 'rgba(0, 0, 0, 0.5)';
+                    overlay.style.border = '2px solid white';
+                    console.log(`Deselected image ${imageIndex + 1}`);
+                } else {
+                    selectedImageIndices.add(imageIndex);
+                    item.classList.add('selected');
+                    item.style.border = '2px solid #00f2ea';
+                    overlay.style.background = '#00f2ea';
+                    overlay.style.border = '2px solid #00f2ea';
+                    console.log(`Selected image ${imageIndex + 1}`);
+                }
+
+                updateSelectAllButton();
+                updateDownloadButtonText();
+            };
             
+            // Store the image index as a data attribute
+            item.dataset.imageIndex = i;
+            
+            // Add both click and touch events for maximum compatibility
+            item.onclick = handleSelection;
+            item.ontouchend = handleSelection;
+            
+            // Add additional touch event for iOS Safari
+            item.addEventListener('touchstart', function(e) {
+                console.log(`Touch start on image ${i + 1}`);
+            });
+            
+            item.addEventListener('touchend', function(e) {
+                console.log(`Touch end on image ${i + 1}`);
+                handleSelection(e);
+            });
+
             item.appendChild(img);
             item.appendChild(overlay);
             grid.appendChild(item);
-            
-            console.log(`Image ${i + 1} added to grid`);
+
+            console.log(`Image ${i + 1} added to grid with click handler`);
         }
-        
+
         // Force grid to flexbox
         grid.style.cssText = `
             display: flex !important;
@@ -1336,7 +1406,7 @@ function renderGalleryWithTryCatch() {
             opacity: 1 !important;
             width: 100% !important;
         `;
-        
+
         // Force gallery visibility
         gallery.style.cssText = `
             display: block !important;
@@ -1349,9 +1419,13 @@ function renderGalleryWithTryCatch() {
             padding: 12px !important;
             margin: 15px 0 !important;
         `;
-        
+
         console.log('=== renderGalleryWithTryCatch COMPLETED ===');
-        
+
+        // Update buttons after rendering
+        updateSelectAllButton();
+        updateDownloadButtonText();
+
     } catch (error) {
         console.error('=== ERROR in renderGalleryWithTryCatch ===');
         console.error('Error:', error);
