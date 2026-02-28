@@ -1288,40 +1288,77 @@ function renderGalleryWithTryCatch() {
 
             const item = document.createElement('div');
             item.className = 'gallery-item selected';
-            item.style.cssText = `
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                position: relative !important;
-                width: calc(33.333% - 4px) !important;
-                height: 0 !important;
-                padding-bottom: calc(33.333% - 4px) !important;
-                margin-bottom: 6px !important;
-                border: 2px solid #00f2ea !important;
-                border-radius: 8px !important;
-                overflow: hidden !important;
-                cursor: pointer !important;
-                flex: 0 0 calc(33.333% - 4px) !important;
-                touch-action: manipulation !important;
-                -webkit-tap-highlight-color: transparent !important;
-                user-select: none !important;
-                -webkit-user-select: none !important;
-            `;
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // Mobile styles
+                item.style.cssText = `
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    position: relative !important;
+                    width: calc(33.333% - 4px) !important;
+                    height: 0 !important;
+                    padding-bottom: calc(33.333% - 4px) !important;
+                    margin-bottom: 6px !important;
+                    border: 2px solid #00f2ea !important;
+                    border-radius: 8px !important;
+                    overflow: hidden !important;
+                    cursor: pointer !important;
+                    flex: 0 0 calc(33.333% - 4px) !important;
+                    touch-action: manipulation !important;
+                    -webkit-tap-highlight-color: transparent !important;
+                    user-select: none !important;
+                    -webkit-user-select: none !important;
+                `;
+            } else {
+                // Desktop styles - let CSS Grid handle sizing
+                item.style.cssText = `
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    position: relative !important;
+                    aspect-ratio: 1 !important;
+                    border: 2px solid #00f2ea !important;
+                    border-radius: 8px !important;
+                    overflow: hidden !important;
+                    cursor: pointer !important;
+                    touch-action: manipulation !important;
+                    -webkit-tap-highlight-color: transparent !important;
+                    user-select: none !important;
+                    -webkit-user-select: none !important;
+                `;
+            }
 
             const img = document.createElement('img');
             img.src = currentTiktokImages[i];
-            img.style.cssText = `
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                object-fit: cover !important;
-                display: block !important;
-                visibility: visible !important;
-                opacity: 1 !important;
-                pointer-events: none !important;
-            `;
+            
+            if (isMobile) {
+                // Mobile img styles
+                img.style.cssText = `
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: none !important;
+                `;
+            } else {
+                // Desktop img styles
+                img.style.cssText = `
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: none !important;
+                `;
+            }
 
             const overlay = document.createElement('div');
             overlay.innerHTML = '✓';
@@ -1397,15 +1434,30 @@ function renderGalleryWithTryCatch() {
             console.log(`Image ${i + 1} added to grid with click handler`);
         }
 
-        // Force grid to flexbox
-        grid.style.cssText = `
-            display: flex !important;
-            flex-wrap: wrap !important;
-            justify-content: space-between !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            width: 100% !important;
-        `;
+        // Check if mobile or desktop
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // Mobile: use flexbox with gap
+            grid.style.cssText = `
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 6px !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 100% !important;
+            `;
+        } else {
+            // Desktop: use CSS Grid (natural layout)
+            grid.style.cssText = `
+                display: grid !important;
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+                gap: 12px !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                width: 100% !important;
+            `;
+        }
 
         // Force gallery visibility
         gallery.style.cssText = `
