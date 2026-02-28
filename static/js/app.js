@@ -235,14 +235,6 @@ async function downloadYoutube() {
         gtag_report_conversion();
     }
 
-    // Show donation promo immediately and wait for user action
-    if (typeof showDonationPromoOnDownload === 'function') {
-        const userAction = await showDonationPromoOnDownload();
-        if (userAction === 'cancelled') {
-            return; // User cancelled, don't proceed with download
-        }
-    }
-
     const btn = document.getElementById('youtube-download-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
@@ -261,6 +253,11 @@ async function downloadYoutube() {
 
         if (data.success) {
             showProgress('youtube', data.download_id);
+            
+            // Show donation promo after starting download
+            if (typeof showDonationPromoOnDownload === 'function') {
+                showDonationPromoOnDownload();
+            }
         } else {
             // Check if it's a rate limit error (429)
             if (response.status === 429 && data.error) {
@@ -416,14 +413,6 @@ async function downloadTiktok() {
         quality = document.getElementById('tiktok-audio-quality').value;
     }
 
-    // Show donation promo immediately and wait for user action
-    if (typeof showDonationPromoOnDownload === 'function') {
-        const userAction = await showDonationPromoOnDownload();
-        if (userAction === 'cancelled') {
-            return; // User cancelled, don't proceed with download
-        }
-    }
-
     // UI Loading
     const btn = document.getElementById('tiktok-download-btn');
     btn.disabled = true;
@@ -457,6 +446,11 @@ async function downloadTiktok() {
 
         if (data.success) {
             showProgress('tiktok', data.download_id);
+            
+            // Show donation promo after starting download
+            if (typeof showDonationPromoOnDownload === 'function') {
+                showDonationPromoOnDownload();
+            }
         } else {
             showToast(data.error || 'Có lỗi xảy ra', 'error');
             resetButton('tiktok');
