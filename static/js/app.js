@@ -186,8 +186,13 @@ async function fetchTiktokInfo(url) {
                 gallery.style.display = 'block';
 
                 if (data.images && data.images.length > 0) {
+                    console.log('Raw images from API:', data.images);
+                    console.log('Images array type:', typeof data.images);
+                    console.log('Images array length:', data.images.length);
+                    
                     currentTiktokImages = data.images;
                     console.log('Setting currentTiktokImages:', currentTiktokImages);
+                    console.log('currentTiktokImages after setting:', typeof currentTiktokImages, currentTiktokImages.length);
                     console.log('About to call renderGallery...');
                     renderGallery();
                     console.log('renderGallery completed');
@@ -387,6 +392,16 @@ function renderGallery() {
                 grid.style.overflowY = 'auto';
             }
         }
+    }
+
+    console.log('currentTiktokImages type:', typeof currentTiktokImages);
+    console.log('currentTiktokImages length:', currentTiktokImages ? currentTiktokImages.length : 'undefined');
+    console.log('currentTiktokImages content:', currentTiktokImages);
+
+    if (!currentTiktokImages || !Array.isArray(currentTiktokImages) || currentTiktokImages.length === 0) {
+        console.error('currentTiktokImages is not a valid array:', currentTiktokImages);
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #666;">Không có ảnh để hiển thị</div>';
+        return;
     }
 
     currentTiktokImages.forEach((url, index) => {
