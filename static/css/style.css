@@ -5428,7 +5428,7 @@ body {
 
 
 
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 
 
 
@@ -5436,7 +5436,7 @@ body {
 
 
 
-    max-height: 400px;
+    max-height: 500px;
 
 
 
@@ -7104,7 +7104,7 @@ body {
 
 
 
-    gap: 8px;
+    gap: 4px;
 
 
 
@@ -7252,7 +7252,7 @@ body {
 
 
 
-    gap: 8px;
+    gap: 4px;
 
 
 
@@ -7504,7 +7504,7 @@ body {
 
 
 
-        gap: 8px;
+        gap: 4px;
 
 
 
@@ -7912,7 +7912,7 @@ body {
 
 
 
-        gap: 8px;
+        gap: 4px;
 
 
 
@@ -7940,7 +7940,7 @@ body {
 
 
 
-        gap: 8px;
+        gap: 4px;
 
 
 
@@ -8016,7 +8016,7 @@ body {
 
 
 
-        gap: 8px;
+        gap: 4px;
 
 
 
@@ -9204,7 +9204,7 @@ body {
 
 
 
-        gap: 8px;
+        gap: 4px;
 
 
 
@@ -10181,7 +10181,7 @@ body {
 
     align-items: center;
 
-    gap: 8px;
+    gap: 4px;
 
 }
 
@@ -10285,7 +10285,7 @@ body {
 .donate-header-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     padding: 10px 20px;
     background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
     color: white;
@@ -10501,7 +10501,7 @@ body {
     /* Show only first 3 nav items + hamburger on mobile */
     .header-nav {
         display: flex !important;
-        gap: 8px;
+        gap: 4px;
     }
     
     /* Hide items after Blog (Tin tức, Language dropdown, Theme toggle) */
