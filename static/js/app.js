@@ -118,6 +118,8 @@ function extractYoutubeId(url) {
 }
 
 async function fetchTiktokInfo(url) {
+    console.log('fetchTiktokInfo called with URL:', url);
+    
     if (!url) return;
 
     if (url.length > 5 && !isValidTikTokUrl(url)) {
@@ -162,6 +164,7 @@ async function fetchTiktokInfo(url) {
         }
 
         const data = await response.json();
+        console.log('API Response:', data);
 
         if (data.success) {
             document.getElementById('tiktok-thumbnail').src = data.thumbnail || '';
@@ -172,12 +175,17 @@ async function fetchTiktokInfo(url) {
             const videoOptions = document.getElementById('tiktok-video-options');
             const gallery = document.getElementById('tiktok-gallery');
 
+            console.log('Is photo:', data.is_photo);
+            console.log('Images count:', data.images ? data.images.length : 0);
+
             if (data.is_photo && data.images && data.images.length > 0) {
                 // PHOTO MODE
+                console.log('Entering PHOTO MODE');
                 videoOptions.style.display = 'none';
                 gallery.style.display = 'block';
 
                 currentTiktokImages = data.images;
+                console.log('Setting currentTiktokImages:', currentTiktokImages);
                 renderGallery(); // This will auto-update button text
                 showToast(`Tìm thấy ${data.images.length} ảnh!`, 'success');
             } else {
@@ -315,11 +323,18 @@ function renderGallery() {
         item.onclick = () => toggleImageSelection(index, item);
 
         const img = document.createElement('img');
-        img.src = url;
+        // Use proxy for TikTok images to avoid CORS
+        const proxyUrl = `/proxy/image?url=${encodeURIComponent(url)}`;
+        img.src = proxyUrl;
         img.loading = 'lazy';
         img.onerror = () => {
-            console.log('Image failed to load:', url);
-            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD48L3N2Zz4=';
+            console.log('Image failed to load via proxy, trying direct:', url);
+            // Fallback to direct URL
+            img.src = url;
+            img.onerror = () => {
+                console.log('Direct image also failed:', url);
+                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzMyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZTwvdGV4dD48L3N2Zz4=';
+            };
         };
 
         const overlay = document.createElement('div');

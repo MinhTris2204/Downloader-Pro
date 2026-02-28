@@ -2167,3 +2167,33 @@ if __name__ == '__main__':
     except ImportError:
         print("Waitress not found. Running with Flask Dev Server.")
         app.run(debug=True, host='0.0.0.0', port=port)
+@app.route('/proxy/image')
+def proxy_image():
+    """Proxy images to avoid CORS issues"""
+    url = request.args.get('url')
+    if not url:
+        return 'No URL provided', 400
+    
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.tiktok.com/'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            return Response(
+                response.content,
+                mimetype=response.headers.get('content-type', 'image/jpeg'),
+                headers={
+                    'Cache-Control': 'public, max-age=3600',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            )
+        else:
+            return 'Image not found', 404
+            
+    except Exception as e:
+        print(f"Proxy error: {e}")
+        return 'Error loading image', 500
