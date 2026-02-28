@@ -194,7 +194,7 @@ async function fetchTiktokInfo(url) {
                     console.log('Setting currentTiktokImages:', currentTiktokImages);
                     console.log('currentTiktokImages after setting:', typeof currentTiktokImages, currentTiktokImages.length);
                     console.log('About to call renderGallery...');
-                    renderGallery();
+                    renderGalleryWithTryCatch();
                     console.log('renderGallery completed');
                     showToast(`Tìm thấy ${data.images.length} ảnh! Chọn ảnh để tải.`, 'success');
                 } else {
@@ -1240,3 +1240,121 @@ document.addEventListener('DOMContentLoaded', function() {
         // testGallery();
     }, 2000);
 });
+// Backup renderGallery with try-catch
+function renderGalleryWithTryCatch() {
+    try {
+        console.log('=== renderGalleryWithTryCatch START ===');
+        console.log('currentTiktokImages:', currentTiktokImages);
+        
+        const grid = document.getElementById('gallery-grid');
+        const gallery = document.getElementById('tiktok-gallery');
+        
+        if (!grid) {
+            console.error('Grid not found!');
+            return;
+        }
+        
+        if (!gallery) {
+            console.error('Gallery not found!');
+            return;
+        }
+        
+        console.log('Elements found, clearing grid...');
+        grid.innerHTML = '';
+        selectedImageIndices.clear();
+        
+        console.log('About to loop through images...');
+        
+        for (let i = 0; i < currentTiktokImages.length; i++) {
+            console.log(`Processing image ${i + 1}:`, currentTiktokImages[i]);
+            
+            selectedImageIndices.add(i);
+            
+            const item = document.createElement('div');
+            item.className = 'gallery-item selected';
+            item.style.cssText = `
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                position: relative !important;
+                width: calc(33.333% - 4px) !important;
+                height: 0 !important;
+                padding-bottom: calc(33.333% - 4px) !important;
+                margin-bottom: 6px !important;
+                border: 2px solid #00f2ea !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                cursor: pointer !important;
+                flex: 0 0 calc(33.333% - 4px) !important;
+            `;
+            
+            const img = document.createElement('img');
+            img.src = currentTiktokImages[i];
+            img.style.cssText = `
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            `;
+            
+            const overlay = document.createElement('div');
+            overlay.innerHTML = '✓';
+            overlay.style.cssText = `
+                position: absolute !important;
+                top: 5px !important;
+                right: 5px !important;
+                width: 20px !important;
+                height: 20px !important;
+                background: #00f2ea !important;
+                border-radius: 50% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                color: white !important;
+                font-size: 12px !important;
+                z-index: 10 !important;
+            `;
+            
+            item.appendChild(img);
+            item.appendChild(overlay);
+            grid.appendChild(item);
+            
+            console.log(`Image ${i + 1} added to grid`);
+        }
+        
+        // Force grid to flexbox
+        grid.style.cssText = `
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: space-between !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+        `;
+        
+        // Force gallery visibility
+        gallery.style.cssText = `
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            margin: 15px 0 !important;
+        `;
+        
+        console.log('=== renderGalleryWithTryCatch COMPLETED ===');
+        
+    } catch (error) {
+        console.error('=== ERROR in renderGalleryWithTryCatch ===');
+        console.error('Error:', error);
+        console.error('Stack:', error.stack);
+    }
+}
