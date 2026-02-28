@@ -19,31 +19,42 @@ function showDonationPromo() {
                     <button class="close-btn" id="promoCloseBtn">×</button>
                 </div>
                 <div class="donation-promo-body">
-                    <div class="promo-icon">☕</div>
-                    <p class="promo-message">${t.promo_message}</p>
-                    <p class="promo-explanation">${t.promo_explanation}</p>
-                    
-                    <div class="promo-benefits">
-                        <h4>${t.promo_benefits_title}</h4>
-                        <ul>
-                            <li>💰 ${t.promo_benefit_1}</li>
-                            <li>🚀 ${t.promo_benefit_2}</li>
-                            <li>❤️ ${t.promo_benefit_3}</li>
-                        </ul>
+                    <div class="promo-left">
+                        <div class="promo-icon">☕</div>
+                        <p class="promo-message">${t.promo_message}</p>
+                        <p class="promo-explanation">${t.promo_explanation}</p>
+                        
+                        <div class="promo-benefits">
+                            <h4>${t.promo_benefits_title}</h4>
+                            <ul>
+                                <li>💰 ${t.promo_benefit_1}</li>
+                                <li>🚀 ${t.promo_benefit_2}</li>
+                                <li>❤️ ${t.promo_benefit_3}</li>
+                            </ul>
+                        </div>
                     </div>
                     
-                    <div class="promo-amounts">
-                        <button class="amount-btn-promo" data-amount="10000">10,000₫</button>
-                        <button class="amount-btn-promo" data-amount="20000">20,000₫</button>
-                        <button class="amount-btn-promo" data-amount="50000">50,000₫</button>
-                        <button class="amount-btn-promo" data-amount="100000">100,000₫</button>
-                    </div>
-                    
-                    <div class="custom-amount-section">
-                        <label for="customAmountInput" class="custom-amount-label">${t.promo_custom_amount || 'Hoặc nhập số tiền khác:'}</label>
-                        <input type="number" id="customAmountInput" class="custom-amount-input" 
-                               placeholder="${t.promo_amount_placeholder || 'Nhập số tiền (VND)'}" 
-                               min="5000" step="1000">
+                    <div class="promo-right">
+                        <div class="promo-amounts">
+                            <button class="amount-btn-promo" data-amount="10000">10,000₫</button>
+                            <button class="amount-btn-promo" data-amount="20000">20,000₫</button>
+                            <button class="amount-btn-promo" data-amount="50000">50,000₫</button>
+                            <button class="amount-btn-promo" data-amount="100000">100,000₫</button>
+                        </div>
+                        
+                        <div class="custom-amount-section">
+                            <label for="customAmountInput" class="custom-amount-label">${t.promo_custom_amount || 'Hoặc nhập số tiền khác:'}</label>
+                            <input type="number" id="customAmountInput" class="custom-amount-input" 
+                                   placeholder="${t.promo_amount_placeholder || 'Nhập số tiền (VND)'}" 
+                                   min="5000" step="1000">
+                        </div>
+                        
+                        <div class="message-section">
+                            <label for="donationMessage" class="message-label">${t.promo_message_label || 'Lời nhắn (tùy chọn):'}</label>
+                            <textarea id="donationMessage" class="message-input" 
+                                      placeholder="${t.promo_message_placeholder || 'Viết lời nhắn để hiển thị trong phần ủng hộ...'}" 
+                                      maxlength="200"></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="donation-promo-footer">
@@ -99,6 +110,9 @@ function showDonationPromo() {
         const customAmount = document.getElementById('customAmountInput').value;
         const amount = customAmount ? parseInt(customAmount) : selectedAmount;
         
+        // Get donation message
+        const message = document.getElementById('donationMessage').value.trim() || 'Cảm ơn bạn đã ủng hộ!';
+        
         if (amount < 5000) {
             showToast('Số tiền tối thiểu là 5,000₫', 'error');
             return;
@@ -115,9 +129,9 @@ function showDonationPromo() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: amount,
-                    name: 'Người dùng ủng hộ',
+                    name: 'Người ủng hộ',
                     email: '',
-                    message: 'Ủng hộ từ modal tải xuống',
+                    message: message,
                     is_premium: false
                 })
             });
