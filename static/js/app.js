@@ -323,11 +323,43 @@ function renderGallery() {
     grid.innerHTML = '';
     selectedImageIndices.clear();
 
-    // Force gallery to be visible
+    // Force gallery to be visible - especially important on mobile
     if (gallery) {
         gallery.style.display = 'block';
         gallery.style.visibility = 'visible';
         gallery.style.opacity = '1';
+        gallery.style.width = '100%';
+        gallery.style.boxSizing = 'border-box';
+        
+        // Mobile specific fixes
+        if (window.innerWidth <= 768) {
+            gallery.style.background = 'rgba(0, 0, 0, 0.2)';
+            gallery.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            gallery.style.borderRadius = '8px';
+            gallery.style.padding = '12px';
+            gallery.style.margin = '15px 0';
+        }
+    }
+    
+    // Force grid visibility
+    if (grid) {
+        grid.style.display = 'grid';
+        grid.style.visibility = 'visible';
+        grid.style.opacity = '1';
+        grid.style.width = '100%';
+        
+        // Mobile specific grid fixes
+        if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 480) {
+                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                grid.style.gap = '6px';
+            } else {
+                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(90px, 1fr))';
+                grid.style.gap = '8px';
+            }
+            grid.style.maxHeight = '280px';
+            grid.style.overflowY = 'auto';
+        }
     }
 
     currentTiktokImages.forEach((url, index) => {
@@ -337,12 +369,32 @@ function renderGallery() {
         const item = document.createElement('div');
         item.className = 'gallery-item selected';
         item.onclick = () => toggleImageSelection(index, item);
+        
+        // Force item visibility
+        item.style.display = 'block';
+        item.style.visibility = 'visible';
+        item.style.opacity = '1';
+        item.style.position = 'relative';
+        item.style.aspectRatio = '1';
+        item.style.cursor = 'pointer';
+        item.style.borderRadius = '8px';
+        item.style.overflow = 'hidden';
+        item.style.border = '2px solid var(--primary)';
 
         const img = document.createElement('img');
         // Use proxy for TikTok images to avoid CORS
         const proxyUrl = `/proxy/image?url=${encodeURIComponent(url)}`;
         img.src = proxyUrl;
         img.loading = 'lazy';
+        
+        // Force image visibility
+        img.style.display = 'block';
+        img.style.visibility = 'visible';
+        img.style.opacity = '1';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        
         img.onerror = () => {
             console.log('Image failed to load via proxy, trying direct:', url);
             // Fallback to direct URL
@@ -356,6 +408,21 @@ function renderGallery() {
         const overlay = document.createElement('div');
         overlay.className = 'gallery-overlay';
         overlay.innerHTML = '<span class="check-icon">✓</span>';
+        
+        // Force overlay visibility
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+        overlay.style.position = 'absolute';
+        overlay.style.top = '5px';
+        overlay.style.right = '5px';
+        overlay.style.width = '20px';
+        overlay.style.height = '20px';
+        overlay.style.background = 'var(--primary)';
+        overlay.style.borderRadius = '50%';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.border = '2px solid var(--primary)';
 
         item.appendChild(img);
         item.appendChild(overlay);
@@ -366,10 +433,17 @@ function renderGallery() {
     updateSelectAllButton();
     updateDownloadButtonText();
     
-    // Force a reflow to ensure visibility
+    // Force a reflow to ensure visibility on mobile
     setTimeout(() => {
-        if (gallery) {
+        if (gallery && window.innerWidth <= 768) {
             gallery.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Double check visibility
+            console.log('Gallery final styles:', {
+                display: gallery.style.display,
+                visibility: gallery.style.visibility,
+                opacity: gallery.style.opacity
+            });
         }
     }, 100);
 }
