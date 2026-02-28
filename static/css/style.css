@@ -10763,23 +10763,25 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 9999;
     padding: 20px;
     animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(8px);
 }
 
 .donation-promo-modal {
     background: var(--card-bg);
+    border: 2px solid var(--border-color);
     border-radius: 20px;
     max-width: 480px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
     animation: slideUp 0.4s ease;
     position: relative;
 }
@@ -10795,7 +10797,7 @@ body {
     margin: 0;
     font-size: 22px;
     color: var(--text-color);
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -10893,13 +10895,13 @@ body {
 }
 
 .amount-btn-promo:hover {
-    border-color: #667eea;
+    border-color: #059669;
     transform: translateY(-2px);
 }
 
 .amount-btn-promo.selected {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #059669;
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
     color: white;
 }
 
@@ -10929,7 +10931,7 @@ body {
 
 .custom-amount-input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #059669;
 }
 
 .custom-amount-input::placeholder {
@@ -10966,13 +10968,13 @@ body {
 }
 
 .btn-donate-promo {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
     color: white;
 }
 
 .btn-donate-promo:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
 }
 
 .btn-donate-promo:disabled {

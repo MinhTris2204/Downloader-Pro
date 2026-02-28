@@ -235,9 +235,12 @@ async function downloadYoutube() {
         gtag_report_conversion();
     }
 
-    // Show donation promo immediately when download starts
+    // Show donation promo immediately and wait for user action
     if (typeof showDonationPromoOnDownload === 'function') {
-        showDonationPromoOnDownload();
+        const userAction = await showDonationPromoOnDownload();
+        if (userAction === 'cancelled') {
+            return; // User cancelled, don't proceed with download
+        }
     }
 
     const btn = document.getElementById('youtube-download-btn');
@@ -413,9 +416,12 @@ async function downloadTiktok() {
         quality = document.getElementById('tiktok-audio-quality').value;
     }
 
-    // Show donation promo immediately when download starts
+    // Show donation promo immediately and wait for user action
     if (typeof showDonationPromoOnDownload === 'function') {
-        showDonationPromoOnDownload();
+        const userAction = await showDonationPromoOnDownload();
+        if (userAction === 'cancelled') {
+            return; // User cancelled, don't proceed with download
+        }
     }
 
     // UI Loading
