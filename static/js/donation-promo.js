@@ -142,12 +142,32 @@ function showDonationPromo() {
     // Select default amount
     document.querySelector('.amount-btn-promo[data-amount="20000"]').classList.add('selected');
     
-    // Close handlers
+    // Close handlers - only X button and Skip button
     document.getElementById('promoCloseBtn').addEventListener('click', closeDonationPromo);
     document.getElementById('promoSkipBtn').addEventListener('click', closeDonationPromo);
-    document.getElementById('donationPromoOverlay').addEventListener('click', function(e) {
-        if (e.target === this) closeDonationPromo();
-    });
+    
+    // Remove click outside to close - user must use X or Skip button
+    // document.getElementById('donationPromoOverlay').addEventListener('click', function(e) {
+    //     if (e.target === this) closeDonationPromo();
+    // });
+    
+    // Block ESC key to close modal
+    const handleKeyDown = function(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            // Optional: highlight the close button to show user how to close
+            const closeBtn = document.getElementById('promoCloseBtn');
+            if (closeBtn) {
+                closeBtn.style.animation = 'pulse 0.5s ease-in-out 2';
+            }
+        }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Store the handler to remove it later
+    window.donationModalKeyHandler = handleKeyDown;
     
     // Donate handler - create payment directly
     document.getElementById('promoDonateBtn').addEventListener('click', async function() {
@@ -206,6 +226,12 @@ function closeDonationPromo() {
     if (modal) {
         modal.style.opacity = '0';
         setTimeout(() => modal.remove(), 300);
+    }
+    
+    // Remove keyboard event listener
+    if (window.donationModalKeyHandler) {
+        document.removeEventListener('keydown', window.donationModalKeyHandler);
+        window.donationModalKeyHandler = null;
     }
 }
 

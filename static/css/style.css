@@ -10735,6 +10735,21 @@ body {
     }
 }
 
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        background: #f3f4f6;
+    }
+    50% {
+        transform: scale(1.1);
+        background: #e5e7eb;
+    }
+    100% {
+        transform: scale(1);
+        background: #f3f4f6;
+    }
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .limit-modal {
@@ -10771,6 +10786,7 @@ body {
     padding: 20px;
     animation: fadeIn 0.3s ease;
     backdrop-filter: blur(8px);
+    cursor: default; /* Indicate this area is not clickable */
 }
 
 .donation-promo-modal {
@@ -11027,11 +11043,19 @@ body {
     background: #f3f4f6;
     color: #6b7280;
     border: 2px solid #e5e7eb;
+    position: relative;
 }
 
 .btn-skip:hover {
     background: #e5e7eb;
     color: #374151;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-skip::before {
+    content: '← ';
+    margin-right: 4px;
 }
 
 .btn-donate-promo {
@@ -11064,11 +11088,27 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    position: relative;
 }
 
 .close-btn:hover {
     background: #f3f4f6;
     color: #374151;
+    transform: scale(1.1);
+}
+
+.close-btn:hover::after {
+    content: 'Đóng';
+    position: absolute;
+    top: -30px;
+    right: 0;
+    background: #374151;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
 }
 
 .donation-promo-body {
