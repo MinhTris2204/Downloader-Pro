@@ -2204,6 +2204,7 @@ def tiktok_info():
 # No duplicate endpoints needed here
 
 if __name__ == '__main__':
+    print("🚀 Starting Downloader Pro...")
     port = int(os.environ.get('PORT', 5000))
     
     # Check if bgutil POT provider is running
