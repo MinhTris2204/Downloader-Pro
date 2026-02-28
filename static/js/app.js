@@ -1440,7 +1440,6 @@ function renderGalleryWithTryCatch() {
         if (isMobile) {
             // Mobile: use flexbox with gap
             grid.style.cssText = `
-                display: flex !important;
                 flex-wrap: wrap !important;
                 gap: 6px !important;
                 visibility: visible !important;
@@ -1450,7 +1449,6 @@ function renderGalleryWithTryCatch() {
         } else {
             // Desktop: use CSS Grid (natural layout)
             grid.style.cssText = `
-                display: grid !important;
                 grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
                 gap: 4px !important;
                 visibility: visible !important;
