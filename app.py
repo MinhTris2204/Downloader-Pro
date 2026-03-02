@@ -17,6 +17,9 @@ import psycopg2
 from psycopg2 import pool
 import hashlib
 
+# Socket.IO for real-time online users
+from flask_socketio import SocketIO, emit, disconnect
+
 # Import controllers
 from controllers.home_controller import HomeController
 from controllers.blog_controller import BlogController
@@ -30,8 +33,55 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-pr
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Initialize Socket.IO
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
+# Track online users with Socket.IO
+online_users = set()  # Set of session IDs
+
 # Register blueprints
 app.register_blueprint(donate_bp)
+
+# ===== SOCKET.IO EVENTS FOR REAL-TIME ONLINE USERS =====
+@socketio.on('connect')
+def handle_connect():
+    """Người dùng kết nối - tăng online count"""
+    try:
+        # Tạo unique session cho user này
+        user_session = request.sid
+        online_users.add(user_session)
+        
+        print(f"[SOCKET] User connected: {user_session} | Online: {len(online_users)}")
+        
+        # Broadcast số online mới cho tất cả clients
+        socketio.emit('online_count_update', {
+            'online_users': len(online_users)
+        }, broadcast=True)
+        
+    except Exception as e:
+        print(f"[SOCKET ERROR] Connect failed: {e}")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Người dùng ngắt kết nối - giảm online count"""
+    try:
+        user_session = request.sid
+        online_users.discard(user_session)
+        
+        print(f"[SOCKET] User disconnected: {user_session} | Online: {len(online_users)}")
+        
+        # Broadcast số online mới cho tất cả clients
+        socketio.emit('online_count_update', {
+            'online_users': len(online_users)
+        }, broadcast=True)
+        
+    except Exception as e:
+        print(f"[SOCKET ERROR] Disconnect failed: {e}")
+
+@socketio.on('ping')
+def handle_ping():
+    """Heartbeat để maintain connection"""
+    emit('pong')
 
 # Admin credentials (use environment variables in production)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -2502,15 +2552,21 @@ def get_statistics():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        # 1. Người dùng online (trong 5 phút qua)
-        cursor.execute("""
-            SELECT COUNT(DISTINCT session_id)
-            FROM page_visits 
-            WHERE visit_time >= NOW() - INTERVAL '5 minutes'
-        """)
-        online_result = cursor.fetchone()
-        online_users = online_result[0] if online_result else 0
-        print(f">>> Online users (5min): {online_users}")
+        # 1. Người dùng online (REALTIME với Socket.IO)
+        realtime_online = len(online_users)
+        
+        # Fallback: nếu không có Socket.IO connections, dùng database
+        if realtime_online == 0:
+            cursor.execute("""
+                SELECT COUNT(DISTINCT session_id)
+                FROM page_visits 
+                WHERE visit_time >= NOW() - INTERVAL '5 minutes'
+            """)
+            online_result = cursor.fetchone()
+            online_users_db = online_result[0] if online_result else 0
+            realtime_online = max(online_users_db, 0)
+        
+        print(f">>> Online users (Socket.IO): {len(online_users)} | DB fallback: {realtime_online}")
         
         # 2. Lượt truy cập hôm nay
         cursor.execute("""
@@ -2552,7 +2608,7 @@ def get_statistics():
         stats_data = {
             'success': True,
             'stats': {
-                'online_users': max(online_users, 0),
+                'online_users': max(realtime_online, 0),
                 'today_visits': max(today_visits, 0),
                 'monthly_visits': max(monthly_visits, 0),
                 'total_pageviews': max(total_pageviews, 1)
@@ -2602,11 +2658,12 @@ if __name__ == '__main__':
     
     try:
         from waitress import serve
-        print(f"Starting Production Server (Waitress) on port {port}...")
-        serve(app, host='0.0.0.0', port=port, threads=6)
+        print(f"Starting Production Server (Waitress) with Socket.IO on port {port}...")
+        # Use socketio.run for Socket.IO support
+        socketio.run(app, host='0.0.0.0', port=port, debug=False)
     except ImportError:
-        print("Waitress not found. Running with Flask Dev Server.")
-        app.run(debug=True, host='0.0.0.0', port=port)
+        print("Waitress not found. Running with Flask Dev Server + Socket.IO.")
+        socketio.run(app, debug=True, host='0.0.0.0', port=port)
 @app.route('/proxy/image')
 def proxy_image():
     """Proxy images to avoid CORS issues"""

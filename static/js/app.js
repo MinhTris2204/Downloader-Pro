@@ -1483,9 +1483,61 @@ function renderGalleryWithTryCatch() {
     }
 }
 
+// ====== Socket.IO for Real-time Online Users ======
+let socket = null;
+let isSocketConnected = false;
+
+function initializeSocket() {
+    try {
+        console.log('🔌 Initializing Socket.IO for real-time online users...');
+        socket = io();
+        
+        socket.on('connect', function() {
+            console.log('✅ Socket.IO connected for real-time stats');
+            isSocketConnected = true;
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('❌ Socket.IO disconnected');
+            isSocketConnected = false;
+        });
+        
+        // Listen for real-time online count updates
+        socket.on('online_count_update', function(data) {
+            console.log('📊 Real-time online update:', data.online_users);
+            
+            // Update only the online users count immediately
+            const onlineElement = document.getElementById('onlineUsers');
+            if (onlineElement) {
+                onlineElement.textContent = formatNumber(data.online_users);
+                
+                // Add visual feedback for real-time update
+                onlineElement.style.color = '#00f2ea';
+                setTimeout(() => {
+                    onlineElement.style.color = '';
+                }, 1000);
+            }
+        });
+        
+        // Heartbeat to maintain connection
+        setInterval(() => {
+            if (socket && isSocketConnected) {
+                socket.emit('ping');
+            }
+        }, 30000);
+        
+    } catch (error) {
+        console.error('❌ Socket.IO initialization failed:', error);
+        console.log('📊 Falling back to polling method');
+    }
+}
+
 // ====== Statistics Section ======
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing statistics...');
+    
+    // Initialize Socket.IO for real-time online users
+    initializeSocket();
     
     // Wait a bit for all elements to be rendered
     setTimeout(() => {
@@ -1494,7 +1546,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Stats section found:', statsSection);
             loadStatistics();
             
-            // Update statistics every 30 seconds
+            // Update other statistics (not online users) every 30 seconds
+            // Online users are updated real-time via Socket.IO
             setInterval(loadStatistics, 30000);
         } else {
             console.error('Stats section not found after DOM load!');
@@ -1572,10 +1625,13 @@ function updateStatDisplay(stats) {
     
     console.log('Found elements:', elements);
     
-    if (elements.onlineUsers) {
+    // Online users - only update if Socket.IO is not connected (fallback)
+    if (elements.onlineUsers && !isSocketConnected) {
         const value = formatNumber(stats.online_users || 0);
         elements.onlineUsers.textContent = value;
-        console.log('Updated onlineUsers to:', value);
+        console.log('Updated onlineUsers to (fallback):', value);
+    } else if (isSocketConnected) {
+        console.log('Skipping onlineUsers update - using Socket.IO real-time data');
     } else {
         console.error('onlineUsers element not found!');
     }
@@ -1609,8 +1665,8 @@ function updateStatDisplay(stats) {
     if (statsHeader && !statsHeader.querySelector('.real-data-badge')) {
         const badge = document.createElement('span');
         badge.className = 'real-data-badge';
-        badge.textContent = ' 🔴 LIVE';
-        badge.style.cssText = 'font-size: 0.7em; color: #dc3545; font-weight: bold; margin-left: 8px;';
+        badge.textContent = isSocketConnected ? ' 🔴 LIVE' : ' 🟡 POLLING';
+        badge.style.cssText = `font-size: 0.7em; color: ${isSocketConnected ? '#dc3545' : '#ffc107'}; font-weight: bold; margin-left: 8px;`;
         statsHeader.appendChild(badge);
     }
     

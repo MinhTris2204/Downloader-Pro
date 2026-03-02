@@ -361,8 +361,11 @@
         </div>
     </div>
 
+    <!-- Socket.IO for real-time online users -->
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+
     <script src="{{ url_for('static', filename='js/translations.js') }}?v=20260228j"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=20260302b"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=20260302c"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 
