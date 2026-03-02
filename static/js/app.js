@@ -1583,9 +1583,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Stats section found:', statsSection);
             loadStatistics();
             
-            // Update other statistics (not online users) every 30 seconds
-            // Online users are updated real-time via Socket.IO
-            setInterval(loadStatistics, 30000);
+            // Update ALL statistics every 3 seconds (including online users)
+            // This ensures real-time updates even without Socket.IO
+            setInterval(loadStatistics, 3000); // Update every 3 seconds for faster updates
         } else {
             console.error('Stats section not found after DOM load!');
             // Try again after a longer delay
@@ -1683,13 +1683,28 @@ function updateStatDisplay(stats) {
     
     console.log('Found elements:', elements);
     
-    // Online users - only update if Socket.IO is not connected (fallback)
-    if (elements.onlineUsers && !isSocketConnected) {
-        const value = formatNumber(stats.online_users || 0);
-        elements.onlineUsers.textContent = value;
-        console.log('Updated onlineUsers to (fallback):', value);
-    } else if (isSocketConnected) {
-        console.log('Skipping onlineUsers update - using Socket.IO real-time data');
+    // Online users - always update from API, Socket.IO is just for real-time bonus
+    if (elements.onlineUsers) {
+        const currentValue = parseInt(elements.onlineUsers.textContent) || 0;
+        const newValue = stats.online_users || 0;
+        
+        // Update the value
+        elements.onlineUsers.textContent = formatNumber(newValue);
+        
+        // Add animation if value changed
+        if (currentValue !== newValue) {
+            elements.onlineUsers.style.transform = 'scale(1.1)';
+            elements.onlineUsers.style.color = '#00f2ea';
+            elements.onlineUsers.style.fontWeight = 'bold';
+            
+            setTimeout(() => {
+                elements.onlineUsers.style.transform = 'scale(1)';
+                elements.onlineUsers.style.color = '';
+                elements.onlineUsers.style.fontWeight = '';
+            }, 500);
+        }
+        
+        console.log('Updated onlineUsers to:', formatNumber(newValue));
     } else {
         console.error('onlineUsers element not found!');
     }
