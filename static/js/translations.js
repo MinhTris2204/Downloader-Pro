@@ -7,7 +7,7 @@ const translations = {
         nav_blog: 'Blog',
         nav_mode: 'Chế độ',
         lang_name: 'Tiếng Việt',
-        donate_header: 'Ủng hộ',
+        donate_header: 'Ủng hộ chúng tôi',
         
         // Hero Section
         hero_title_prefix: 'Tải Video',
