@@ -150,6 +150,13 @@ const translations = {
         footer_desc: 'Công cụ tải video YouTube, TikTok miễn phí tốt nhất Việt Nam. Hỗ trợ chuyển đổi MP4, MP3 chất lượng cao.',
         footer_contact: 'Liên hệ hỗ trợ',
         
+        // Statistics
+        stats_title: '📊 THỐNG KÊ TRUY CẬP',
+        stats_online: 'Đang online:',
+        stats_today: 'Hôm nay:',
+        stats_monthly: 'Trong tháng:',
+        stats_total: 'Tổng pageview:',
+        
         // Download limit messages
         limit_title: '⚠️ Đã hết lượt tải miễn phí',
         limit_message: 'Bạn đã sử dụng hết 2 lượt tải miễn phí trong tuần này.',
@@ -331,6 +338,13 @@ const translations = {
         footer_desc: 'Best free YouTube, TikTok video downloader in Vietnam. Support high quality MP4, MP3 conversion.',
         footer_contact: 'Contact Support',
         
+        // Statistics
+        stats_title: '📊 ACCESS STATISTICS',
+        stats_online: 'Online now:',
+        stats_today: 'Today:',
+        stats_monthly: 'This month:',
+        stats_total: 'Total pageviews:',
+        
         // Download limit messages
         limit_title: '⚠️ Free Downloads Limit Reached',
         limit_message: 'You have used all 2 free downloads this week.',
@@ -511,6 +525,13 @@ const translations = {
         // Footer
         footer_desc: 'Лучший бесплатный загрузчик видео YouTube, TikTok во Вьетнаме. Поддержка высококачественного преобразования MP4, MP3.',
         footer_contact: 'Связаться с поддержкой',
+        
+        // Statistics
+        stats_title: '📊 СТАТИСТИКА ПОСЕЩЕНИЙ',
+        stats_online: 'Онлайн сейчас:',
+        stats_today: 'Сегодня:',
+        stats_monthly: 'В этом месяце:',
+        stats_total: 'Всего просмотров:',
         
         // Download limit messages
         limit_title: '⚠️ Лимит бесплатных загрузок исчерпан',

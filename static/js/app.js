@@ -1482,3 +1482,60 @@ function renderGalleryWithTryCatch() {
         console.error('Stack:', error.stack);
     }
 }
+
+// ====== Statistics Section ======
+document.addEventListener('DOMContentLoaded', function() {
+    loadStatistics();
+    
+    // Update statistics every 30 seconds
+    setInterval(loadStatistics, 30000);
+});
+
+async function loadStatistics() {
+    try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        
+        if (data.success) {
+            updateStatDisplay(data.stats);
+        } else {
+            console.error('Failed to load statistics:', data.error);
+        }
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
+
+function updateStatDisplay(stats) {
+    const elements = {
+        onlineUsers: document.getElementById('onlineUsers'),
+        todayVisits: document.getElementById('todayVisits'),
+        monthlyVisits: document.getElementById('monthlyVisits'),
+        totalPageviews: document.getElementById('totalPageviews')
+    };
+    
+    if (elements.onlineUsers) {
+        elements.onlineUsers.textContent = formatNumber(stats.online_users || 0);
+    }
+    
+    if (elements.todayVisits) {
+        elements.todayVisits.textContent = formatNumber(stats.today_visits || 0);
+    }
+    
+    if (elements.monthlyVisits) {
+        elements.monthlyVisits.textContent = formatNumber(stats.monthly_visits || 0);
+    }
+    
+    if (elements.totalPageviews) {
+        elements.totalPageviews.textContent = formatNumber(stats.total_pageviews || 0);
+    }
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+}
