@@ -105,7 +105,7 @@ function showDonationPromo() {
     let selectedAmount = 20000; // Default
     
     // Format number with commas (VD: 50000 -> 50,000 VNĐ)
-    function formatNumber(num) {
+    function formatCurrency(num) {
         const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         return formatted + ' VNĐ';
     }
@@ -138,7 +138,7 @@ function showDonationPromo() {
         
         // Format with dots
         if (value) {
-            this.value = formatNumber(value);
+            this.value = formatCurrency(value);
             const numValue = parseInt(value);
             if (numValue >= 5000) {
                 selectedAmount = numValue;
@@ -166,7 +166,7 @@ function showDonationPromo() {
         const paste = (e.clipboardData || window.clipboardData).getData('text');
         const numericOnly = paste.replace(/[^\d]/g, '');
         if (numericOnly) {
-            this.value = formatNumber(numericOnly);
+            this.value = formatCurrency(numericOnly);
             const numValue = parseInt(numericOnly);
             if (numValue >= 5000) {
                 selectedAmount = numValue;

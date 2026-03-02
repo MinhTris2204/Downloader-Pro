@@ -430,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 customAmountInput.focus();
             } else {
                 // Format with thousand separator
-                customAmountInput.value = formatNumber(amount);
+                customAmountInput.value = formatCurrency(amount);
             }
         });
     });
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Format with thousand separator
         if (value) {
-            this.value = formatNumber(value);
+            this.value = formatCurrency(value);
         } else {
             this.value = '';
         }
@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const paste = (e.clipboardData || window.clipboardData).getData('text');
         const numericOnly = paste.replace(/[^\d]/g, '');
         if (numericOnly) {
-            this.value = formatNumber(numericOnly);
+            this.value = formatCurrency(numericOnly);
             // Trigger input event to update UI
             this.dispatchEvent(new Event('input'));
         }
@@ -603,7 +603,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function formatNumber(num) {
+function formatCurrency(num) {
     // Convert to string and remove any existing formatting
     const numStr = num.toString().replace(/[^\d]/g, '');
     
