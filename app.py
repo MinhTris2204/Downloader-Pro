@@ -33,8 +33,8 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-pr
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Initialize Socket.IO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+# Initialize Socket.IO with eventlet for production
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 # Track online users with Socket.IO
 online_users = set()  # Set of session IDs
@@ -2657,13 +2657,30 @@ if __name__ == '__main__':
     print("="*60 + "\n")
     
     try:
-        from waitress import serve
-        print(f"Starting Production Server (Waitress) with Socket.IO on port {port}...")
-        # Use socketio.run for Socket.IO support
-        socketio.run(app, host='0.0.0.0', port=port, debug=False)
-    except ImportError:
-        print("Waitress not found. Running with Flask Dev Server + Socket.IO.")
-        socketio.run(app, debug=True, host='0.0.0.0', port=port)
+        # Socket.IO requires eventlet or gevent for production
+        # Try to use eventlet first, then gevent, then fallback
+        try:
+            import eventlet
+            print(f"Starting Production Server with Socket.IO (eventlet) on port {port}...")
+            socketio.run(app, host='0.0.0.0', port=port, debug=False)
+        except ImportError:
+            try:
+                import gevent
+                print(f"Starting Production Server with Socket.IO (gevent) on port {port}...")
+                socketio.run(app, host='0.0.0.0', port=port, debug=False)
+            except ImportError:
+                print("⚠️ No eventlet/gevent found. Using Werkzeug (development mode)...")
+                socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
+    except Exception as e:
+        print(f"❌ Socket.IO failed: {e}")
+        print("🔄 Falling back to regular Flask server without Socket.IO...")
+        try:
+            from waitress import serve
+            print(f"Starting Waitress server (no Socket.IO) on port {port}...")
+            serve(app, host='0.0.0.0', port=port, threads=6)
+        except ImportError:
+            print("Starting Flask dev server...")
+            app.run(debug=True, host='0.0.0.0', port=port)
 @app.route('/proxy/image')
 def proxy_image():
     """Proxy images to avoid CORS issues"""
