@@ -59,7 +59,7 @@
         rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260228k">
 
     <!-- Google Ads Tag -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17935616298"></script>
@@ -931,6 +931,45 @@
         </div>
     </footer>
 
+    <!-- Statistics Section -->
+    <div class="stats-section">
+        <div class="container">
+            <div class="stats-header">
+                <h3 data-i18n="stats_title">📊 THỐNG KÊ TRUY CẬP</h3>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <span class="stat-label" data-i18n="stats_online">Đang online:</span>
+                        <span class="stat-value" id="onlineUsers">--</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <span class="stat-label" data-i18n="stats_today">Hôm nay:</span>
+                        <span class="stat-value" id="todayVisits">--</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-info">
+                        <span class="stat-label" data-i18n="stats_monthly">Trong tháng:</span>
+                        <span class="stat-value" id="monthlyVisits">--</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">🌍</div>
+                    <div class="stat-info">
+                        <span class="stat-label" data-i18n="stats_total">Tổng pageview:</span>
+                        <span class="stat-value" id="totalPageviews">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-container" id="toast-container"></div>
 
     <style>
@@ -943,9 +982,9 @@
         }
     </style>
 
-    <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/translations.js') }}?v=20260228j"></script>
     <script src="{{ url_for('static', filename='js/donation-promo.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=20260228k"></script>
     <script src="{{ url_for('static', filename='js/blog-viewer.js') }}"></script>
 </body>
 
