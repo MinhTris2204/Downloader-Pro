@@ -10,6 +10,10 @@ function showDonationPromo() {
     const lang = getCurrentLanguage();
     const t = translations[lang];
     
+    console.log('🌍 Current language:', lang);
+    console.log('📝 Translations loaded:', !!t);
+    console.log('🔑 Available keys:', t ? Object.keys(t).length : 0);
+    
     // Create modal HTML
     const modalHTML = `
         <div class="donation-promo-overlay" id="donationPromoOverlay">
@@ -207,6 +211,8 @@ function showDonationPromo() {
     
     // Donate handler - create payment directly
     document.getElementById('promoDonateBtn').addEventListener('click', async function() {
+        console.log('🎯 Donate button clicked');
+        
         // Get amount from custom input or selected button
         const customAmountValue = document.getElementById('customAmountInput').value;
         let amount;
@@ -217,24 +223,38 @@ function showDonationPromo() {
             amount = selectedAmount;
         }
         
-        // Get donor name and message
-        const donorName = document.getElementById('donorName').value.trim() || t.anonymous_user || 'Người dùng ẩn danh';
-        const message = document.getElementById('donationMessage').value.trim() || t.default_message || 'Cảm ơn bạn đã ủng hộ!';
+        // Get donor name and message with fallbacks
+        const donorNameInput = document.getElementById('donorName');
+        const messageInput = document.getElementById('donationMessage');
         
-        console.log(`Final amount: ${amount} (from custom: "${customAmountValue}", selected: ${selectedAmount})`);
-        console.log(`Donor: "${donorName}", Message: "${message}"`);
+        const donorName = (donorNameInput ? donorNameInput.value.trim() : '') || 
+                         (t && t.anonymous_user) || 'Người dùng ẩn danh';
+        const message = (messageInput ? messageInput.value.trim() : '') || 
+                       (t && t.default_message) || 'Cảm ơn bạn đã ủng hộ!';
+        
+        console.log(`💰 Final amount: ${amount} (from custom: "${customAmountValue}", selected: ${selectedAmount})`);
+        console.log(`👤 Donor: "${donorName}", Message: "${message}"`);
         
         if (!amount || amount < 5000) {
-            showToast('Số tiền tối thiểu là 5.000₫', 'error');
+            const errorMsg = 'Số tiền tối thiểu là 5,000 VNĐ';
+            console.error('❌ Amount validation failed:', errorMsg);
+            
+            // Try showToast, fallback to alert
+            if (typeof showToast === 'function') {
+                showToast(errorMsg, 'error');
+            } else {
+                alert(errorMsg);
+            }
             return;
         }
         
         // Disable button
         this.disabled = true;
+        const originalText = this.innerHTML;
         this.innerHTML = '<span class="spinner"></span> Đang xử lý...';
         
         try {
-            console.log(`Sending to API: amount=${amount}, name="${donorName}"`);
+            console.log(`🚀 Sending to API: amount=${amount}, name="${donorName}"`);
             
             // Create payment directly via API
             const response = await fetch('/api/donate/create', {
@@ -249,22 +269,45 @@ function showDonationPromo() {
                 })
             });
             
+            console.log('📡 API Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const data = await response.json();
+            console.log('📦 API Response data:', data);
             
             if (data.success && data.checkoutUrl) {
+                console.log('✅ Payment link created, redirecting to:', data.checkoutUrl);
                 // Close modal and redirect to PayOS payment
                 closeDonationPromo();
                 window.open(data.checkoutUrl, '_blank');
             } else {
-                showToast(data.error || 'Lỗi tạo thanh toán', 'error');
+                const errorMsg = data.error || 'Lỗi tạo thanh toán';
+                console.error('❌ API Error:', errorMsg);
+                
+                if (typeof showToast === 'function') {
+                    showToast(errorMsg, 'error');
+                } else {
+                    alert(errorMsg);
+                }
+                
                 this.disabled = false;
-                this.innerHTML = t.promo_donate;
+                this.innerHTML = (t && t.promo_donate) || '💝 Ủng hộ';
             }
         } catch (err) {
-            console.error('Donation error:', err);
-            showToast('Lỗi kết nối server', 'error');
+            console.error('💥 Donation error:', err);
+            const errorMsg = 'Lỗi kết nối server: ' + err.message;
+            
+            if (typeof showToast === 'function') {
+                showToast(errorMsg, 'error');
+            } else {
+                alert(errorMsg);
+            }
+            
             this.disabled = false;
-            this.innerHTML = t.promo_donate;
+            this.innerHTML = (t && t.promo_donate) || '💝 Ủng hộ';
         }
     });
 }
