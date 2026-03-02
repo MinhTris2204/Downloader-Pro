@@ -441,20 +441,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const customBtn = document.querySelector('[data-amount="custom"]');
         customBtn.classList.add('active');
         
-        // Remove all non-digit characters
-        let value = this.value.replace(/\D/g, '');
+        // Remove all non-digit characters (including k, K, etc.)
+        let value = this.value.replace(/[^\d]/g, '');
         
         // Format with thousand separator
         if (value) {
             this.value = formatNumber(value);
+        } else {
+            this.value = '';
         }
     });
     
-    // Prevent non-numeric input
+    // Prevent non-numeric input completely
     customAmountInput.addEventListener('keypress', function(e) {
-        // Allow only numbers
-        if (e.key && !/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+        // Only allow numbers, backspace, delete, arrow keys
+        const allowedKeys = ['0','1','2','3','4','5','6','7','8','9','Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+        if (!allowedKeys.includes(e.key)) {
             e.preventDefault();
+        }
+    });
+    
+    // Prevent paste of non-numeric content
+    customAmountInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        const numericOnly = paste.replace(/[^\d]/g, '');
+        if (numericOnly) {
+            this.value = formatNumber(numericOnly);
+            // Trigger input event to update UI
+            this.dispatchEvent(new Event('input'));
         }
     });
     

@@ -111,7 +111,12 @@ function showDonationPromo() {
     
     // Parse formatted number back to integer (VD: 50.000 -> 50000)
     function parseFormattedNumber(str) {
-        return parseInt(str.replace(/\./g, '')) || 0;
+        if (!str) return 0;
+        // Remove all non-digits and parse
+        const cleanStr = str.toString().replace(/[^\d]/g, '');
+        const result = parseInt(cleanStr) || 0;
+        console.log(`Parsing: "${str}" -> "${cleanStr}" -> ${result}`);
+        return result;
     }
     
     // Handle preset amount buttons
@@ -127,8 +132,8 @@ function showDonationPromo() {
     // Handle custom amount input with formatting
     const customAmountInput = document.getElementById('customAmountInput');
     customAmountInput.addEventListener('input', function() {
-        // Remove all non-digits
-        let value = this.value.replace(/\D/g, '');
+        // Remove all non-digits (including k, K, etc.)
+        let value = this.value.replace(/[^\d]/g, '');
         
         // Format with dots
         if (value) {
@@ -140,24 +145,32 @@ function showDonationPromo() {
                 document.querySelectorAll('.amount-btn-promo').forEach(b => b.classList.remove('selected'));
             }
         } else {
+            this.value = '';
             selectedAmount = 20000; // Reset to default
         }
     });
     
-    // Prevent non-numeric input
+    // Prevent non-numeric input completely
     customAmountInput.addEventListener('keypress', function(e) {
-        // Allow backspace, delete, tab, escape, enter
-        if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
-            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-            (e.keyCode === 65 && e.ctrlKey === true) ||
-            (e.keyCode === 67 && e.ctrlKey === true) ||
-            (e.keyCode === 86 && e.ctrlKey === true) ||
-            (e.keyCode === 88 && e.ctrlKey === true)) {
-            return;
-        }
-        // Ensure that it is a number and stop the keypress
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+        // Only allow numbers and control keys
+        const allowedKeys = ['0','1','2','3','4','5','6','7','8','9','Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+        if (!allowedKeys.includes(e.key)) {
             e.preventDefault();
+        }
+    });
+    
+    // Prevent paste of non-numeric content
+    customAmountInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        const numericOnly = paste.replace(/[^\d]/g, '');
+        if (numericOnly) {
+            this.value = formatNumber(numericOnly);
+            const numValue = parseInt(numericOnly);
+            if (numValue >= 5000) {
+                selectedAmount = numValue;
+                document.querySelectorAll('.amount-btn-promo').forEach(b => b.classList.remove('selected'));
+            }
         }
     });
     
@@ -195,13 +208,21 @@ function showDonationPromo() {
     document.getElementById('promoDonateBtn').addEventListener('click', async function() {
         // Get amount from custom input or selected button
         const customAmountValue = document.getElementById('customAmountInput').value;
-        const amount = customAmountValue ? parseFormattedNumber(customAmountValue) : selectedAmount;
+        let amount;
+        
+        if (customAmountValue && customAmountValue.trim() !== '') {
+            amount = parseFormattedNumber(customAmountValue);
+        } else {
+            amount = selectedAmount;
+        }
+        
+        console.log(`Final amount: ${amount} (from custom: "${customAmountValue}", selected: ${selectedAmount})`);
         
         // Get donor name and message
         const donorName = document.getElementById('donorName').value.trim() || 'Người ủng hộ';
         const message = document.getElementById('donationMessage').value.trim() || 'Cảm ơn bạn đã ủng hộ!';
         
-        if (amount < 5000) {
+        if (!amount || amount < 5000) {
             showToast('Số tiền tối thiểu là 5.000₫', 'error');
             return;
         }
@@ -211,6 +232,8 @@ function showDonationPromo() {
         this.innerHTML = '<span class="spinner"></span> Đang xử lý...';
         
         try {
+            console.log(`Sending to API: amount=${amount}, name="${donorName}"`);
+            
             // Create payment directly via API
             const response = await fetch('/api/donate/create', {
                 method: 'POST',
@@ -236,6 +259,7 @@ function showDonationPromo() {
                 this.innerHTML = t.promo_donate;
             }
         } catch (err) {
+            console.error('Donation error:', err);
             showToast('Lỗi kết nối server', 'error');
             this.disabled = false;
             this.innerHTML = t.promo_donate;
