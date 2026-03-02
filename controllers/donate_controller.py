@@ -97,10 +97,18 @@ def create_donation():
                 print(f">>> Error saving donation: {e}")
                 # Continue anyway, payment link is more important
         
-        # Tạo description
-        description = f"{'Premium Access' if is_premium else 'Donate'} {amount:,} VND"
-        if message and not is_premium:
-            description += f" - {message[:50]}"
+        # Tạo description (PayOS yêu cầu tối đa 25 ký tự)
+        if is_premium:
+            description = "Premium Access"
+        else:
+            # Format: "Donate 100K" (tối đa 25 ký tự)
+            if amount >= 1000000:
+                amount_str = f"{amount//1000000}M"
+            elif amount >= 1000:
+                amount_str = f"{amount//1000}K"
+            else:
+                amount_str = str(amount)
+            description = f"Donate {amount_str}"
         
         # Tạo payment link
         result = payos.create_payment_link(
