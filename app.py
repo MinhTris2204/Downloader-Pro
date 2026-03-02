@@ -297,6 +297,13 @@ def init_db():
         
         print("[INFO] Donations and donation_messages tables created/verified")
         
+        # CLEANUP: Remove old premium_users table (no longer needed)
+        try:
+            cursor.execute("DROP TABLE IF EXISTS premium_users CASCADE")
+            print("[CLEANUP] Removed old premium_users table")
+        except Exception as e:
+            print(f"[WARNING] Could not remove premium_users table: {e}")
+        
         # Initialize stats if empty
         cursor.execute("SELECT COUNT(*) FROM stats")
         if cursor.fetchone()[0] == 0:
