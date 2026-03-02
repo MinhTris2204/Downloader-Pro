@@ -1498,6 +1498,9 @@ function initializeSocket() {
             
             // Update badge to show LIVE status
             updateStatusBadge();
+            
+            // Request current online count immediately after connecting
+            socket.emit('get_online_count');
         });
         
         socket.on('disconnect', function() {

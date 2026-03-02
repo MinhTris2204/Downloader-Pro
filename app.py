@@ -53,7 +53,12 @@ def handle_connect():
         
         print(f"[SOCKET] User connected: {user_session} | Online: {len(online_users)}")
         
-        # Broadcast số online mới cho tất cả clients
+        # Gửi số online hiện tại cho user vừa connect (ngay lập tức)
+        emit('online_count_update', {
+            'online_users': len(online_users)
+        })
+        
+        # Broadcast số online mới cho tất cả clients khác
         socketio.emit('online_count_update', {
             'online_users': len(online_users)
         }, broadcast=True)
@@ -82,6 +87,21 @@ def handle_disconnect():
 def handle_ping():
     """Heartbeat để maintain connection"""
     emit('pong')
+
+@socketio.on('get_online_count')
+def handle_get_online_count():
+    """Client yêu cầu số online hiện tại"""
+    try:
+        current_count = len(online_users)
+        print(f"[SOCKET] Client requested online count: {current_count}")
+        
+        # Gửi về cho client yêu cầu
+        emit('online_count_update', {
+            'online_users': current_count
+        })
+        
+    except Exception as e:
+        print(f"[SOCKET ERROR] Get online count failed: {e}")
 
 # Admin credentials (use environment variables in production)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
