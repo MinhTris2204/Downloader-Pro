@@ -1495,11 +1495,17 @@ function initializeSocket() {
         socket.on('connect', function() {
             console.log('✅ Socket.IO connected for real-time stats');
             isSocketConnected = true;
+            
+            // Update badge to show LIVE status
+            updateStatusBadge();
         });
         
         socket.on('disconnect', function() {
             console.log('❌ Socket.IO disconnected');
             isSocketConnected = false;
+            
+            // Update badge to show POLLING status
+            updateStatusBadge();
         });
         
         // Listen for real-time online count updates
@@ -1516,6 +1522,11 @@ function initializeSocket() {
                 setTimeout(() => {
                     onlineElement.style.color = '';
                 }, 1000);
+            }
+            
+            // Ensure badge shows LIVE status
+            if (isSocketConnected) {
+                updateStatusBadge();
             }
         });
         
@@ -1613,6 +1624,27 @@ async function loadStatistics() {
     }
 }
 
+// Function to update status badge
+function updateStatusBadge() {
+    const statsHeader = document.querySelector('.stats-header h3');
+    if (statsHeader) {
+        // Remove existing badge
+        const existingBadge = statsHeader.querySelector('.real-data-badge');
+        if (existingBadge) {
+            existingBadge.remove();
+        }
+        
+        // Add new badge
+        const badge = document.createElement('span');
+        badge.className = 'real-data-badge';
+        badge.textContent = isSocketConnected ? ' 🔴 LIVE' : ' 🟡 POLLING';
+        badge.style.cssText = `font-size: 0.7em; color: ${isSocketConnected ? '#dc3545' : '#ffc107'}; font-weight: bold; margin-left: 8px;`;
+        statsHeader.appendChild(badge);
+        
+        console.log(`📊 Status badge updated: ${isSocketConnected ? 'LIVE' : 'POLLING'}`);
+    }
+}
+
 function updateStatDisplay(stats) {
     console.log('updateStatDisplay called with REAL DATA:', stats);
     
@@ -1660,14 +1692,10 @@ function updateStatDisplay(stats) {
         console.error('totalPageviews element not found!');
     }
     
-    // Thêm indicator cho dữ liệu thực tế
+    // Thêm indicator cho dữ liệu thực tế (chỉ tạo lần đầu)
     const statsHeader = document.querySelector('.stats-header h3');
     if (statsHeader && !statsHeader.querySelector('.real-data-badge')) {
-        const badge = document.createElement('span');
-        badge.className = 'real-data-badge';
-        badge.textContent = isSocketConnected ? ' 🔴 LIVE' : ' 🟡 POLLING';
-        badge.style.cssText = `font-size: 0.7em; color: ${isSocketConnected ? '#dc3545' : '#ffc107'}; font-weight: bold; margin-left: 8px;`;
-        statsHeader.appendChild(badge);
+        updateStatusBadge();
     }
     
     console.log('Statistics display update completed - REAL DATA MODE');
