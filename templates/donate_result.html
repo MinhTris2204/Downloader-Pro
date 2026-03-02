@@ -7,28 +7,13 @@
     {% if success %}
     <div class="result-box success">
         <div class="result-icon">✅</div>
-        {% if is_demo %}
-        <h1>Demo Mode - Test thành công!</h1>
-        <p>Đây là chế độ demo để test hệ thống thanh toán.</p>
-        <div class="demo-notice">
-            <p><strong>⚠️ Lưu ý:</strong> PayOS chưa được cấu hình. Để sử dụng thanh toán thật, vui lòng:</p>
-            <ol>
-                <li>Đăng ký tài khoản tại <a href="https://my.payos.vn" target="_blank">https://my.payos.vn</a></li>
-                <li>Lấy Client ID, API Key và Checksum Key</li>
-                <li>Cấu hình các biến môi trường PAYOS_*</li>
-            </ol>
-        </div>
-        {% else %}
         <h1>Cảm ơn bạn rất nhiều!</h1>
         <p>Giao dịch của bạn đã được xử lý thành công.</p>
-        {% endif %}
         <p class="order-code">Mã đơn hàng: <strong>{{ order_code }}</strong></p>
-        {% if not is_demo %}
         <p class="thank-you-message">
             Sự ủng hộ của bạn giúp chúng tôi duy trì và phát triển website tốt hơn. 
             Chúng tôi rất trân trọng điều đó! 💝
         </p>
-        {% endif %}
         
         {% if donation_info and donation_info.message %}
         <div class="message-section">

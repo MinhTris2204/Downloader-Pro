@@ -40,15 +40,10 @@ def create_donation():
         # Check PayOS configuration first
         payos = get_payos_instance()
         if not payos:
-            # Demo mode - simulate successful payment for testing
-            print(">>> PayOS Demo Mode: Simulating successful payment")
             return jsonify({
-                'success': True,
-                'checkoutUrl': f'/payos/return?orderCode={int(time.time())}&status=PAID&demo=true',
-                'orderCode': int(time.time()),
-                'demo': True,
-                'message': 'Demo mode: PayOS chưa được cấu hình. Đây là giao dịch mô phỏng.'
-            })
+                'success': False,
+                'error': 'Hệ thống thanh toán chưa được cấu hình. Vui lòng liên hệ admin để kích hoạt PayOS.'
+            }), 500
         
         data = request.get_json()
         amount = int(data.get('amount', 0))
@@ -204,25 +199,8 @@ def payos_return():
     
     order_code = request.args.get('orderCode', '')
     status = request.args.get('status', '')
-    is_demo = request.args.get('demo', '') == 'true'
     
     donation_info = None
-    
-    # Handle demo mode
-    if is_demo:
-        print(f">>> Demo mode return: orderCode={order_code}")
-        donation_info = {
-            'donor_name': 'Demo User',
-            'message': 'Đây là giao dịch demo để test hệ thống',
-            'amount': 100000
-        }
-        return render_template('donate_result.html', 
-                             success=True,
-                             order_code=order_code,
-                             status='DEMO',
-                             can_post_message=False,
-                             donation_info=donation_info,
-                             is_demo=True)
     
     # Update donation status to success and get info
     if db_pool and order_code:

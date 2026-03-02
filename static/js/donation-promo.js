@@ -290,23 +290,9 @@ function showDonationPromo() {
             
             if (data.success && data.checkoutUrl) {
                 console.log('✅ Payment link created, redirecting to:', data.checkoutUrl);
-                
-                // Check if this is demo mode
-                if (data.demo) {
-                    console.log('🎭 Demo mode detected');
-                    if (typeof showToast === 'function') {
-                        showToast(data.message || 'Demo mode: Giao dịch mô phỏng thành công!', 'info');
-                    } else {
-                        alert(data.message || 'Demo mode: Giao dịch mô phỏng thành công!');
-                    }
-                    closeDonationPromo();
-                    // For demo, redirect to return page in same tab
-                    window.location.href = data.checkoutUrl;
-                } else {
-                    // Real PayOS payment - open in new tab
-                    closeDonationPromo();
-                    window.open(data.checkoutUrl, '_blank');
-                }
+                // Close modal and redirect to PayOS payment
+                closeDonationPromo();
+                window.open(data.checkoutUrl, '_blank');
             } else {
                 const errorMsg = data.error || 'Lỗi tạo thanh toán';
                 console.error('❌ API Error:', errorMsg);
