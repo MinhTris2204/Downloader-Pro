@@ -10771,59 +10771,84 @@ body {
     }
 }
 
-/* ====== Donation Promo Modal ====== */
+/* ====== Donation Promo Modal - Modern Design ====== */
 .donation-promo-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+    backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10001;
     padding: 20px;
-    animation: fadeIn 0.3s ease;
-    backdrop-filter: blur(8px);
-    cursor: default; /* Indicate this area is not clickable */
-    overflow: auto; /* Allow scrolling if content is too tall */
+    animation: fadeIn 0.4s ease;
+    cursor: default;
+    overflow: auto;
 }
 
 .donation-promo-modal {
-    background: #ffffff;
-    border: 2px solid #e5e7eb;
-    border-radius: 20px;
-    max-width: 900px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 24px;
+    max-width: 920px;
     width: 95%;
-    max-height: 85vh;
+    max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
-    animation: slideUp 0.4s ease;
+    box-shadow: 
+        0 32px 64px rgba(16, 185, 129, 0.15),
+        0 16px 32px rgba(59, 130, 246, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.8);
+    animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
+    overflow: hidden;
+}
+
+.donation-promo-modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981 0%, #3b82f6 50%, #06b6d4 100%);
+    z-index: 1;
 }
 
 .donation-promo-header {
-    padding: 24px 32px 16px 32px;
+    padding: 32px 40px 24px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.1);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, rgba(59, 130, 246, 0.03) 100%);
+    position: relative;
 }
 
 .donation-promo-header h2 {
     margin: 0;
-    font-size: 24px;
-    color: #1f2937;
-    font-weight: 700;
+    font-size: 28px;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .donation-promo-body {
-    padding: 24px 32px;
+    padding: 32px 40px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
+    gap: 40px;
     color: #374151;
+    position: relative;
 }
 
 .promo-left {
@@ -10831,40 +10856,67 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+    padding: 32px 24px;
+    border-radius: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.promo-left::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
 }
 
 .promo-right {
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .name-section {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .name-label {
     display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    position: relative;
+}
+
+.name-label::before {
+    content: '👤';
+    margin-right: 8px;
 }
 
 .name-input {
     width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #d1d5db;
-    border-radius: 10px;
+    padding: 16px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
     font-size: 16px;
     background: #ffffff;
     color: #1f2937;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .name-input:focus {
     outline: none;
-    border-color: #059669;
-    background: #f0fdf4;
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    transform: translateY(-1px);
 }
 
 .name-input::placeholder {
@@ -10872,38 +10924,54 @@ body {
 }
 
 .promo-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
+    font-size: 64px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+    animation: bounce 2s ease-in-out infinite;
 }
 
 .promo-message {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 12px;
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 2;
 }
 
 .promo-explanation {
-    font-size: 15px;
+    font-size: 16px;
     color: #6b7280;
-    margin-bottom: 24px;
-    line-height: 1.5;
+    margin-bottom: 28px;
+    line-height: 1.6;
+    position: relative;
+    z-index: 2;
 }
 
 .promo-benefits {
     text-align: left;
     margin: 0;
-    background: #f9fafb;
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+    position: relative;
+    z-index: 2;
 }
 
 .promo-benefits h4 {
-    margin: 0 0 12px 0;
-    font-size: 16px;
-    color: #1f2937;
-    font-weight: 600;
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
 }
 
 .promo-benefits ul {
@@ -10913,72 +10981,101 @@ body {
 }
 
 .promo-benefits li {
-    padding: 8px 0;
-    font-size: 14px;
+    padding: 10px 0;
+    font-size: 15px;
     color: #4b5563;
     display: flex;
     align-items: center;
+    font-weight: 500;
 }
 
 .promo-amounts {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .amount-btn-promo {
-    padding: 14px 12px;
-    border: 2px solid #d1d5db;
-    background: #ffffff;
+    padding: 18px 16px;
+    border: 2px solid #e5e7eb;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     color: #374151;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.amount-btn-promo::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+    transition: left 0.5s ease;
 }
 
 .amount-btn-promo:hover {
-    border-color: #059669;
-    transform: translateY(-2px);
-    background: #f0fdf4;
+    border-color: #10b981;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
+}
+
+.amount-btn-promo:hover::before {
+    left: 100%;
 }
 
 .amount-btn-promo.selected {
-    border-color: #059669;
-    background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    border-color: #10b981;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+    transform: translateY(-2px);
 }
 
 .custom-amount-section {
-    margin: 20px 0;
+    margin: 24px 0;
 }
 
 .custom-amount-label {
     display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    position: relative;
+}
+
+.custom-amount-label::before {
+    content: '💰';
+    margin-right: 8px;
 }
 
 .custom-amount-input {
     width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #d1d5db;
-    border-radius: 10px;
+    padding: 16px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
     font-size: 16px;
     background: #ffffff;
     color: #1f2937;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .custom-amount-input:focus {
     outline: none;
-    border-color: #059669;
-    background: #f0fdf4;
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    transform: translateY(-1px);
 }
 
 .custom-amount-input::placeholder {
@@ -10986,35 +11083,45 @@ body {
 }
 
 .message-section {
-    margin: 20px 0;
+    margin: 24px 0;
 }
 
 .message-label {
     display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    position: relative;
+}
+
+.message-label::before {
+    content: '💬';
+    margin-right: 8px;
 }
 
 .message-input {
     width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #d1d5db;
-    border-radius: 10px;
-    font-size: 14px;
+    padding: 16px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    font-size: 15px;
     background: #ffffff;
     color: #1f2937;
-    transition: border-color 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     resize: vertical;
-    min-height: 80px;
-    max-height: 120px;
+    min-height: 100px;
+    max-height: 140px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    font-family: inherit;
 }
 
 .message-input:focus {
     outline: none;
-    border-color: #059669;
-    background: #f0fdf4;
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    transform: translateY(-1px);
 }
 
 .message-input::placeholder {
@@ -11022,80 +11129,104 @@ body {
 }
 
 .donation-promo-footer {
-    padding: 20px 32px 32px 32px;
+    padding: 24px 40px 40px 40px;
     display: flex;
-    gap: 16px;
-    border-top: 1px solid #f3f4f6;
+    gap: 20px;
+    border-top: 1px solid rgba(16, 185, 129, 0.1);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.02) 0%, rgba(59, 130, 246, 0.02) 100%);
 }
 
 .btn-skip,
 .btn-donate-promo {
     flex: 1;
-    padding: 16px 24px;
-    border-radius: 12px;
+    padding: 18px 28px;
+    border-radius: 16px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-skip {
-    background: #f3f4f6;
-    color: #6b7280;
-    border: 2px solid #e5e7eb;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #64748b;
+    border: 2px solid #e2e8f0;
     position: relative;
 }
 
 .btn-skip:hover {
-    background: #e5e7eb;
-    color: #374151;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    color: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(100, 116, 139, 0.15);
 }
 
 .btn-skip::before {
     content: '← ';
-    margin-right: 4px;
+    margin-right: 6px;
+    font-size: 18px;
 }
 
 .btn-donate-promo {
-    background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%);
     color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    position: relative;
+}
+
+.btn-donate-promo::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s ease;
 }
 
 .btn-donate-promo:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+}
+
+.btn-donate-promo:hover::before {
+    left: 100%;
 }
 
 .btn-donate-promo:disabled {
-    opacity: 0.6;
+    opacity: 0.7;
     cursor: not-allowed;
     transform: none;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
 }
 
 .close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #6b7280;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    font-size: 20px;
+    color: #64748b;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
+    padding: 8px;
+    border-radius: 12px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
 
 .close-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
-    transform: scale(1.1);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #ef4444;
+    color: white;
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
 }
 
 .close-btn:hover::after {
@@ -11283,11 +11414,83 @@ body {
     }
 }
 
+/* Animation keyframes for donation modal */
+@keyframes modalSlideIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(40px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(180deg);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .donation-promo-modal {
         max-width: 95%;
         margin: 10px;
+        border-radius: 20px;
+    }
+    
+    .donation-promo-header {
+        padding: 24px 24px 20px 24px;
+    }
+    
+    .donation-promo-header h2 {
+        font-size: 24px;
+    }
+    
+    .donation-promo-body {
+        padding: 24px;
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+    
+    .promo-left {
+        padding: 24px 20px;
+    }
+    
+    .promo-icon {
+        font-size: 48px;
+    }
+    
+    .promo-message {
+        font-size: 18px;
+    }
+    
+    .donation-promo-footer {
+        padding: 20px 24px 32px 24px;
+        flex-direction: column;
+    }
+    
+    .btn-skip,
+    .btn-donate-promo {
+        padding: 16px 24px;
+    }
+}
         border-radius: 16px;
     }
     
