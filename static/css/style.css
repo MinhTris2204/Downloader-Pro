@@ -10782,11 +10782,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 10001;
     padding: 20px;
     animation: fadeIn 0.3s ease;
     backdrop-filter: blur(8px);
     cursor: default; /* Indicate this area is not clickable */
+    overflow: auto; /* Allow scrolling if content is too tall */
 }
 
 .donation-promo-modal {

@@ -79,6 +79,28 @@ function showDonationPromo() {
     // Add modal to page
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
+    // Ensure modal is visible and centered
+    const modal = document.getElementById('donationPromoOverlay');
+    if (modal) {
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+        
+        // Force modal to be visible
+        modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.zIndex = '10001';
+        
+        // Scroll modal content to top if needed
+        const modalContent = modal.querySelector('.donation-promo-modal');
+        if (modalContent) {
+            modalContent.scrollTop = 0;
+        }
+    }
+    
     // Add event listeners
     let selectedAmount = 20000; // Default
     
@@ -225,7 +247,11 @@ function closeDonationPromo() {
     const modal = document.getElementById('donationPromoOverlay');
     if (modal) {
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(() => {
+            modal.remove();
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }, 300);
     }
     
     // Remove keyboard event listener
