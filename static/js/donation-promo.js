@@ -272,7 +272,17 @@ function showDonationPromo() {
             console.log('📡 API Response status:', response.status);
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                // Try to get error message from response
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    // If can't parse JSON, use default message
+                }
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
@@ -280,9 +290,23 @@ function showDonationPromo() {
             
             if (data.success && data.checkoutUrl) {
                 console.log('✅ Payment link created, redirecting to:', data.checkoutUrl);
-                // Close modal and redirect to PayOS payment
-                closeDonationPromo();
-                window.open(data.checkoutUrl, '_blank');
+                
+                // Check if this is demo mode
+                if (data.demo) {
+                    console.log('🎭 Demo mode detected');
+                    if (typeof showToast === 'function') {
+                        showToast(data.message || 'Demo mode: Giao dịch mô phỏng thành công!', 'info');
+                    } else {
+                        alert(data.message || 'Demo mode: Giao dịch mô phỏng thành công!');
+                    }
+                    closeDonationPromo();
+                    // For demo, redirect to return page in same tab
+                    window.location.href = data.checkoutUrl;
+                } else {
+                    // Real PayOS payment - open in new tab
+                    closeDonationPromo();
+                    window.open(data.checkoutUrl, '_blank');
+                }
             } else {
                 const errorMsg = data.error || 'Lỗi tạo thanh toán';
                 console.error('❌ API Error:', errorMsg);

@@ -12148,3 +12148,39 @@ body .stats-section .stat-item {
     padding: 25px 0 !important;
     margin-top: 0 !important;
 }
+
+/* Demo Mode Notice */
+.demo-notice {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 2px solid #ffc107;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+.demo-notice p {
+    margin: 0 0 15px 0;
+    color: #856404;
+    font-weight: 500;
+}
+
+.demo-notice ol {
+    margin: 10px 0 0 20px;
+    color: #856404;
+}
+
+.demo-notice ol li {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.demo-notice a {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.demo-notice a:hover {
+    text-decoration: underline;
+}

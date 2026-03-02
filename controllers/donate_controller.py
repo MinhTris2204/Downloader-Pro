@@ -15,8 +15,16 @@ from utils.payos_helper import PayOS
 
 donate_bp = Blueprint('donate', __name__)
 
-# Initialize PayOS
-payos = PayOS(PAYOS_CLIENT_ID, PAYOS_API_KEY, PAYOS_CHECKSUM_KEY)
+# Initialize PayOS with validation
+def get_payos_instance():
+    """Get PayOS instance with proper error handling"""
+    if not PAYOS_CLIENT_ID or not PAYOS_API_KEY or not PAYOS_CHECKSUM_KEY:
+        print(">>> PayOS Error: Missing credentials in environment variables")
+        print(f">>> PAYOS_CLIENT_ID: {'SET' if PAYOS_CLIENT_ID else 'NOT SET'}")
+        print(f">>> PAYOS_API_KEY: {'SET' if PAYOS_API_KEY else 'NOT SET'}")
+        print(f">>> PAYOS_CHECKSUM_KEY: {'SET' if PAYOS_CHECKSUM_KEY else 'NOT SET'}")
+        return None
+    return PayOS(PAYOS_CLIENT_ID, PAYOS_API_KEY, PAYOS_CHECKSUM_KEY)
 
 @donate_bp.route('/donate')
 def donate_page():
@@ -28,6 +36,19 @@ def create_donation():
     """Tạo link thanh toán donate"""
     try:
         from app import db_pool
+        
+        # Check PayOS configuration first
+        payos = get_payos_instance()
+        if not payos:
+            # Demo mode - simulate successful payment for testing
+            print(">>> PayOS Demo Mode: Simulating successful payment")
+            return jsonify({
+                'success': True,
+                'checkoutUrl': f'/payos/return?orderCode={int(time.time())}&status=PAID&demo=true',
+                'orderCode': int(time.time()),
+                'demo': True,
+                'message': 'Demo mode: PayOS chưa được cấu hình. Đây là giao dịch mô phỏng.'
+            })
         
         data = request.get_json()
         amount = int(data.get('amount', 0))
@@ -183,8 +204,25 @@ def payos_return():
     
     order_code = request.args.get('orderCode', '')
     status = request.args.get('status', '')
+    is_demo = request.args.get('demo', '') == 'true'
     
     donation_info = None
+    
+    # Handle demo mode
+    if is_demo:
+        print(f">>> Demo mode return: orderCode={order_code}")
+        donation_info = {
+            'donor_name': 'Demo User',
+            'message': 'Đây là giao dịch demo để test hệ thống',
+            'amount': 100000
+        }
+        return render_template('donate_result.html', 
+                             success=True,
+                             order_code=order_code,
+                             status='DEMO',
+                             can_post_message=False,
+                             donation_info=donation_info,
+                             is_demo=True)
     
     # Update donation status to success and get info
     if db_pool and order_code:
