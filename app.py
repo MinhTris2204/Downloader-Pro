@@ -2314,7 +2314,9 @@ def tiktok_info():
 def get_statistics():
     """API endpoint để lấy thống kê truy cập"""
     try:
+        print(">>> Statistics API called")
         if not db_pool:
+            print(">>> No database pool, returning mock data")
             # Return mock data if no database
             return jsonify({
                 'success': True,
@@ -2326,6 +2328,7 @@ def get_statistics():
                 }
             })
         
+        print(">>> Database pool available, querying...")
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
@@ -2338,6 +2341,7 @@ def get_statistics():
         """)
         today_result = cursor.fetchone()
         today_visits = today_result[1] if today_result else 0
+        print(f">>> Today visits: {today_visits}")
         
         # Get this month's visits
         cursor.execute("""
@@ -2348,11 +2352,13 @@ def get_statistics():
         """)
         month_result = cursor.fetchone()
         monthly_visits = month_result[1] if month_result else 0
+        print(f">>> Monthly visits: {monthly_visits}")
         
         # Get total pageviews
         cursor.execute("SELECT COUNT(*) FROM tracking")
         total_result = cursor.fetchone()
         total_pageviews = total_result[0] if total_result else 0
+        print(f">>> Total pageviews: {total_pageviews}")
         
         # Estimate online users (visitors in last 5 minutes)
         cursor.execute("""
@@ -2362,11 +2368,12 @@ def get_statistics():
         """)
         online_result = cursor.fetchone()
         online_users = online_result[0] if online_result else 0
+        print(f">>> Online users: {online_users}")
         
         cursor.close()
         db_pool.putconn(conn)
         
-        return jsonify({
+        stats_data = {
             'success': True,
             'stats': {
                 'online_users': online_users,
@@ -2374,10 +2381,14 @@ def get_statistics():
                 'monthly_visits': monthly_visits,
                 'total_pageviews': total_pageviews
             }
-        })
+        }
+        print(f">>> Returning stats: {stats_data}")
+        return jsonify(stats_data)
         
     except Exception as e:
-        print(f"Statistics error: {e}")
+        print(f">>> Statistics error: {e}")
+        import traceback
+        traceback.print_exc()
         # Return mock data on error
         return jsonify({
             'success': True,
