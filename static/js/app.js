@@ -1518,13 +1518,26 @@ function initializeSocket() {
             // Update only the online users count immediately
             const onlineElement = document.getElementById('onlineUsers');
             if (onlineElement) {
-                onlineElement.textContent = formatNumber(data.online_users);
+                // Animate the number change
+                const currentValue = parseInt(onlineElement.textContent) || 0;
+                const newValue = data.online_users;
                 
-                // Add visual feedback for real-time update
-                onlineElement.style.color = '#00f2ea';
-                setTimeout(() => {
-                    onlineElement.style.color = '';
-                }, 1000);
+                if (currentValue !== newValue) {
+                    // Add pulsing animation for visual feedback
+                    onlineElement.style.transform = 'scale(1.1)';
+                    onlineElement.style.color = '#00f2ea';
+                    onlineElement.style.fontWeight = 'bold';
+                    
+                    // Update the number
+                    onlineElement.textContent = formatNumber(newValue);
+                    
+                    // Reset animation after 500ms
+                    setTimeout(() => {
+                        onlineElement.style.transform = 'scale(1)';
+                        onlineElement.style.color = '';
+                        onlineElement.style.fontWeight = '';
+                    }, 500);
+                }
             }
             
             // Ensure badge shows LIVE status
@@ -1539,6 +1552,16 @@ function initializeSocket() {
                 socket.emit('ping');
             }
         }, 30000);
+        
+        // Test function - emit every 10 seconds to verify real-time updates
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('🧪 Development mode: Testing real-time updates every 10s');
+            setInterval(() => {
+                if (socket && isSocketConnected) {
+                    socket.emit('get_online_count');
+                }
+            }, 10000);
+        }
         
     } catch (error) {
         console.error('❌ Socket.IO initialization failed:', error);

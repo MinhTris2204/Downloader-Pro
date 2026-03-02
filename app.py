@@ -53,12 +53,7 @@ def handle_connect():
         
         print(f"[SOCKET] User connected: {user_session} | Online: {len(online_users)}")
         
-        # Gửi số online hiện tại cho user vừa connect (ngay lập tức)
-        emit('online_count_update', {
-            'online_users': len(online_users)
-        })
-        
-        # Broadcast số online mới cho tất cả clients khác
+        # Broadcast số online mới cho TẤT CẢ clients (bao gồm cả user vừa connect)
         socketio.emit('online_count_update', {
             'online_users': len(online_users)
         }, broadcast=True)
