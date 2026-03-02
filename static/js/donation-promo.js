@@ -43,10 +43,10 @@ function showDonationPromo() {
                         </div>
                         
                         <div class="promo-amounts">
-                            <button class="amount-btn-promo" data-amount="10000">10.000₫</button>
-                            <button class="amount-btn-promo" data-amount="20000">20.000₫</button>
-                            <button class="amount-btn-promo" data-amount="50000">50.000₫</button>
-                            <button class="amount-btn-promo" data-amount="100000">100.000₫</button>
+                            <button class="amount-btn-promo" data-amount="10000">10,000 VNĐ</button>
+                            <button class="amount-btn-promo" data-amount="20000">20,000 VNĐ</button>
+                            <button class="amount-btn-promo" data-amount="50000">50,000 VNĐ</button>
+                            <button class="amount-btn-promo" data-amount="100000">100,000 VNĐ</button>
                         </div>
                         
                         <div class="custom-amount-section">
@@ -104,15 +104,16 @@ function showDonationPromo() {
     // Add event listeners
     let selectedAmount = 20000; // Default
     
-    // Format number with dots (VD: 50000 -> 50.000)
+    // Format number with commas (VD: 50000 -> 50,000 VNĐ)
     function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return formatted + ' VNĐ';
     }
     
-    // Parse formatted number back to integer (VD: 50.000 -> 50000)
+    // Parse formatted number back to integer (VD: 50,000 VNĐ -> 50000)
     function parseFormattedNumber(str) {
         if (!str) return 0;
-        // Remove all non-digits and parse
+        // Remove all non-digits (commas, VNĐ, spaces, etc.) and parse
         const cleanStr = str.toString().replace(/[^\d]/g, '');
         const result = parseInt(cleanStr) || 0;
         console.log(`Parsing: "${str}" -> "${cleanStr}" -> ${result}`);
