@@ -11724,6 +11724,12 @@ body {
     border-top: 1px solid #dee2e6;
     padding: 25px 0;
     margin-top: 0;
+    position: relative;
+    z-index: 1;
+    clear: both;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .stats-header {
@@ -11745,6 +11751,8 @@ body {
     gap: 15px;
     max-width: 800px;
     margin: 0 auto;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .stat-item {
@@ -11862,4 +11870,31 @@ body {
     .stat-item {
         padding: 15px;
     }
+}
+
+/* Force stats section to be visible */
+body .stats-section {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+body .stats-section .stats-grid {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+body .stats-section .stat-item {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure no other elements hide stats */
+.stats-section ~ * {
+    position: relative;
+    z-index: 1;
 }

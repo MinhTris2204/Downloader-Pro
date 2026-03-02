@@ -1485,6 +1485,14 @@ function renderGalleryWithTryCatch() {
 
 // ====== Statistics Section ======
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading statistics...');
+    const statsSection = document.querySelector('.stats-section');
+    if (statsSection) {
+        console.log('Stats section found:', statsSection);
+    } else {
+        console.error('Stats section not found!');
+    }
+    
     loadStatistics();
     
     // Update statistics every 30 seconds
