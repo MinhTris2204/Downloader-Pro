@@ -910,27 +910,52 @@ async function fetchStats() {
             const element = document.getElementById('total-downloads');
             const badge = document.getElementById('stats-badge');
 
-            // Animate the counter
-            animateCounter(element, data.total_downloads);
-            badge.style.opacity = '1';
+            // Get current value for comparison
+            const currentText = element.textContent.replace(/[^\d]/g, ''); // Remove non-digits
+            const currentValue = parseInt(currentText) || 0;
+            const newValue = data.total_downloads;
 
-            // Add "rising" effect when count increases
-            if (data.total_downloads > lastDownloadCount && lastDownloadCount > 0) {
-                badge.style.animation = 'none';
-                badge.offsetHeight; // Trigger reflow
-                badge.style.animation = 'stats-pulse 0.5s ease-in-out 3';
+            // Only animate if value actually changed
+            if (currentValue !== newValue) {
+                console.log(`📊 Downloads updated: ${currentValue} → ${newValue}`);
+                
+                // Add visual feedback for real-time update
+                element.style.transform = 'scale(1.1)';
+                element.style.color = '#ff6b6b';
+                element.style.fontWeight = 'bold';
+                
+                // Animate the counter
+                animateCounter(element, newValue);
+                
+                // Reset animation after 500ms
+                setTimeout(() => {
+                    element.style.transform = 'scale(1)';
+                    element.style.color = '';
+                    element.style.fontWeight = '';
+                }, 500);
+
+                // Add "rising" effect when count increases
+                if (newValue > lastDownloadCount && lastDownloadCount > 0) {
+                    badge.style.animation = 'none';
+                    badge.offsetHeight; // Trigger reflow
+                    badge.style.animation = 'stats-pulse 0.5s ease-in-out 3';
+                }
+                
+                lastDownloadCount = newValue;
             }
+            
+            badge.style.opacity = '1';
         }
     } catch (err) {
-        console.error('Failed to fetch stats');
+        console.error('Failed to fetch stats:', err);
     }
 }
 
 console.log('Downloader Pro - Ready!');
 fetchStats();
 
-// Auto refresh stats every 30 seconds
-setInterval(fetchStats, 30000);
+// Auto refresh stats every 3 seconds for real-time updates
+setInterval(fetchStats, 3000);
 
 
 
