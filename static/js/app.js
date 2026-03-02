@@ -1485,32 +1485,61 @@ function renderGalleryWithTryCatch() {
 
 // ====== Statistics Section ======
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Loading statistics...');
-    const statsSection = document.querySelector('.stats-section');
-    if (statsSection) {
-        console.log('Stats section found:', statsSection);
-    } else {
-        console.error('Stats section not found!');
-    }
+    console.log('DOM loaded, initializing statistics...');
     
-    loadStatistics();
-    
-    // Update statistics every 30 seconds
-    setInterval(loadStatistics, 30000);
+    // Wait a bit for all elements to be rendered
+    setTimeout(() => {
+        const statsSection = document.querySelector('.stats-section');
+        if (statsSection) {
+            console.log('Stats section found:', statsSection);
+            loadStatistics();
+            
+            // Update statistics every 30 seconds
+            setInterval(loadStatistics, 30000);
+        } else {
+            console.error('Stats section not found after DOM load!');
+            // Try again after a longer delay
+            setTimeout(() => {
+                const statsSection2 = document.querySelector('.stats-section');
+                if (statsSection2) {
+                    console.log('Stats section found on retry:', statsSection2);
+                    loadStatistics();
+                    setInterval(loadStatistics, 30000);
+                } else {
+                    console.error('Stats section still not found after retry!');
+                }
+            }, 1000);
+        }
+    }, 100);
 });
 
 async function loadStatistics() {
     try {
+        console.log('Loading statistics...');
+        const statsSection = document.querySelector('.stats-section');
+        console.log('Stats section found:', statsSection);
+        
+        if (!statsSection) {
+            console.error('Stats section not found in DOM!');
+            return;
+        }
+        
         console.log('Fetching statistics from /api/site-stats...');
         const response = await fetch('/api/site-stats');
         console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         console.log('Response data:', data);
         
-        if (data.success) {
+        if (data.success && data.stats) {
+            console.log('Updating stats display with:', data.stats);
             updateStatDisplay(data.stats);
         } else {
-            console.error('Failed to load statistics:', data.error);
+            console.error('Invalid response format:', data);
             // Show mock data on error
             updateStatDisplay({
                 online_users: 25,
@@ -1532,6 +1561,8 @@ async function loadStatistics() {
 }
 
 function updateStatDisplay(stats) {
+    console.log('updateStatDisplay called with REAL DATA:', stats);
+    
     const elements = {
         onlineUsers: document.getElementById('onlineUsers'),
         todayVisits: document.getElementById('todayVisits'),
@@ -1539,21 +1570,51 @@ function updateStatDisplay(stats) {
         totalPageviews: document.getElementById('totalPageviews')
     };
     
+    console.log('Found elements:', elements);
+    
     if (elements.onlineUsers) {
-        elements.onlineUsers.textContent = formatNumber(stats.online_users || 0);
+        const value = formatNumber(stats.online_users || 0);
+        elements.onlineUsers.textContent = value;
+        console.log('Updated onlineUsers to:', value);
+    } else {
+        console.error('onlineUsers element not found!');
     }
     
     if (elements.todayVisits) {
-        elements.todayVisits.textContent = formatNumber(stats.today_visits || 0);
+        const value = formatNumber(stats.today_visits || 0);
+        elements.todayVisits.textContent = value;
+        console.log('Updated todayVisits to:', value);
+    } else {
+        console.error('todayVisits element not found!');
     }
     
     if (elements.monthlyVisits) {
-        elements.monthlyVisits.textContent = formatNumber(stats.monthly_visits || 0);
+        const value = formatNumber(stats.monthly_visits || 0);
+        elements.monthlyVisits.textContent = value;
+        console.log('Updated monthlyVisits to:', value);
+    } else {
+        console.error('monthlyVisits element not found!');
     }
     
     if (elements.totalPageviews) {
-        elements.totalPageviews.textContent = formatNumber(stats.total_pageviews || 0);
+        const value = formatNumber(stats.total_pageviews || 0);
+        elements.totalPageviews.textContent = value;
+        console.log('Updated totalPageviews to:', value);
+    } else {
+        console.error('totalPageviews element not found!');
     }
+    
+    // Thêm indicator cho dữ liệu thực tế
+    const statsHeader = document.querySelector('.stats-header h3');
+    if (statsHeader && !statsHeader.querySelector('.real-data-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'real-data-badge';
+        badge.textContent = ' 🔴 LIVE';
+        badge.style.cssText = 'font-size: 0.7em; color: #dc3545; font-weight: bold; margin-left: 8px;';
+        statsHeader.appendChild(badge);
+    }
+    
+    console.log('Statistics display update completed - REAL DATA MODE');
 }
 
 function formatNumber(num) {

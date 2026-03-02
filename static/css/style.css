@@ -11879,6 +11879,7 @@ body .stats-section {
     opacity: 1 !important;
     position: relative !important;
     z-index: 10 !important;
+    min-height: 120px !important;
 }
 
 body .stats-section .stats-grid {
@@ -11897,4 +11898,12 @@ body .stats-section .stat-item {
 .stats-section ~ * {
     position: relative;
     z-index: 1;
+}
+
+/* Additional fallback for statistics visibility */
+.stats-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border-top: 1px solid #dee2e6 !important;
+    padding: 25px 0 !important;
+    margin-top: 0 !important;
 }

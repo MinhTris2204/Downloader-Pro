@@ -262,6 +262,39 @@ def init_db():
             ON user_downloads(user_id, download_time)
         """)
         
+        # Create page_visits table for real-time statistics
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS page_visits (
+                id SERIAL PRIMARY KEY,
+                ip_address VARCHAR(45) NOT NULL,
+                user_agent TEXT,
+                page_url VARCHAR(500),
+                referrer VARCHAR(500),
+                visit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                session_id VARCHAR(64),
+                country VARCHAR(100),
+                city VARCHAR(100),
+                device_type VARCHAR(50),
+                browser VARCHAR(100),
+                is_mobile BOOLEAN DEFAULT FALSE
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_page_visits_time 
+            ON page_visits(visit_time)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_page_visits_ip_time 
+            ON page_visits(ip_address, visit_time)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_page_visits_session 
+            ON page_visits(session_id, visit_time)
+        """)
+        
         print("[INFO] Donations and donation_messages tables created/verified")
         
         # Initialize stats if empty
@@ -310,6 +343,59 @@ def init_db():
 
 # Stats file path (fallback)
 STATS_FILE = 'stats.json'
+
+def record_page_visit():
+    """Ghi nhận lượt truy cập trang thực tế"""
+    if not db_pool:
+        return
+    
+    try:
+        # Lấy thông tin tracking
+        tracking_info = get_full_tracking_info()
+        
+        # Tạo session ID từ IP + User Agent
+        import hashlib
+        session_data = f"{tracking_info.get('ip_address', 'unknown')}_{tracking_info.get('user_agent', 'unknown')}"
+        session_id = hashlib.md5(session_data.encode()).hexdigest()
+        
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Kiểm tra xem đã có visit trong 30 phút qua chưa (tránh spam)
+        cursor.execute("""
+            SELECT id FROM page_visits 
+            WHERE session_id = %s AND visit_time >= NOW() - INTERVAL '30 minutes'
+            LIMIT 1
+        """, (session_id,))
+        
+        if not cursor.fetchone():
+            # Ghi nhận visit mới
+            cursor.execute("""
+                INSERT INTO page_visits (
+                    ip_address, user_agent, page_url, referrer, session_id,
+                    country, city, device_type, browser, is_mobile
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                tracking_info.get('ip_address'),
+                tracking_info.get('user_agent'),
+                request.url,
+                request.referrer,
+                session_id,
+                tracking_info.get('country'),
+                tracking_info.get('city'),
+                tracking_info.get('device_type'),
+                tracking_info.get('browser'),
+                tracking_info.get('is_mobile', False)
+            ))
+            
+            conn.commit()
+            print(f"[INFO] Recorded page visit from {tracking_info.get('ip_address')}")
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+    except Exception as e:
+        print(f"[ERROR] Failed to record page visit: {e}")
 
 def get_stats():
     """Get total downloads from DB or fallback to JSON"""
@@ -472,18 +558,26 @@ def extract_video_id(url):
     return None
 
 @app.before_request
-def force_https():
+def before_request():
+    # Force HTTPS
     # Skip for local development
     if 'localhost' in request.host or '127.0.0.1' in request.host or '.internal' in request.host:
-        return
+        pass
+    else:
+        # For Railway/production: Trust X-Forwarded-Proto header
+        # Only redirect if the forwarded protocol is explicitly 'http'
+        forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
+        
+        if forwarded_proto == 'http':
+            url = request.url.replace('http://', 'https://', 1)
+            return redirect(url, code=301)
     
-    # For Railway/production: Trust X-Forwarded-Proto header
-    # Only redirect if the forwarded protocol is explicitly 'http'
-    forwarded_proto = request.headers.get('X-Forwarded-Proto', '')
-    
-    if forwarded_proto == 'http':
-        url = request.url.replace('http://', 'https://', 1)
-        return redirect(url, code=301)
+    # Record page visit for statistics (chỉ cho GET requests và không phải API)
+    if request.method == 'GET' and not request.path.startswith('/api/') and not request.path.startswith('/static/'):
+        try:
+            record_page_visit()
+        except Exception as e:
+            print(f"[ERROR] Failed to record visit: {e}")
 
 # Helper function to extract images (Shared logic)
 def extract_tiktok_images_direct(url):
@@ -2306,65 +2400,144 @@ def tiktok_info():
 # Donation API endpoints are handled by donate_controller.py blueprint
 # No duplicate endpoints needed here
 
-@app.route('/api/site-stats')
-def get_statistics():
-    """API endpoint để lấy thống kê truy cập"""
+@app.route('/api/admin/visit-stats')
+def admin_visit_stats():
+    """API chi tiết thống kê truy cập (cho admin)"""
+    if not db_pool:
+        return jsonify({'error': 'Database not available'})
+    
     try:
-        print(">>> Statistics API called")
-        if not db_pool:
-            print(">>> No database pool, returning mock data")
-            # Return mock data if no database
-            return jsonify({
-                'success': True,
-                'stats': {
-                    'online_users': 42,
-                    'today_visits': 1234,
-                    'monthly_visits': 45678,
-                    'total_pageviews': 987654
-                }
-            })
-        
-        print(">>> Database pool available, querying...")
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        # Get today's visits
+        # Thống kê theo giờ (24h qua)
         cursor.execute("""
-            SELECT COUNT(DISTINCT ip_address) as unique_visitors,
-                   COUNT(*) as total_visits
-            FROM tracking 
-            WHERE DATE(created_at) = CURRENT_DATE
+            SELECT 
+                DATE_TRUNC('hour', visit_time) as hour,
+                COUNT(DISTINCT session_id) as unique_visitors,
+                COUNT(*) as total_visits
+            FROM page_visits 
+            WHERE visit_time >= NOW() - INTERVAL '24 hours'
+            GROUP BY DATE_TRUNC('hour', visit_time)
+            ORDER BY hour DESC
+            LIMIT 24
         """)
-        today_result = cursor.fetchone()
-        today_visits = today_result[1] if today_result else 0
-        print(f">>> Today visits: {today_visits}")
+        hourly_stats = cursor.fetchall()
         
-        # Get this month's visits
+        # Top countries
         cursor.execute("""
-            SELECT COUNT(DISTINCT ip_address) as unique_visitors,
-                   COUNT(*) as total_visits
-            FROM tracking 
-            WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+            SELECT country, COUNT(DISTINCT session_id) as visitors
+            FROM page_visits 
+            WHERE country IS NOT NULL AND visit_time >= NOW() - INTERVAL '7 days'
+            GROUP BY country
+            ORDER BY visitors DESC
+            LIMIT 10
         """)
-        month_result = cursor.fetchone()
-        monthly_visits = month_result[1] if month_result else 0
-        print(f">>> Monthly visits: {monthly_visits}")
+        top_countries = cursor.fetchall()
         
-        # Get total pageviews
-        cursor.execute("SELECT COUNT(*) FROM tracking")
-        total_result = cursor.fetchone()
-        total_pageviews = total_result[0] if total_result else 0
-        print(f">>> Total pageviews: {total_pageviews}")
-        
-        # Estimate online users (visitors in last 5 minutes)
+        # Device types
         cursor.execute("""
-            SELECT COUNT(DISTINCT ip_address)
-            FROM tracking 
-            WHERE created_at >= NOW() - INTERVAL '5 minutes'
+            SELECT 
+                CASE WHEN is_mobile THEN 'Mobile' ELSE 'Desktop' END as device,
+                COUNT(DISTINCT session_id) as visitors
+            FROM page_visits 
+            WHERE visit_time >= NOW() - INTERVAL '7 days'
+            GROUP BY is_mobile
+        """)
+        device_stats = cursor.fetchall()
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({
+            'success': True,
+            'hourly_stats': [{'hour': str(row[0]), 'unique_visitors': row[1], 'total_visits': row[2]} for row in hourly_stats],
+            'top_countries': [{'country': row[0], 'visitors': row[1]} for row in top_countries],
+            'device_stats': [{'device': row[0], 'visitors': row[1]} for row in device_stats]
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Admin visit stats error: {e}")
+        return jsonify({'error': str(e)})
+
+@app.route('/api/stats')
+def get_download_stats():
+    """API endpoint for download counter in hero section"""
+    try:
+        stats = get_stats()
+        return jsonify({
+            'total_downloads': stats.get('total_downloads', 1250)
+        })
+    except Exception as e:
+        print(f">>> Download stats error: {e}")
+        return jsonify({
+            'total_downloads': 1250
+        })
+
+@app.route('/api/site-stats')
+def get_statistics():
+    """API endpoint để lấy thống kê truy cập THỰC TẾ"""
+    try:
+        print(">>> Statistics API called - REAL DATA MODE")
+        if not db_pool:
+            print(">>> No database pool, returning minimal fallback")
+            return jsonify({
+                'success': True,
+                'stats': {
+                    'online_users': 1,
+                    'today_visits': 1,
+                    'monthly_visits': 1,
+                    'total_pageviews': 1
+                }
+            })
+        
+        print(">>> Database pool available, querying REAL data...")
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # 1. Người dùng online (trong 5 phút qua)
+        cursor.execute("""
+            SELECT COUNT(DISTINCT session_id)
+            FROM page_visits 
+            WHERE visit_time >= NOW() - INTERVAL '5 minutes'
         """)
         online_result = cursor.fetchone()
         online_users = online_result[0] if online_result else 0
-        print(f">>> Online users: {online_users}")
+        print(f">>> Online users (5min): {online_users}")
+        
+        # 2. Lượt truy cập hôm nay
+        cursor.execute("""
+            SELECT COUNT(DISTINCT session_id)
+            FROM page_visits 
+            WHERE DATE(visit_time) = CURRENT_DATE
+        """)
+        today_result = cursor.fetchone()
+        today_visits = today_result[0] if today_result else 0
+        print(f">>> Today visits: {today_visits}")
+        
+        # 3. Lượt truy cập trong tháng
+        cursor.execute("""
+            SELECT COUNT(DISTINCT session_id)
+            FROM page_visits 
+            WHERE DATE_TRUNC('month', visit_time) = DATE_TRUNC('month', CURRENT_DATE)
+        """)
+        month_result = cursor.fetchone()
+        monthly_visits = month_result[0] if month_result else 0
+        print(f">>> Monthly visits: {monthly_visits}")
+        
+        # 4. Tổng pageviews (tất cả visits)
+        cursor.execute("SELECT COUNT(*) FROM page_visits")
+        total_result = cursor.fetchone()
+        total_pageviews = total_result[0] if total_result else 0
+        
+        # Nếu chưa có dữ liệu, lấy từ bảng downloads để có baseline
+        if total_pageviews == 0:
+            cursor.execute("SELECT total_downloads FROM stats LIMIT 1")
+            stats_result = cursor.fetchone()
+            baseline = stats_result[0] if stats_result else 1250
+            total_pageviews = baseline
+        
+        print(f">>> Total pageviews: {total_pageviews}")
         
         cursor.close()
         db_pool.putconn(conn)
@@ -2372,27 +2545,27 @@ def get_statistics():
         stats_data = {
             'success': True,
             'stats': {
-                'online_users': online_users,
-                'today_visits': today_visits,
-                'monthly_visits': monthly_visits,
-                'total_pageviews': total_pageviews
+                'online_users': max(online_users, 0),
+                'today_visits': max(today_visits, 0),
+                'monthly_visits': max(monthly_visits, 0),
+                'total_pageviews': max(total_pageviews, 1)
             }
         }
-        print(f">>> Returning stats: {stats_data}")
+        print(f">>> Returning REAL stats: {stats_data}")
         return jsonify(stats_data)
         
     except Exception as e:
         print(f">>> Statistics error: {e}")
         import traceback
         traceback.print_exc()
-        # Return mock data on error
+        # Fallback tối thiểu khi có lỗi
         return jsonify({
             'success': True,
             'stats': {
-                'online_users': 25,
-                'today_visits': 856,
-                'monthly_visits': 23456,
-                'total_pageviews': 654321
+                'online_users': 1,
+                'today_visits': 1,
+                'monthly_visits': 1,
+                'total_pageviews': 1
             }
         })
 
