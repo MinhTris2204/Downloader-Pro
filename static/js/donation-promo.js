@@ -36,9 +36,9 @@ function showDonationPromo() {
                     
                     <div class="promo-right">
                         <div class="name-section">
-                            <label for="donorName" class="name-label">${t.promo_name_label || 'Tên của bạn:'}</label>
+                            <label for="donorName" class="name-label">${t.promo_name_label || 'Tên của bạn (tùy chọn):'}</label>
                             <input type="text" id="donorName" class="name-input" 
-                                   placeholder="${t.promo_name_placeholder || 'Nhập tên để hiển thị...'}" 
+                                   placeholder="${t.promo_name_placeholder || 'Để trống sẽ hiển thị "Người dùng ẩn danh"'}" 
                                    maxlength="50">
                         </div>
                         
@@ -217,11 +217,12 @@ function showDonationPromo() {
             amount = selectedAmount;
         }
         
-        console.log(`Final amount: ${amount} (from custom: "${customAmountValue}", selected: ${selectedAmount})`);
-        
         // Get donor name and message
-        const donorName = document.getElementById('donorName').value.trim() || 'Người ủng hộ';
-        const message = document.getElementById('donationMessage').value.trim() || 'Cảm ơn bạn đã ủng hộ!';
+        const donorName = document.getElementById('donorName').value.trim() || t.anonymous_user || 'Người dùng ẩn danh';
+        const message = document.getElementById('donationMessage').value.trim() || t.default_message || 'Cảm ơn bạn đã ủng hộ!';
+        
+        console.log(`Final amount: ${amount} (from custom: "${customAmountValue}", selected: ${selectedAmount})`);
+        console.log(`Donor: "${donorName}", Message: "${message}"`);
         
         if (!amount || amount < 5000) {
             showToast('Số tiền tối thiểu là 5.000₫', 'error');

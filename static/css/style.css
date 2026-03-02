@@ -10921,6 +10921,13 @@ body {
     margin-right: 8px;
 }
 
+.name-label::after {
+    content: ' (không bắt buộc)';
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 400;
+}
+
 .name-input {
     width: 100%;
     padding: 16px 20px;
@@ -11120,6 +11127,13 @@ body {
 .message-label::before {
     content: '💬';
     margin-right: 8px;
+}
+
+.message-label::after {
+    content: ' (không bắt buộc)';
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 400;
 }
 
 .message-input {
