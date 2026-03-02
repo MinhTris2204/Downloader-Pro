@@ -149,6 +149,7 @@ const translations = {
         // Footer
         footer_desc: 'Công cụ tải video YouTube, TikTok miễn phí tốt nhất Việt Nam. Hỗ trợ chuyển đổi MP4, MP3 chất lượng cao.',
         footer_contact: 'Liên hệ hỗ trợ',
+        footer_dev_info: 'Phát triển bởi đội ngũ kỹ sư Việt Nam',
         
         // Statistics
         stats_title: '📊 THỐNG KÊ TRUY CẬP',
@@ -337,6 +338,7 @@ const translations = {
         // Footer
         footer_desc: 'Best free YouTube, TikTok video downloader in Vietnam. Support high quality MP4, MP3 conversion.',
         footer_contact: 'Contact Support',
+        footer_dev_info: 'Developed by Vietnamese Engineers Team',
         
         // Statistics
         stats_title: '📊 ACCESS STATISTICS',
@@ -525,6 +527,7 @@ const translations = {
         // Footer
         footer_desc: 'Лучший бесплатный загрузчик видео YouTube, TikTok во Вьетнаме. Поддержка высококачественного преобразования MP4, MP3.',
         footer_contact: 'Связаться с поддержкой',
+        footer_dev_info: 'Разработано командой вьетнамских инженеров',
         
         // Statistics
         stats_title: '📊 СТАТИСТИКА ПОСЕЩЕНИЙ',
