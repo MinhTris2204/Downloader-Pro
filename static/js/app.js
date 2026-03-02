@@ -1501,8 +1501,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadStatistics() {
     try {
-        console.log('Fetching statistics from /api/stats...');
-        const response = await fetch('/api/stats');
+        console.log('Fetching statistics from /api/site-stats...');
+        const response = await fetch('/api/site-stats');
         console.log('Response status:', response.status);
         const data = await response.json();
         console.log('Response data:', data);

@@ -1649,10 +1649,6 @@ def download_file(download_id):
         download_name=download_name
     )
 
-@app.route('/api/stats')
-def api_stats():
-    return jsonify(get_stats())
-
 @app.route('/api/stats/tracking')
 def api_tracking_stats():
     """Get tracking statistics"""
@@ -2310,7 +2306,7 @@ def tiktok_info():
 # Donation API endpoints are handled by donate_controller.py blueprint
 # No duplicate endpoints needed here
 
-@app.route('/api/stats')
+@app.route('/api/site-stats')
 def get_statistics():
     """API endpoint để lấy thống kê truy cập"""
     try:
