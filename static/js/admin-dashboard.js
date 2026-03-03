@@ -328,68 +328,102 @@ function getCountryDisplay(country) {
 
 // Load analytics
 async function loadAnalytics() {
-    document.getElementById('analyticsLoading').style.display = 'block';
+    const loadingElement = document.getElementById('analyticsLoading');
+    if (loadingElement) loadingElement.style.display = 'block';
     
     try {
         const response = await fetch('/api/admin/analytics/daily');
         const data = await response.json();
         
+        if (!data || data.error) {
+            throw new Error(data.error || 'Failed to load analytics data');
+        }
+        
         // Platform distribution
         const platformsTable = document.getElementById('platformsTable');
-        const totalPlatform = data.platforms.reduce((sum, p) => sum + p.count, 0);
-        platformsTable.innerHTML = data.platforms.map(p => `
-            <tr>
-                <td><strong>${p.platform}</strong></td>
-                <td>${p.count.toLocaleString()}</td>
-                <td>${((p.count / totalPlatform) * 100).toFixed(1)}%</td>
-            </tr>
-        `).join('');
+        if (platformsTable && data.platforms && data.platforms.length > 0) {
+            const totalPlatform = data.platforms.reduce((sum, p) => sum + (p.count || 0), 0);
+            platformsTable.innerHTML = data.platforms.map(p => `
+                <tr>
+                    <td><strong>${p.platform || 'Unknown'}</strong></td>
+                    <td style="text-align: right;">${(p.count || 0).toLocaleString()}</td>
+                    <td style="text-align: right;">${totalPlatform > 0 ? (((p.count || 0) / totalPlatform) * 100).toFixed(1) : '0.0'}%</td>
+                </tr>
+            `).join('');
+        } else if (platformsTable) {
+            platformsTable.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #7f8c8d;">Chưa có dữ liệu</td></tr>';
+        }
         
         // Format distribution
         const formatsTable = document.getElementById('formatsTable');
-        const totalFormat = data.formats.reduce((sum, f) => sum + f.count, 0);
-        formatsTable.innerHTML = data.formats.map(f => `
-            <tr>
-                <td><strong>${f.format}</strong></td>
-                <td>${f.count.toLocaleString()}</td>
-                <td>${((f.count / totalFormat) * 100).toFixed(1)}%</td>
-            </tr>
-        `).join('');
+        if (formatsTable && data.formats && data.formats.length > 0) {
+            const totalFormat = data.formats.reduce((sum, f) => sum + (f.count || 0), 0);
+            formatsTable.innerHTML = data.formats.map(f => `
+                <tr>
+                    <td><strong>${f.format || 'Unknown'}</strong></td>
+                    <td style="text-align: right;">${(f.count || 0).toLocaleString()}</td>
+                    <td style="text-align: right;">${totalFormat > 0 ? (((f.count || 0) / totalFormat) * 100).toFixed(1) : '0.0'}%</td>
+                </tr>
+            `).join('');
+        } else if (formatsTable) {
+            formatsTable.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #7f8c8d;">Chưa có dữ liệu</td></tr>';
+        }
         
-        // Simple daily chart (text-based)
+        // Daily chart with better formatting
         const dailyChart = document.getElementById('dailyChart');
-        dailyChart.innerHTML = `
-            <table style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th>Ngày</th>
-                        <th>Tổng</th>
-                        <th>YouTube</th>
-                        <th>TikTok</th>
-                        <th>Mobile</th>
-                        <th>Desktop</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${data.daily_stats.map(d => `
-                        <tr>
-                            <td>${formatDate(d.date)}</td>
-                            <td><strong>${d.total}</strong></td>
-                            <td>${d.youtube}</td>
-                            <td>${d.tiktok}</td>
-                            <td>${d.mobile}</td>
-                            <td>${d.desktop}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
+        if (dailyChart) {
+            if (data.daily_stats && data.daily_stats.length > 0) {
+                dailyChart.innerHTML = `
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; min-width: 600px;">
+                            <thead>
+                                <tr style="background: #f8f9fa;">
+                                    <th style="padding: 12px; text-align: left;">Ngày</th>
+                                    <th style="padding: 12px; text-align: right;">Tổng</th>
+                                    <th style="padding: 12px; text-align: right;">YouTube</th>
+                                    <th style="padding: 12px; text-align: right;">TikTok</th>
+                                    <th style="padding: 12px; text-align: right;">Mobile</th>
+                                    <th style="padding: 12px; text-align: right;">Desktop</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.daily_stats.map(d => `
+                                    <tr style="border-bottom: 1px solid #e9ecef;">
+                                        <td style="padding: 10px; font-weight: 600;">${formatDate(d.date)}</td>
+                                        <td style="padding: 10px; text-align: right; font-weight: bold; color: #2c3e50;">${(d.total || 0).toLocaleString()}</td>
+                                        <td style="padding: 10px; text-align: right; color: #e74c3c;">${(d.youtube || 0).toLocaleString()}</td>
+                                        <td style="padding: 10px; text-align: right; color: #000;">${(d.tiktok || 0).toLocaleString()}</td>
+                                        <td style="padding: 10px; text-align: right; color: #17a2b8;">${(d.mobile || 0).toLocaleString()}</td>
+                                        <td style="padding: 10px; text-align: right; color: #6c757d;">${(d.desktop || 0).toLocaleString()}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                dailyChart.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu thống kê</p>';
+            }
+        }
         
-        document.getElementById('analyticsLoading').style.display = 'none';
+        if (loadingElement) loadingElement.style.display = 'none';
         
     } catch (error) {
         console.error('Error loading analytics:', error);
-        document.getElementById('analyticsLoading').style.display = 'none';
+        
+        // Show error in all tables
+        const errorMessage = '<tr><td colspan="3" style="text-align: center; color: #e74c3c; padding: 20px;">Lỗi tải dữ liệu: ' + error.message + '</td></tr>';
+        
+        const platformsTable = document.getElementById('platformsTable');
+        if (platformsTable) platformsTable.innerHTML = errorMessage;
+        
+        const formatsTable = document.getElementById('formatsTable');
+        if (formatsTable) formatsTable.innerHTML = errorMessage;
+        
+        const dailyChart = document.getElementById('dailyChart');
+        if (dailyChart) dailyChart.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu: ' + error.message + '</p>';
+        
+        if (loadingElement) loadingElement.style.display = 'none';
     }
 }
 
@@ -437,12 +471,23 @@ function formatDateTime(dateStr) {
 
 function formatDate(dateStr) {
     if (!dateStr) return 'N/A';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
+    
+    try {
+        const date = new Date(dateStr);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        
+        return date.toLocaleDateString('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Error';
+    }
 }
 
 // Initialize
