@@ -136,32 +136,70 @@ function showDonationPromo() {
     
     // Handle custom amount input with formatting
     const customAmountInput = document.getElementById('customAmountInput');
+    let formatTimeout;
+    
     customAmountInput.addEventListener('input', function() {
-        // Remove all non-digits (including k, K, etc.)
-        let value = this.value.replace(/[^\d]/g, '');
-        
-        // Format with dots
-        if (value) {
-            this.value = formatCurrency(value);
-            const numValue = parseInt(value);
-            if (numValue >= 5000) {
-                selectedAmount = numValue;
-                // Deselect preset buttons
-                document.querySelectorAll('.amount-btn-promo').forEach(b => b.classList.remove('selected'));
-            }
-        } else {
-            this.value = '';
-            selectedAmount = 20000; // Reset to default
+        // Clear previous timeout
+        if (formatTimeout) {
+            clearTimeout(formatTimeout);
         }
+        
+        // Delay formatting to allow backspace/delete to work
+        formatTimeout = setTimeout(() => {
+            // Remove all non-digits (including k, K, etc.)
+            let value = this.value.replace(/[^\d]/g, '');
+            
+            // Format with dots
+            if (value) {
+                this.value = formatCurrency(value);
+                const numValue = parseInt(value);
+                if (numValue >= 5000) {
+                    selectedAmount = numValue;
+                    // Deselect preset buttons
+                    document.querySelectorAll('.amount-btn-promo').forEach(b => b.classList.remove('selected'));
+                }
+            } else {
+                this.value = '';
+                selectedAmount = 20000; // Reset to default
+            }
+        }, 100);
     });
     
-    // Prevent non-numeric input completely
-    customAmountInput.addEventListener('keypress', function(e) {
-        // Only allow numbers and control keys
-        const allowedKeys = ['0','1','2','3','4','5','6','7','8','9','Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
-        if (!allowedKeys.includes(e.key)) {
-            e.preventDefault();
+    // Allow all keys for better user experience
+    customAmountInput.addEventListener('keydown', function(e) {
+        // Allow all control keys and navigation keys
+        const allowedKeys = [
+            8,  // Backspace
+            9,  // Tab
+            13, // Enter
+            27, // Escape
+            35, // End
+            36, // Home
+            37, // Left Arrow
+            38, // Up Arrow
+            39, // Right Arrow
+            40, // Down Arrow
+            46  // Delete
+        ];
+        
+        // Allow Ctrl combinations
+        if (e.ctrlKey || e.metaKey) {
+            return true;
         }
+        
+        // Allow allowed keys
+        if (allowedKeys.includes(e.keyCode)) {
+            return true;
+        }
+        
+        // Allow numbers (0-9) from both main keyboard and numpad
+        if ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)) {
+            return true;
+        }
+        
+        // Block everything else
+        e.preventDefault();
+        return false;
     });
     
     // Prevent paste of non-numeric content
