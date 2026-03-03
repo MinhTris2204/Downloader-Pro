@@ -1680,6 +1680,11 @@ def robots():
 def propush_service_worker():
     return app.send_static_file('sw-check-permissions-c6f62.js')
 
+@app.errorhandler(404)
+def page_not_found(e):
+    # Redirect 404 to SmartLink for monetization
+    return redirect('https://rm358.com/4/106/8420?var=404_redirect')
+
 @app.route('/favicon.ico')
 def favicon():
     return app.send_static_file('favicon.svg')

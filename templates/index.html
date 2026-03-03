@@ -1057,6 +1057,31 @@
     <script src="{{ url_for('static', filename='js/donation-promo.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}?v=20260302e"></script>
     <script src="{{ url_for('static', filename='js/blog-viewer.js') }}"></script>
+
+    <!-- SmartLink Exit Intent -->
+    <script>
+        let exitIntentTriggered = false;
+        
+        document.addEventListener('mouseleave', function(e) {
+            if (e.clientY <= 0 && !exitIntentTriggered) {
+                exitIntentTriggered = true;
+                // Open SmartLink in new tab
+                window.open('https://rm358.com/4/106/8420?var=exit_intent', '_blank', 'noopener,noreferrer');
+            }
+        });
+        
+        // Mobile exit intent (back button)
+        let backButtonPressed = false;
+        window.addEventListener('popstate', function(e) {
+            if (!backButtonPressed) {
+                backButtonPressed = true;
+                window.open('https://rm358.com/4/106/8420?var=mobile_back', '_blank', 'noopener,noreferrer');
+            }
+        });
+        
+        // Push fake history state for mobile detection
+        history.pushState(null, null, location.href);
+    </script>
 </body>
 
 </html>
