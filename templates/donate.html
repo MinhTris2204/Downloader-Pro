@@ -689,11 +689,11 @@ function formatCurrency(num) {
     // If empty, return empty
     if (!numStr) return '';
     
-    // Add thousand separator (comma for Vietnamese format)
+    // Add thousand separator (comma for Vietnamese format) - NO VNĐ suffix
     const formatted = numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     
-    // Add VNĐ suffix
-    return formatted + ' VNĐ';
+    // Return only the formatted number, VNĐ will be shown by CSS
+    return formatted;
 }
 </script>
 {% endblock %}
