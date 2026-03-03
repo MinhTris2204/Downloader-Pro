@@ -178,7 +178,7 @@
 
 .custom-amount input {
     width: 100%;
-    padding: 14px 70px 14px 14px;
+    padding: 14px 100px 14px 14px;
     border: 2px solid #e0e0e0;
     border-radius: 10px;
     font-size: 16px;
@@ -188,6 +188,30 @@
 .custom-amount input:focus {
     outline: none;
     border-color: #3498db;
+}
+
+.custom-amount .clear-btn {
+    position: absolute;
+    right: 75px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #95a5a6;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.3s;
+    display: none;
+}
+
+.custom-amount .clear-btn:hover {
+    color: #e74c3c;
+    background: #f8f9fa;
+}
+
+.custom-amount input:not(:placeholder-shown) + .clear-btn {
+    display: block;
 }
 
 .custom-amount .currency {
@@ -416,7 +440,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('donateForm');
     const amountBtns = document.querySelectorAll('.amount-btn');
     const customAmountInput = document.getElementById('customAmount');
+    const clearAmountBtn = document.getElementById('clearAmountBtn');
     const submitBtn = document.getElementById('submitBtn');
+    
+    // Handle clear button click
+    clearAmountBtn.addEventListener('click', function() {
+        customAmountInput.value = '';
+        customAmountInput.focus();
+        // Reset to custom button active
+        amountBtns.forEach(b => b.classList.remove('active'));
+        const customBtn = document.querySelector('[data-amount="custom"]');
+        customBtn.classList.add('active');
+    });
     
     // Handle amount button clicks
     amountBtns.forEach(btn => {
@@ -452,11 +487,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Prevent non-numeric input completely
-    customAmountInput.addEventListener('keypress', function(e) {
-        // Only allow numbers, backspace, delete, arrow keys
-        const allowedKeys = ['0','1','2','3','4','5','6','7','8','9','Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
-        if (!allowedKeys.includes(e.key)) {
+    // Prevent non-numeric input but allow control keys
+    customAmountInput.addEventListener('keydown', function(e) {
+        // Allow: backspace, delete, tab, escape, enter, arrow keys
+        if ([8, 9, 27, 13, 37, 38, 39, 40, 46].indexOf(e.keyCode) !== -1 ||
+            // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+            return; // Let it happen, don't do anything
+        }
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
             e.preventDefault();
         }
     });
