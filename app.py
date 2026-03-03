@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, session
 from werkzeug.middleware.proxy_fix import ProxyFix
+from datetime import datetime
 import os
 import re
 import uuid
@@ -1913,8 +1914,7 @@ def api_recent_downloads():
         
         cursor.execute("""
             SELECT 
-                id, platform, format, quality, 
-                download_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' as download_time_vn,
+                id, platform, format, quality, download_time,
                 ip_address, country, city, device_type, os, browser,
                 is_mobile, is_tablet, is_pc, success
             FROM downloads
