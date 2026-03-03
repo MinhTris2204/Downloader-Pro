@@ -34,6 +34,12 @@
                                    name="amount" 
                                    placeholder="Ví dụ: 100,000 VNĐ"
                                    required>
+                            <button type="button" class="clear-btn" id="clearAmountBtn" title="Xóa">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
                             <span class="currency">VNĐ</span>
                         </div>
                     </div>
@@ -434,7 +440,6 @@
 }
 </style>
 
-<script src="{{ url_for('static', filename='js/translations.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('donateForm');
@@ -443,15 +448,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearAmountBtn = document.getElementById('clearAmountBtn');
     const submitBtn = document.getElementById('submitBtn');
     
-    // Handle clear button click
-    clearAmountBtn.addEventListener('click', function() {
-        customAmountInput.value = '';
-        customAmountInput.focus();
-        // Reset to custom button active
-        amountBtns.forEach(b => b.classList.remove('active'));
-        const customBtn = document.querySelector('[data-amount="custom"]');
-        customBtn.classList.add('active');
-    });
+    // Handle clear button click (if exists)
+    if (clearAmountBtn) {
+        clearAmountBtn.addEventListener('click', function() {
+            customAmountInput.value = '';
+            customAmountInput.focus();
+            // Reset to custom button active
+            amountBtns.forEach(b => b.classList.remove('active'));
+            const customBtn = document.querySelector('[data-amount="custom"]');
+            customBtn.classList.add('active');
+        });
+    }
     
     // Handle amount button clicks
     amountBtns.forEach(btn => {
