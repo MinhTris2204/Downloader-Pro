@@ -344,11 +344,11 @@ async function loadAnalytics() {
         if (platformsTable && data.platforms && data.platforms.length > 0) {
             const totalPlatform = data.platforms.reduce((sum, p) => sum + (p.count || 0), 0);
             platformsTable.innerHTML = data.platforms.map(p => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-weight: 600; color: #2c3e50;">${p.platform || 'Unknown'}</div>
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <div style="font-weight: 700; color: #e74c3c;">${(p.count || 0).toLocaleString()}</div>
-                        <div style="background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${totalPlatform > 0 ? (((p.count || 0) / totalPlatform) * 100).toFixed(1) : '0.0'}%</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: white; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); border-left: 4px solid #e74c3c;">
+                    <div style="font-weight: 600; color: #2c3e50; font-size: 15px;">${p.platform || 'Unknown'}</div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <div style="font-weight: 700; color: #e74c3c; font-size: 16px;">${(p.count || 0).toLocaleString()}</div>
+                        <div style="background: #e74c3c; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; min-width: 45px; text-align: center;">${totalPlatform > 0 ? (((p.count || 0) / totalPlatform) * 100).toFixed(1) : '0.0'}%</div>
                     </div>
                 </div>
             `).join('');
@@ -361,11 +361,11 @@ async function loadAnalytics() {
         if (formatsTable && data.formats && data.formats.length > 0) {
             const totalFormat = data.formats.reduce((sum, f) => sum + (f.count || 0), 0);
             formatsTable.innerHTML = data.formats.map(f => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-weight: 600; color: #2c3e50;">${f.format || 'Unknown'}</div>
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <div style="font-weight: 700; color: #27ae60;">${(f.count || 0).toLocaleString()}</div>
-                        <div style="background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${totalFormat > 0 ? (((f.count || 0) / totalFormat) * 100).toFixed(1) : '0.0'}%</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: white; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); border-left: 4px solid #27ae60;">
+                    <div style="font-weight: 600; color: #2c3e50; font-size: 15px;">${f.format || 'Unknown'}</div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <div style="font-weight: 700; color: #27ae60; font-size: 16px;">${(f.count || 0).toLocaleString()}</div>
+                        <div style="background: #27ae60; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; min-width: 45px; text-align: center;">${totalFormat > 0 ? (((f.count || 0) / totalFormat) * 100).toFixed(1) : '0.0'}%</div>
                     </div>
                 </div>
             `).join('');
@@ -373,36 +373,36 @@ async function loadAnalytics() {
             formatsTable.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</div>';
         }
         
-        // Daily stats with card grid
+        // Daily stats with simple vertical layout
         const dailyChart = document.getElementById('dailyChart');
         if (dailyChart) {
             if (data.daily_stats && data.daily_stats.length > 0) {
                 dailyChart.innerHTML = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto;">
                         ${data.daily_stats.map(d => `
-                            <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid #3498db;">
+                            <div style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #3498db;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="color: #2c3e50; margin: 0; font-size: 16px;">${formatDate(d.date)}</h4>
-                                    <div style="background: #3498db; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 18px;">
+                                    <h4 style="color: #2c3e50; margin: 0; font-size: 16px; font-weight: 600;">${formatDate(d.date)}</h4>
+                                    <div style="background: #3498db; color: white; padding: 8px 16px; border-radius: 25px; font-weight: 700; font-size: 18px;">
                                         ${(d.total || 0).toLocaleString()}
                                     </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                    <div style="text-align: center; padding: 10px; background: #fee; border-radius: 8px;">
-                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">YouTube</div>
+                                <div style="display: flex; justify-content: space-between; gap: 10px;">
+                                    <div style="flex: 1; text-align: center; padding: 12px; background: #ffebee; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">YouTube</div>
                                         <div style="font-weight: 700; color: #e74c3c; font-size: 16px;">${(d.youtube || 0).toLocaleString()}</div>
                                     </div>
-                                    <div style="text-align: center; padding: 10px; background: #f0f0f0; border-radius: 8px;">
-                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">TikTok</div>
+                                    <div style="flex: 1; text-align: center; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">TikTok</div>
                                         <div style="font-weight: 700; color: #000; font-size: 16px;">${(d.tiktok || 0).toLocaleString()}</div>
                                     </div>
-                                    <div style="text-align: center; padding: 10px; background: #e8f4fd; border-radius: 8px;">
-                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">📱 Mobile</div>
-                                        <div style="font-weight: 700; color: #17a2b8; font-size: 16px;">${(d.mobile || 0).toLocaleString()}</div>
+                                    <div style="flex: 1; text-align: center; padding: 12px; background: #e3f2fd; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">📱 Mobile</div>
+                                        <div style="font-weight: 700; color: #2196f3; font-size: 16px;">${(d.mobile || 0).toLocaleString()}</div>
                                     </div>
-                                    <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 8px;">
-                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">💻 Desktop</div>
-                                        <div style="font-weight: 700; color: #6c757d; font-size: 16px;">${(d.desktop || 0).toLocaleString()}</div>
+                                    <div style="flex: 1; text-align: center; padding: 12px; background: #fafafa; border-radius: 8px;">
+                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">💻 Desktop</div>
+                                        <div style="font-weight: 700; color: #757575; font-size: 16px;">${(d.desktop || 0).toLocaleString()}</div>
                                     </div>
                                 </div>
                             </div>
