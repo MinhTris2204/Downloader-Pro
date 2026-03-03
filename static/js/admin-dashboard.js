@@ -241,15 +241,25 @@ async function loadDownloadsHistory() {
         
         if (data.downloads && data.downloads.length > 0) {
             container.innerHTML = `
+                <div style="margin-bottom: 15px; padding: 10px; background: #e8f5e8; border-radius: 6px; font-size: 14px;">
+                    <i class="fas fa-info-circle" style="color: #28a745;"></i> 
+                    Hiển thị ${data.downloads.length} lượt tải gần nhất | 
+                    Cập nhật lúc: ${formatDateTime(data.timestamp)} |
+                    <button onclick="loadDownloadsHistory()" style="margin-left: 10px; padding: 4px 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-sync-alt"></i> Làm mới
+                    </button>
+                </div>
                 <table>
                     <thead>
                         <tr>
                             <th>Thời gian</th>
                             <th>Platform</th>
                             <th>Format</th>
+                            <th>Chất lượng</th>
                             <th>Quốc gia</th>
                             <th>Thành phố</th>
                             <th>Thiết bị</th>
+                            <th>OS</th>
                             <th>Trình duyệt</th>
                             <th>IP</th>
                             <th>Trạng thái</th>
@@ -258,28 +268,62 @@ async function loadDownloadsHistory() {
                     <tbody>
                         ${data.downloads.map(d => `
                             <tr>
-                                <td style="white-space: nowrap;">${formatDateTime(d.download_time)}</td>
-                                <td><span style="padding: 4px 8px; background: ${d.platform === 'youtube' ? '#ff0000' : '#000'}; color: white; border-radius: 4px; font-size: 11px;">${d.platform || 'N/A'}</span></td>
-                                <td>${d.format || 'N/A'}</td>
-                                <td>${d.country || 'Unknown'}</td>
-                                <td>${d.city || 'Unknown'}</td>
-                                <td>${getDeviceIcon(d)} ${d.device_type || 'Unknown'}</td>
-                                <td style="font-size: 12px;">${d.browser || 'Unknown'}</td>
-                                <td style="font-family: monospace; font-size: 12px;">${d.ip_address || 'N/A'}</td>
-                                <td>${d.success ? '<span style="color: #4caf50;">✓</span>' : '<span style="color: #f44336;">✗</span>'}</td>
+                                <td style="white-space: nowrap; font-size: 12px;">${formatDateTime(d.download_time)}</td>
+                                <td><span style="padding: 3px 6px; background: ${getPlatformColor(d.platform)}; color: white; border-radius: 3px; font-size: 10px; font-weight: bold;">${(d.platform || 'N/A').toUpperCase()}</span></td>
+                                <td><span style="padding: 2px 6px; background: #6c757d; color: white; border-radius: 3px; font-size: 10px;">${d.format || 'N/A'}</span></td>
+                                <td style="font-size: 12px;">${d.quality || 'N/A'}</td>
+                                <td style="font-size: 12px;">${getCountryDisplay(d.country)}</td>
+                                <td style="font-size: 12px;">${d.city || 'Unknown'}</td>
+                                <td style="font-size: 12px;">${getDeviceIcon(d)} ${d.device_type || 'Unknown'}</td>
+                                <td style="font-size: 11px;">${d.os || 'Unknown'}</td>
+                                <td style="font-size: 11px;">${d.browser || 'Unknown'}</td>
+                                <td style="font-family: monospace; font-size: 11px; color: #6c757d;">${d.ip_address || 'N/A'}</td>
+                                <td style="text-align: center;">${d.success ? '<span style="color: #28a745; font-size: 16px;">✓</span>' : '<span style="color: #dc3545; font-size: 16px;">✗</span>'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
                 </table>
             `;
         } else {
-            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</p>';
+            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu tải xuống</p>';
         }
         
     } catch (error) {
         console.error('Error loading downloads:', error);
-        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu</p>';
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu: ' + error.message + '</p>';
     }
+}
+
+// Helper function to get platform color
+function getPlatformColor(platform) {
+    const colors = {
+        'youtube': '#ff0000',
+        'tiktok': '#000000',
+        'instagram': '#e4405f',
+        'facebook': '#1877f2'
+    };
+    return colors[platform?.toLowerCase()] || '#6c757d';
+}
+
+// Helper function to display country with flag
+function getCountryDisplay(country) {
+    if (!country || country === 'Unknown') return 'Unknown';
+    
+    // Common country mappings
+    const countryFlags = {
+        'Vietnam': '🇻🇳 Vietnam',
+        'United States': '🇺🇸 United States', 
+        'China': '🇨🇳 China',
+        'Japan': '🇯🇵 Japan',
+        'South Korea': '🇰🇷 South Korea',
+        'Thailand': '🇹🇭 Thailand',
+        'Singapore': '🇸🇬 Singapore',
+        'Malaysia': '🇲🇾 Malaysia',
+        'Philippines': '🇵🇭 Philippines',
+        'Indonesia': '🇮🇩 Indonesia'
+    };
+    
+    return countryFlags[country] || country;
 }
 
 // Load analytics
@@ -368,14 +412,27 @@ function getDeviceIcon(download) {
 
 function formatDateTime(dateStr) {
     if (!dateStr) return 'N/A';
-    const date = new Date(dateStr);
-    return date.toLocaleString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    
+    try {
+        const date = new Date(dateStr);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        
+        // Format with Vietnam timezone
+        return date.toLocaleString('vi-VN', {
+            timeZone: 'Asia/Ho_Chi_Minh',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return 'Error';
+    }
 }
 
 function formatDate(dateStr) {
@@ -398,6 +455,8 @@ setInterval(() => {
         loadOverviewData();
     } else if (activeSection === 'tracking') {
         loadTrackingData();
+    } else if (activeSection === 'downloads') {
+        loadDownloadsHistory(); // Add auto refresh for downloads
     }
 }, 30000);
 

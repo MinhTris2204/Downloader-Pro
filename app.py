@@ -1913,7 +1913,8 @@ def api_recent_downloads():
         
         cursor.execute("""
             SELECT 
-                id, platform, format, quality, download_time,
+                id, platform, format, quality, 
+                download_time AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Ho_Chi_Minh' as download_time_vn,
                 ip_address, country, city, device_type, os, browser,
                 is_mobile, is_tablet, is_pc, success
             FROM downloads
@@ -1944,10 +1945,15 @@ def api_recent_downloads():
         cursor.close()
         db_pool.putconn(conn)
         
-        return jsonify({'downloads': downloads})
+        return jsonify({
+            'downloads': downloads,
+            'total': len(downloads),
+            'timestamp': datetime.now().isoformat()
+        })
         
     except Exception as e:
         print(f"[ERROR] Recent downloads failed: {e}")
+        return jsonify({'error': str(e)}), 500
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/admin/analytics/daily')
