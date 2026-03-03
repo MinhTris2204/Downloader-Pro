@@ -339,70 +339,78 @@ async function loadAnalytics() {
             throw new Error(data.error || 'Failed to load analytics data');
         }
         
-        // Platform distribution
+        // Platform distribution with cards
         const platformsTable = document.getElementById('platformsTable');
         if (platformsTable && data.platforms && data.platforms.length > 0) {
             const totalPlatform = data.platforms.reduce((sum, p) => sum + (p.count || 0), 0);
             platformsTable.innerHTML = data.platforms.map(p => `
-                <tr>
-                    <td><strong>${p.platform || 'Unknown'}</strong></td>
-                    <td style="text-align: right;">${(p.count || 0).toLocaleString()}</td>
-                    <td style="text-align: right;">${totalPlatform > 0 ? (((p.count || 0) / totalPlatform) * 100).toFixed(1) : '0.0'}%</td>
-                </tr>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="font-weight: 600; color: #2c3e50;">${p.platform || 'Unknown'}</div>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div style="font-weight: 700; color: #e74c3c;">${(p.count || 0).toLocaleString()}</div>
+                        <div style="background: #3498db; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${totalPlatform > 0 ? (((p.count || 0) / totalPlatform) * 100).toFixed(1) : '0.0'}%</div>
+                    </div>
+                </div>
             `).join('');
         } else if (platformsTable) {
-            platformsTable.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #7f8c8d;">Chưa có dữ liệu</td></tr>';
+            platformsTable.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</div>';
         }
         
-        // Format distribution
+        // Format distribution with cards
         const formatsTable = document.getElementById('formatsTable');
         if (formatsTable && data.formats && data.formats.length > 0) {
             const totalFormat = data.formats.reduce((sum, f) => sum + (f.count || 0), 0);
             formatsTable.innerHTML = data.formats.map(f => `
-                <tr>
-                    <td><strong>${f.format || 'Unknown'}</strong></td>
-                    <td style="text-align: right;">${(f.count || 0).toLocaleString()}</td>
-                    <td style="text-align: right;">${totalFormat > 0 ? (((f.count || 0) / totalFormat) * 100).toFixed(1) : '0.0'}%</td>
-                </tr>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="font-weight: 600; color: #2c3e50;">${f.format || 'Unknown'}</div>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div style="font-weight: 700; color: #27ae60;">${(f.count || 0).toLocaleString()}</div>
+                        <div style="background: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${totalFormat > 0 ? (((f.count || 0) / totalFormat) * 100).toFixed(1) : '0.0'}%</div>
+                    </div>
+                </div>
             `).join('');
         } else if (formatsTable) {
-            formatsTable.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #7f8c8d;">Chưa có dữ liệu</td></tr>';
+            formatsTable.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</div>';
         }
         
-        // Daily chart with better formatting
+        // Daily stats with card grid
         const dailyChart = document.getElementById('dailyChart');
         if (dailyChart) {
             if (data.daily_stats && data.daily_stats.length > 0) {
                 dailyChart.innerHTML = `
-                    <div style="overflow-x: auto; border-radius: 8px; border: 1px solid #dee2e6;">
-                        <table style="width: 100%; min-width: 700px; margin: 0; border-radius: 0;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 120px; text-align: center;">Ngày</th>
-                                    <th style="width: 80px; text-align: center;">Tổng</th>
-                                    <th style="width: 80px; text-align: center;">YouTube</th>
-                                    <th style="width: 80px; text-align: center;">TikTok</th>
-                                    <th style="width: 80px; text-align: center;">Mobile</th>
-                                    <th style="width: 80px; text-align: center;">Desktop</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${data.daily_stats.map((d, index) => `
-                                    <tr style="border-bottom: 1px solid #e9ecef; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
-                                        <td style="text-align: center; font-weight: 600; background: #f1f3f4;">${formatDate(d.date)}</td>
-                                        <td style="text-align: center; font-weight: bold; color: #2c3e50;">${(d.total || 0).toLocaleString()}</td>
-                                        <td style="text-align: center; color: #e74c3c; font-weight: 600;">${(d.youtube || 0).toLocaleString()}</td>
-                                        <td style="text-align: center; color: #000; font-weight: 600;">${(d.tiktok || 0).toLocaleString()}</td>
-                                        <td style="text-align: center; color: #17a2b8; font-weight: 600;">${(d.mobile || 0).toLocaleString()}</td>
-                                        <td style="text-align: center; color: #6c757d; font-weight: 600;">${(d.desktop || 0).toLocaleString()}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                        ${data.daily_stats.map(d => `
+                            <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 4px solid #3498db;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="color: #2c3e50; margin: 0; font-size: 16px;">${formatDate(d.date)}</h4>
+                                    <div style="background: #3498db; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 18px;">
+                                        ${(d.total || 0).toLocaleString()}
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div style="text-align: center; padding: 10px; background: #fee; border-radius: 8px;">
+                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">YouTube</div>
+                                        <div style="font-weight: 700; color: #e74c3c; font-size: 16px;">${(d.youtube || 0).toLocaleString()}</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px; background: #f0f0f0; border-radius: 8px;">
+                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">TikTok</div>
+                                        <div style="font-weight: 700; color: #000; font-size: 16px;">${(d.tiktok || 0).toLocaleString()}</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px; background: #e8f4fd; border-radius: 8px;">
+                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">📱 Mobile</div>
+                                        <div style="font-weight: 700; color: #17a2b8; font-size: 16px;">${(d.mobile || 0).toLocaleString()}</div>
+                                    </div>
+                                    <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">💻 Desktop</div>
+                                        <div style="font-weight: 700; color: #6c757d; font-size: 16px;">${(d.desktop || 0).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 `;
             } else {
-                dailyChart.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu thống kê</p>';
+                dailyChart.innerHTML = '<div style="text-align: center; padding: 60px; color: #7f8c8d; background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i><br>Chưa có dữ liệu thống kê</div>';
             }
         }
         
@@ -411,8 +419,8 @@ async function loadAnalytics() {
     } catch (error) {
         console.error('Error loading analytics:', error);
         
-        // Show error in all tables
-        const errorMessage = '<tr><td colspan="3" style="text-align: center; color: #e74c3c; padding: 20px;">Lỗi tải dữ liệu: ' + error.message + '</td></tr>';
+        // Show error in all containers
+        const errorMessage = `<div style="text-align: center; padding: 40px; color: #e74c3c; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i><br>Lỗi tải dữ liệu: ${error.message}</div>`;
         
         const platformsTable = document.getElementById('platformsTable');
         if (platformsTable) platformsTable.innerHTML = errorMessage;
@@ -421,7 +429,7 @@ async function loadAnalytics() {
         if (formatsTable) formatsTable.innerHTML = errorMessage;
         
         const dailyChart = document.getElementById('dailyChart');
-        if (dailyChart) dailyChart.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu: ' + error.message + '</p>';
+        if (dailyChart) dailyChart.innerHTML = errorMessage;
         
         if (loadingElement) loadingElement.style.display = 'none';
     }
