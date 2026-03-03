@@ -110,7 +110,14 @@ function showDonationPromo() {
     
     // Format number with commas (VD: 50000 -> 50,000 VNĐ)
     function formatCurrency(num) {
-        const formatted = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        // Convert to string and remove any existing formatting (including VNĐ)
+        const numStr = num.toString().replace(/[^\d]/g, '');
+        
+        // If empty, return empty
+        if (!numStr) return '';
+        
+        // Add thousand separator
+        const formatted = numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         return formatted + ' VNĐ';
     }
     

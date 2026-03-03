@@ -683,8 +683,11 @@ function escapeHtml(text) {
 }
 
 function formatCurrency(num) {
-    // Convert to string and remove any existing formatting
+    // Convert to string and remove any existing formatting (including VNĐ)
     const numStr = num.toString().replace(/[^\d]/g, '');
+    
+    // If empty, return empty
+    if (!numStr) return '';
     
     // Add thousand separator (comma for Vietnamese format)
     const formatted = numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
