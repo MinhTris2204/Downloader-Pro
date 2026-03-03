@@ -374,27 +374,27 @@ async function loadAnalytics() {
         if (dailyChart) {
             if (data.daily_stats && data.daily_stats.length > 0) {
                 dailyChart.innerHTML = `
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; min-width: 600px;">
+                    <div style="overflow-x: auto; border-radius: 8px; border: 1px solid #dee2e6;">
+                        <table style="width: 100%; min-width: 700px; margin: 0; border-radius: 0;">
                             <thead>
-                                <tr style="background: #f8f9fa;">
-                                    <th style="padding: 12px; text-align: left;">Ngày</th>
-                                    <th style="padding: 12px; text-align: right;">Tổng</th>
-                                    <th style="padding: 12px; text-align: right;">YouTube</th>
-                                    <th style="padding: 12px; text-align: right;">TikTok</th>
-                                    <th style="padding: 12px; text-align: right;">Mobile</th>
-                                    <th style="padding: 12px; text-align: right;">Desktop</th>
+                                <tr>
+                                    <th style="width: 120px; text-align: center;">Ngày</th>
+                                    <th style="width: 80px; text-align: center;">Tổng</th>
+                                    <th style="width: 80px; text-align: center;">YouTube</th>
+                                    <th style="width: 80px; text-align: center;">TikTok</th>
+                                    <th style="width: 80px; text-align: center;">Mobile</th>
+                                    <th style="width: 80px; text-align: center;">Desktop</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.daily_stats.map(d => `
-                                    <tr style="border-bottom: 1px solid #e9ecef;">
-                                        <td style="padding: 10px; font-weight: 600;">${formatDate(d.date)}</td>
-                                        <td style="padding: 10px; text-align: right; font-weight: bold; color: #2c3e50;">${(d.total || 0).toLocaleString()}</td>
-                                        <td style="padding: 10px; text-align: right; color: #e74c3c;">${(d.youtube || 0).toLocaleString()}</td>
-                                        <td style="padding: 10px; text-align: right; color: #000;">${(d.tiktok || 0).toLocaleString()}</td>
-                                        <td style="padding: 10px; text-align: right; color: #17a2b8;">${(d.mobile || 0).toLocaleString()}</td>
-                                        <td style="padding: 10px; text-align: right; color: #6c757d;">${(d.desktop || 0).toLocaleString()}</td>
+                                ${data.daily_stats.map((d, index) => `
+                                    <tr style="border-bottom: 1px solid #e9ecef; ${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                                        <td style="text-align: center; font-weight: 600; background: #f1f3f4;">${formatDate(d.date)}</td>
+                                        <td style="text-align: center; font-weight: bold; color: #2c3e50;">${(d.total || 0).toLocaleString()}</td>
+                                        <td style="text-align: center; color: #e74c3c; font-weight: 600;">${(d.youtube || 0).toLocaleString()}</td>
+                                        <td style="text-align: center; color: #000; font-weight: 600;">${(d.tiktok || 0).toLocaleString()}</td>
+                                        <td style="text-align: center; color: #17a2b8; font-weight: 600;">${(d.mobile || 0).toLocaleString()}</td>
+                                        <td style="text-align: center; color: #6c757d; font-weight: 600;">${(d.desktop || 0).toLocaleString()}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>

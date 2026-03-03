@@ -182,20 +182,61 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         th, td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
         }
         th {
             background: #f8f9fa;
             color: #2c3e50;
             font-weight: 600;
             font-size: 14px;
+            white-space: nowrap;
         }
         tr:hover {
             background: #f8f9fa;
+        }
+        
+        /* Analytics specific table styling */
+        #dailyChart table {
+            margin: 0;
+            border: 1px solid #dee2e6;
+        }
+        #dailyChart th {
+            background: #e9ecef;
+            font-weight: 700;
+            text-align: center;
+            padding: 12px 8px;
+            font-size: 13px;
+        }
+        #dailyChart td {
+            padding: 10px 8px;
+            font-size: 13px;
+            border-right: 1px solid #dee2e6;
+        }
+        #dailyChart td:first-child {
+            font-weight: 600;
+            background: #f8f9fa;
+        }
+        #dailyChart td:last-child {
+            border-right: none;
+        }
+        
+        /* Platform and Format tables */
+        #platformsTable td, #formatsTable td {
+            padding: 12px 15px;
+        }
+        #platformsTable td:nth-child(2), #platformsTable td:nth-child(3),
+        #formatsTable td:nth-child(2), #formatsTable td:nth-child(3) {
+            text-align: right;
+            font-weight: 600;
         }
         
         /* Charts */
