@@ -1676,6 +1676,10 @@ def api_news_proxy():
 def robots():
     return app.send_static_file('robots.txt')
 
+@app.route('/sw-check-permissions-c6f62.js')
+def propush_service_worker():
+    return app.send_static_file('sw-check-permissions-c6f62.js')
+
 @app.route('/favicon.ico')
 def favicon():
     return app.send_static_file('favicon.svg')
