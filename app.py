@@ -247,6 +247,7 @@ def init_db():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
+        # Chỉ tạo các bảng cần thiết
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS downloads (
                 id SERIAL PRIMARY KEY,
@@ -300,75 +301,26 @@ def init_db():
             )
         """)
         
-        # Create donation_messages table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS donation_messages (
-                id SERIAL PRIMARY KEY,
-                order_code VARCHAR(50) UNIQUE NOT NULL,
-                donor_name VARCHAR(100) DEFAULT 'Anonymous',
-                message TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_approved BOOLEAN DEFAULT TRUE,
-                FOREIGN KEY (order_code) REFERENCES donations(order_code) ON DELETE CASCADE
-            )
-        """)
+        print("[INFO] Essential tables created/verified")
         
-        # Create user_downloads table for tracking free downloads
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS user_downloads (
-                id SERIAL PRIMARY KEY,
-                user_id VARCHAR(64) NOT NULL,
-                platform VARCHAR(20) NOT NULL,
-                download_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
+        # CLEANUP: Xóa các bảng không cần thiết
+        tables_to_drop = [
+            'donation_messages',
+            'email_verifications',
+            'page_visits',
+            'user_downloads',
+            'users',
+            'download_history',
+            'premium_users'
+        ]
         
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_user_downloads_user_time 
-            ON user_downloads(user_id, download_time)
-        """)
-        
-        # Create page_visits table for real-time statistics
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS page_visits (
-                id SERIAL PRIMARY KEY,
-                ip_address VARCHAR(45) NOT NULL,
-                user_agent TEXT,
-                page_url VARCHAR(500),
-                referrer VARCHAR(500),
-                visit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                session_id VARCHAR(64),
-                country VARCHAR(100),
-                city VARCHAR(100),
-                device_type VARCHAR(50),
-                browser VARCHAR(100),
-                is_mobile BOOLEAN DEFAULT FALSE
-            )
-        """)
-        
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_page_visits_time 
-            ON page_visits(visit_time)
-        """)
-        
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_page_visits_ip_time 
-            ON page_visits(ip_address, visit_time)
-        """)
-        
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_page_visits_session 
-            ON page_visits(session_id, visit_time)
-        """)
-        
-        print("[INFO] Donations and donation_messages tables created/verified")
-        
-        # CLEANUP: Remove old premium_users table (no longer needed)
-        try:
-            cursor.execute("DROP TABLE IF EXISTS premium_users CASCADE")
-            print("[CLEANUP] Removed old premium_users table")
-        except Exception as e:
-            print(f"[WARNING] Could not remove premium_users table: {e}")
+        for table in tables_to_drop:
+            try:
+                cursor.execute(f"DROP TABLE IF EXISTS {table} CASCADE")
+                print(f"[CLEANUP] Dropped unused table: {table}")
+            except Exception as e:
+                print(f"[WARNING] Could not drop {table}: {e}")
+                conn.rollback()
         
         # Initialize stats if empty
         cursor.execute("SELECT COUNT(*) FROM stats")
@@ -417,58 +369,7 @@ def init_db():
 # Stats file path (fallback)
 STATS_FILE = 'stats.json'
 
-def record_page_visit():
-    """Ghi nhận lượt truy cập trang thực tế"""
-    if not db_pool:
-        return
-    
-    try:
-        # Lấy thông tin tracking
-        tracking_info = get_full_tracking_info()
-        
-        # Tạo session ID từ IP + User Agent
-        import hashlib
-        session_data = f"{tracking_info.get('ip_address', 'unknown')}_{tracking_info.get('user_agent', 'unknown')}"
-        session_id = hashlib.md5(session_data.encode()).hexdigest()
-        
-        conn = db_pool.getconn()
-        cursor = conn.cursor()
-        
-        # Kiểm tra xem đã có visit trong 30 phút qua chưa (tránh spam)
-        cursor.execute("""
-            SELECT id FROM page_visits 
-            WHERE session_id = %s AND visit_time >= NOW() - INTERVAL '30 minutes'
-            LIMIT 1
-        """, (session_id,))
-        
-        if not cursor.fetchone():
-            # Ghi nhận visit mới
-            cursor.execute("""
-                INSERT INTO page_visits (
-                    ip_address, user_agent, page_url, referrer, session_id,
-                    country, city, device_type, browser, is_mobile
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                tracking_info.get('ip_address'),
-                tracking_info.get('user_agent'),
-                request.url,
-                request.referrer,
-                session_id,
-                tracking_info.get('country'),
-                tracking_info.get('city'),
-                tracking_info.get('device_type'),
-                tracking_info.get('browser'),
-                tracking_info.get('is_mobile', False)
-            ))
-            
-            conn.commit()
-            print(f"[INFO] Recorded page visit from {tracking_info.get('ip_address')}")
-        
-        cursor.close()
-        db_pool.putconn(conn)
-        
-    except Exception as e:
-        print(f"[ERROR] Failed to record page visit: {e}")
+# Removed record_page_visit() function - page_visits table no longer needed
 
 def get_stats():
     """Get total downloads from DB or fallback to JSON"""
@@ -645,12 +546,7 @@ def before_request():
             url = request.url.replace('http://', 'https://', 1)
             return redirect(url, code=301)
     
-    # Record page visit for statistics (chỉ cho GET requests và không phải API)
-    if request.method == 'GET' and not request.path.startswith('/api/') and not request.path.startswith('/static/'):
-        try:
-            record_page_visit()
-        except Exception as e:
-            print(f"[ERROR] Failed to record visit: {e}")
+    # Record page visit removed - no longer tracking page visits
 
 # Helper function to extract images (Shared logic)
 def extract_tiktok_images_direct(url):
