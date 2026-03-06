@@ -308,13 +308,35 @@ def forgot_password_page():
 @auth_bp.route('/account')
 def account_page():
     """Trang tài khoản"""
-    user = get_current_user()
-    if not user:
-        return redirect('/login')
-    
-    premium_info = get_user_premium_info(user['id'])
-    google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
-    return render_template('auth/account.html', user=user, premium_info=premium_info, google_client_id=google_client_id)
+    try:
+        user = get_current_user()
+        if not user:
+            return redirect('/login')
+        
+        print(f"[ACCOUNT] Loading account page for user: {user.get('username')}")
+        
+        premium_info = get_user_premium_info(user['id'])
+        
+        # Ensure premium_info is always a dict
+        if not premium_info:
+            premium_info = {
+                'is_premium': False,
+                'premium_expires': None,
+                'premium_days_left': 0,
+                'downloads_this_month': 0,
+                'free_downloads_left': 2,
+                'max_free_downloads': 2
+            }
+        
+        print(f"[ACCOUNT] Premium info: {premium_info}")
+        
+        google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
+        return render_template('auth/account.html', user=user, premium_info=premium_info, google_client_id=google_client_id)
+    except Exception as e:
+        print(f"[ACCOUNT ERROR] Failed to load account page: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Error loading account page: {str(e)}", 500
 
 
 # ===== AUTH API =====
