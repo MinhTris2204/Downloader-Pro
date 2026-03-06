@@ -56,37 +56,43 @@ def _send_email_task(email, otp, purpose):
         if purpose == 'verify':
             subject = '🔐 Mã xác thực OTP - Downloader Pro'
             body = f"""
-            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px; border-radius: 16px; color: #fff;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #818cf8; margin: 0; font-size: 28px;">⬇️ Downloader Pro</h1>
-                    <p style="color: #94a3b8; margin-top: 8px;">Xác thực tài khoản</p>
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div style="background-color: #f8fafc; padding: 30px; border-bottom: 3px solid #3b82f6; text-align: center;">
+                    <h1 style="color: #1e293b; margin: 0; font-size: 24px; font-weight: 800;">⬇️ Downloader Pro</h1>
+                    <p style="color: #64748b; margin-top: 8px; font-size: 14px;">Xác thực tài khoản của bạn</p>
                 </div>
-                <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; text-align: center;">
-                    <p style="color: #e2e8f0; font-size: 16px; margin-bottom: 20px;">Mã OTP xác thực của bạn là:</p>
-                    <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 20px 40px; border-radius: 12px; display: inline-block;">
-                        <span style="font-size: 36px; font-weight: 800; letter-spacing: 12px; color: #fff;">{otp}</span>
+                <div style="padding: 40px; text-align: center;">
+                    <p style="color: #334155; font-size: 16px; margin-bottom: 25px;">Chào bạn, mã xác thực OTP của bạn là:</p>
+                    <div style="background-color: #f1f5f9; padding: 20px 40px; border-radius: 8px; display: inline-block; border: 1px dashed #3b82f6;">
+                        <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #2563eb;">{otp}</span>
                     </div>
-                    <p style="color: #94a3b8; font-size: 14px; margin-top: 20px;">⏱️ Mã có hiệu lực trong <strong style="color: #fbbf24;">5 phút</strong></p>
+                    <p style="color: #94a3b8; font-size: 14px; margin-top: 25px;">⏱️ Mã này có hiệu lực trong <strong style="color: #1e293b;">5 phút</strong>.</p>
                 </div>
-                <p style="color: #64748b; font-size: 12px; text-align: center; margin-top: 20px;">Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email.</p>
+                <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="color: #64748b; font-size: 12px; margin: 0;">Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email.</p>
+                    <p style="color: #94a3b8; font-size: 11px; margin-top: 5px;">&copy; 2026 Downloader Pro Team</p>
+                </div>
             </div>
             """
         else:
             subject = '🔑 Đặt lại mật khẩu - Downloader Pro'
             body = f"""
-            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 500px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 40px; border-radius: 16px; color: #fff;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #818cf8; margin: 0; font-size: 28px;">⬇️ Downloader Pro</h1>
-                    <p style="color: #94a3b8; margin-top: 8px;">Đặt lại mật khẩu</p>
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div style="background-color: #f8fafc; padding: 30px; border-bottom: 3px solid #0f172a; text-align: center;">
+                    <h1 style="color: #1e293b; margin: 0; font-size: 24px; font-weight: 800;">⬇️ Downloader Pro</h1>
+                    <p style="color: #64748b; margin-top: 8px; font-size: 14px;">Yêu cầu đặt lại mật khẩu</p>
                 </div>
-                <div style="background: rgba(255,255,255,0.05); padding: 30px; border-radius: 12px; text-align: center;">
-                    <p style="color: #e2e8f0; font-size: 16px; margin-bottom: 20px;">Mã OTP để đặt lại mật khẩu:</p>
-                    <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 20px 40px; border-radius: 12px; display: inline-block;">
-                        <span style="font-size: 36px; font-weight: 800; letter-spacing: 12px; color: #fff;">{otp}</span>
+                <div style="padding: 40px; text-align: center;">
+                    <p style="color: #334155; font-size: 16px; margin-bottom: 25px;">Mã OTP để đặt lại mật khẩu của bạn là:</p>
+                    <div style="background-color: #f1f5f9; padding: 20px 40px; border-radius: 8px; display: inline-block; border: 1px dashed #0f172a;">
+                        <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0f172a;">{otp}</span>
                     </div>
-                    <p style="color: #94a3b8; font-size: 14px; margin-top: 20px;">⏱️ Mã có hiệu lực trong <strong style="color: #fbbf24;">5 phút</strong></p>
+                    <p style="color: #94a3b8; font-size: 14px; margin-top: 25px;">⏱️ Mã này có hiệu lực trong <strong style="color: #1e293b;">5 phút</strong>.</p>
                 </div>
-                <p style="color: #64748b; font-size: 12px; text-align: center; margin-top: 20px;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+                <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="color: #64748b; font-size: 12px; margin: 0;">Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
+                    <p style="color: #94a3b8; font-size: 11px; margin-top: 5px;">&copy; 2026 Downloader Pro Team</p>
+                </div>
             </div>
             """
         

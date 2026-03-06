@@ -6,6 +6,9 @@ const translations = {
         nav_news: 'Tin tức',
         nav_blog: 'Blog',
         nav_mode: 'Chế độ',
+        nav_account: 'Tài khoản',
+        nav_login: 'Đăng nhập',
+        nav_logout: 'Đăng xuất',
         lang_name: 'Tiếng Việt',
         donate_header: 'Ủng hộ chúng tôi',
         
@@ -195,6 +198,9 @@ const translations = {
         nav_news: 'News',
         nav_blog: 'Blog',
         nav_mode: 'Mode',
+        nav_account: 'Account',
+        nav_login: 'Login',
+        nav_logout: 'Logout',
         lang_name: 'English',
         donate_header: 'Donate',
         
@@ -384,6 +390,9 @@ const translations = {
         nav_news: 'Новости',
         nav_blog: 'Блог',
         nav_mode: 'Режим',
+        nav_account: 'Аккаунт',
+        nav_login: 'Вход',
+        nav_logout: 'Выход',
         lang_name: 'Русский',
         donate_header: 'Поддержать',
         
