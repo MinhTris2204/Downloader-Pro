@@ -22,8 +22,8 @@
                 </svg>
                 <span>Downloader Pro</span>
             </a>
-            <h1>Đăng Nhập</h1>
-            <p>Chào mừng bạn quay lại với chúng tôi!</p>
+            <h1 data-i18n="auth_login_title">Đăng Nhập</h1>
+            <p data-i18n="auth_login_welcome">Chào mừng bạn quay lại với chúng tôi!</p>
         </div>
 
         <!-- Login Form -->
@@ -35,9 +35,9 @@
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    Tài khoản hoặc Email
+                    <span data-i18n="auth_login_id">Tài khoản hoặc Email</span>
                 </label>
-                <input type="text" id="login_id" name="login_id" placeholder="Nhập username hoặc email" required autocomplete="username">
+                <input type="text" id="login_id" name="login_id" data-i18n-placeholder="auth_login_id_placeholder" placeholder="Nhập username hoặc email" required autocomplete="username">
             </div>
             <div class="form-group">
                 <label for="password">
@@ -46,10 +46,10 @@
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
-                    Mật khẩu
+                    <span data-i18n="auth_password">Mật khẩu</span>
                 </label>
                 <div class="password-wrapper">
-                    <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+                    <input type="password" id="password" name="password" data-i18n-placeholder="auth_password_placeholder" placeholder="Nhập mật khẩu" required autocomplete="current-password">
                     <button type="button" class="toggle-password" onclick="togglePassword('password')">
                         <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -64,14 +64,14 @@
             </div>
             
             <div class="form-actions-row">
-                <a href="/forgot-password" class="forgot-link">Quên mật khẩu?</a>
+                <a href="/forgot-password" class="forgot-link" data-i18n="auth_forgot_password">Quên mật khẩu?</a>
             </div>
 
             <button type="submit" class="auth-btn" id="loginBtn" onclick="handleLogin()">
-                <span class="btn-text">Đăng Nhập</span>
+                <span class="btn-text" data-i18n="auth_btn_login">Đăng Nhập</span>
                 <span class="btn-loading" style="display:none;">
                     <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle></svg>
-                    Đang xử lý...
+                    <span data-i18n="auth_processing">Đang xử lý...</span>
                 </span>
             </button>
             
@@ -82,28 +82,28 @@
         <form id="otpForm" class="auth-form" style="display:none;" onsubmit="return false;">
             <div class="otp-info">
                 <div class="otp-icon">📧</div>
-                <p>Mã OTP đã được gửi đến email:</p>
+                <p data-i18n="auth_otp_sent">Mã OTP đã được gửi đến email:</p>
                 <span class="otp-email" id="otpEmail"></span>
             </div>
             <div class="form-group">
-                <label for="otp_code">Nhập mã OTP (6 chữ số)</label>
+                <label for="otp_code" data-i18n="auth_otp_enter">Nhập mã OTP (6 chữ số)</label>
                 <input type="text" id="otp_code" name="otp_code" placeholder="000000" maxlength="6" 
                     pattern="[0-9]{6}" inputmode="numeric" class="otp-input" autocomplete="one-time-code">
             </div>
             <button type="submit" class="auth-btn" onclick="handleVerifyOTP()">
-                <span class="btn-text">Xác Thực Email</span>
+                <span class="btn-text" data-i18n="auth_btn_verify_email">Xác Thực Email</span>
                 <span class="btn-loading" style="display:none;">
                     <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle></svg>
                 </span>
             </button>
             <button type="button" class="resend-btn" id="resendBtn" onclick="handleResendOTP()">
-                Gửi lại mã OTP (<span id="resendCountdown">60</span>s)
+                <span data-i18n="auth_resend_otp">Gửi lại mã OTP</span> (<span id="resendCountdown">60</span>s)
             </button>
             <div class="auth-error" id="otpError" style="display:none;"></div>
         </form>
 
         <div class="auth-divider">
-            <span>Hoặc đăng nhập với</span>
+            <span data-i18n="auth_or_continue">Hoặc đăng nhập với</span>
         </div>
 
         {% if google_client_id %}
@@ -125,7 +125,7 @@
         {% endif %}
 
         <div class="auth-footer">
-            <p>Bạn chưa có tài khoản? <a href="/register">Tạo tài khoản mới</a></p>
+            <p><span data-i18n="auth_no_account">Bạn chưa có tài khoản?</span> <a href="/register" data-i18n="auth_create_account">Tạo tài khoản mới</a></p>
         </div>
     </div>
 </div>

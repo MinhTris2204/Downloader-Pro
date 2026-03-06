@@ -459,12 +459,12 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
-                        Thông tin Premium
+                        <span data-i18n="account_premium_status">Thông tin Premium</span>
                     </div>
 
                     <div class="info-row">
                         <div class="info-label">
-                            📅 Ngày hết hạn
+                            <span>📅</span> <span data-i18n="account_premium_expires">Ngày hết hạn</span>
                         </div>
                         <div class="info-value">
                             {{ premium_info.premium_expires[:10] if premium_info.premium_expires else 'Vô thời hạn' }}
@@ -473,42 +473,42 @@
 
                     <div class="info-row">
                         <div class="info-label">
-                            ⏰ Thời gian còn lại
+                            <span>⏰</span> <span data-i18n="account_days_left">Thời gian còn lại</span>
                         </div>
                         <div class="info-value warning">
-                            {{ premium_info.premium_days_left }} ngày
+                            {{ premium_info.premium_days_left }} <span data-i18n="account_days">ngày</span>
                         </div>
                     </div>
 
                     <div class="info-row">
                         <div class="info-label">
-                            📥 Lượt tải tháng này
+                            <span>📥</span> <span data-i18n="account_downloads_month">Lượt tải tháng này</span>
                         </div>
                         <div class="info-value success">
-                            ♾️ Không giới hạn
+                            <span>♾️</span> <span data-i18n="account_downloads_unlimited">Không giới hạn</span>
                         </div>
                     </div>
 
                     <div class="info-row">
                         <div class="info-label">
-                            🚀 Tốc độ tải
+                            <span>🚀</span> <span data-i18n="account_speed">Tốc độ tải</span>
                         </div>
                         <div class="info-value success">
-                            Tối đa (Ưu tiên)
+                            <span data-i18n="account_speed_max">Tối đa (Ưu tiên)</span>
                         </div>
                     </div>
 
                     <div class="info-row">
                         <div class="info-label">
-                            🚫 Quảng cáo
+                            <span>🚫</span> <span data-i18n="account_ads">Quảng cáo</span>
                         </div>
                         <div class="info-value success">
-                            Đã tắt hoàn toàn
+                            <span data-i18n="account_ads_off">Đã tắt hoàn toàn</span>
                         </div>
                     </div>
 
                     <button class="btn-secondary" onclick="showPremiumPurchase()" style="margin-top: 20px;">
-                        🔄 Gia hạn thêm Premium
+                        <span>🔄</span> <span data-i18n="account_renew_premium">Gia hạn thêm Premium</span>
                     </button>
                 </div>
                 {% else %}
@@ -519,17 +519,17 @@
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M12 6v6l4 2"></path>
                         </svg>
-                        Giới hạn tải xuống
+                        <span data-i18n="account_download_limit">Giới hạn tải xuống</span>
                     </div>
 
                     <div class="progress-container">
                         <div class="progress-label">
-                            <span>Đã sử dụng: {{ premium_info.downloads_this_month or 0 }}/2 lượt</span>
+                            <span><span data-i18n="account_used">Đã sử dụng</span>: {{ premium_info.downloads_this_month or 0 }}/2 <span data-i18n="account_times">lượt</span></span>
                             <span style="font-weight: 700; color: #3b82f6;">
                                 {% if premium_info and premium_info.free_downloads_left|int > 0 %}
-                                    Còn {{ premium_info.free_downloads_left }} lượt
+                                    <span data-i18n="account_remaining">Còn</span> {{ premium_info.free_downloads_left }} <span data-i18n="account_times">lượt</span>
                                 {% else %}
-                                    Đã hết lượt
+                                    <span data-i18n="account_no_downloads">Đã hết lượt</span>
                                 {% endif %}
                             </span>
                         </div>
@@ -540,28 +540,28 @@
 
                     <div class="info-row">
                         <div class="info-label">
-                            📅 Làm mới vào
+                            <span>📅</span> <span data-i18n="account_refresh_date">Làm mới vào</span>
                         </div>
                         <div class="info-value">
-                            Đầu tháng sau
+                            <span data-i18n="account_next_month">Đầu tháng sau</span>
                         </div>
                     </div>
 
                     <div class="info-row">
                         <div class="info-label">
-                            🚀 Tốc độ tải
+                            <span>🚀</span> <span data-i18n="account_speed">Tốc độ tải</span>
                         </div>
                         <div class="info-value">
-                            Tiêu chuẩn
+                            <span data-i18n="account_speed_standard">Tiêu chuẩn</span>
                         </div>
                     </div>
 
                     <div class="info-row">
                         <div class="info-label">
-                            📺 Quảng cáo
+                            <span>📺</span> <span data-i18n="account_ads">Quảng cáo</span>
                         </div>
                         <div class="info-value">
-                            Có hiển thị
+                            <span data-i18n="account_ads_shown">Có hiển thị</span>
                         </div>
                     </div>
                 </div>
@@ -569,19 +569,19 @@
                 <!-- Premium Benefits -->
                 <div class="account-card" style="margin-top: 24px;">
                     <div class="card-title">
-                        💎 Đặc quyền Premium
+                        <span>💎</span> <span data-i18n="account_premium_benefits">Đặc quyền Premium</span>
                     </div>
                     
                     <ul class="benefits-list">
-                        <li>Tải video không giới hạn mỗi tháng</li>
-                        <li>Không có quảng cáo làm phiền</li>
-                        <li>Tốc độ tải tối đa, ưu tiên xử lý</li>
-                        <li>Hỗ trợ chúng tôi duy trì hệ thống</li>
-                        <li>Truy cập sớm các tính năng mới</li>
+                        <li><span data-i18n="account_benefit_unlimited">Tải video không giới hạn mỗi tháng</span></li>
+                        <li><span data-i18n="account_benefit_no_ads">Không có quảng cáo làm phiền</span></li>
+                        <li><span data-i18n="account_benefit_priority">Tốc độ tải tối đa, ưu tiên xử lý</span></li>
+                        <li><span data-i18n="account_benefit_support">Hỗ trợ chúng tôi duy trì hệ thống</span></li>
+                        <li><span data-i18n="account_benefit_features">Truy cập sớm các tính năng mới</span></li>
                     </ul>
 
                     <button class="btn-primary" onclick="showPremiumPurchase()">
-                        👑 Nâng cấp Premium ngay
+                        <span>👑</span> <span data-i18n="account_upgrade_premium">Nâng cấp Premium ngay</span>
                     </button>
                 </div>
                 {% endif %}
@@ -591,9 +591,9 @@
         <!-- Premium Purchase Section -->
         <div class="account-card premium-purchase" id="premiumPurchaseSection" style="display:none;">
             <div class="card-title">
-                💳 Thanh toán Premium
+                <span>💳</span> <span data-i18n="account_payment_title">Thanh toán Premium</span>
             </div>
-            <p style="color: #64748b; margin-bottom: 20px;">
+            <p style="color: #64748b; margin-bottom: 20px;" data-i18n="account_payment_subtitle">
                 Ủng hộ bất kỳ số tiền nào để nhận ngay 30 ngày Premium đặc quyền
             </p>
 
@@ -605,7 +605,7 @@
                     20,000 VNĐ
                 </div>
                 <div class="amount-option popular" onclick="selectAmount(50000)">
-                    <span class="popular-tag">PHỔ BIẾN</span>
+                    <span class="popular-tag" data-i18n="account_amount_popular">PHỔ BIẾN</span>
                     50,000 VNĐ
                 </div>
                 <div class="amount-option" onclick="selectAmount(100000)">
@@ -616,11 +616,12 @@
             <input type="text" 
                    id="customAmount" 
                    class="custom-input" 
+                   data-i18n-placeholder="account_amount_custom"
                    placeholder="Hoặc nhập số tiền khác (tối thiểu 5,000 VNĐ)" 
                    oninput="formatCurrency(this)">
 
             <button class="btn-primary" id="premiumPayBtn" onclick="handlePremiumPurchase()">
-                <span class="btn-text">🚀 Thanh toán ngay</span>
+                <span class="btn-text"><span>🚀</span> <span data-i18n="account_btn_pay">Thanh toán ngay</span></span>
                 <span class="btn-loading" style="display:none;">
                     <svg class="spinner" viewBox="0 0 24 24" style="width: 20px; height: 20px; animation: spin 1s linear infinite;">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
@@ -638,13 +639,13 @@
 <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;" id="premiumSuccessOverlay">
     <div style="background: white; padding: 48px; border-radius: 20px; text-align: center; max-width: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
         <div style="font-size: 5em; margin-bottom: 20px;">🎉</div>
-        <h2 style="font-size: 2em; color: #0f172a; margin-bottom: 16px; font-weight: 800;">Cảm ơn bạn rất nhiều!</h2>
-        <p style="color: #64748b; font-size: 1.05em; margin-bottom: 12px;">Giao dịch thành công. Tài khoản Premium đã được kích hoạt.</p>
-        <p style="color: #10b981; font-weight: 600; font-size: 1.1em; margin: 20px 0; padding: 16px; background: #d1fae5; border-radius: 10px;">
+        <h2 style="font-size: 2em; color: #0f172a; margin-bottom: 16px; font-weight: 800;" data-i18n="premium_success_title">Cảm ơn bạn rất nhiều!</h2>
+        <p style="color: #64748b; font-size: 1.05em; margin-bottom: 12px;" data-i18n="premium_success_message">Giao dịch thành công. Tài khoản Premium đã được kích hoạt.</p>
+        <p style="color: #10b981; font-weight: 600; font-size: 1.1em; margin: 20px 0; padding: 16px; background: #d1fae5; border-radius: 10px;" data-i18n="premium_success_support">
             💝 Sự ủng hộ của bạn giúp chúng tôi phát triển Downloader Pro tốt hơn!
         </p>
         <button onclick="document.getElementById('premiumSuccessOverlay').style.display='none'" style="margin-top: 24px; padding: 16px 40px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 12px; font-size: 1.05em; font-weight: 700; cursor: pointer;">
-            Bắt đầu trải nghiệm
+            <span data-i18n="premium_success_btn">Bắt đầu trải nghiệm</span>
         </button>
     </div>
 </div>
