@@ -240,12 +240,18 @@ def get_user_premium_info(user_id):
             premium_days_left = max(0, delta.days)
         
         # Count downloads this month (for free users)
-        cursor.execute("""
-            SELECT COUNT(*) FROM user_downloads 
-            WHERE user_id = %s 
-            AND download_time >= DATE_TRUNC('month', CURRENT_DATE)
-        """, (str(user_id),))
-        downloads_this_month = cursor.fetchone()[0]
+        # Try to get from user_downloads table, if not exists, return 0
+        downloads_this_month = 0
+        try:
+            cursor.execute("""
+                SELECT COUNT(*) FROM user_downloads 
+                WHERE user_id = %s 
+                AND download_time >= DATE_TRUNC('month', CURRENT_DATE)
+            """, (str(user_id),))
+            downloads_this_month = cursor.fetchone()[0]
+        except Exception as e:
+            print(f"[AUTH WARNING] user_downloads table not found or error: {e}")
+            downloads_this_month = 0
         
         free_downloads_left = max(0, 2 - downloads_this_month)
         
@@ -264,7 +270,15 @@ def get_user_premium_info(user_id):
         print(f"[AUTH ERROR] Get premium info failed: {e}")
         import traceback
         traceback.print_exc()
-    return None
+        # Return default values instead of None to prevent template errors
+        return {
+            'is_premium': False,
+            'premium_expires': None,
+            'premium_days_left': 0,
+            'downloads_this_month': 0,
+            'free_downloads_left': 2,
+            'max_free_downloads': 2
+        }
 
 
 # ===== AUTH PAGES =====
