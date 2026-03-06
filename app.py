@@ -59,7 +59,7 @@ def handle_connect():
         # Broadcast số online mới cho TẤT CẢ clients (bao gồm cả user vừa connect)
         socketio.emit('online_count_update', {
             'online_users': len(online_users)
-        }, broadcast=True)
+        }, to=None)  # to=None means broadcast to all
         
     except Exception as e:
         print(f"[SOCKET ERROR] Connect failed: {e}")
@@ -76,7 +76,7 @@ def handle_disconnect():
         # Broadcast số online mới cho tất cả clients
         socketio.emit('online_count_update', {
             'online_users': len(online_users)
-        }, broadcast=True)
+        }, to=None)  # to=None means broadcast to all
         
     except Exception as e:
         print(f"[SOCKET ERROR] Disconnect failed: {e}")
