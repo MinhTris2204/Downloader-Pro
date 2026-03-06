@@ -1805,10 +1805,7 @@ function updateStatDisplay(stats) {
 }
 
 function formatNumber(num) {
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'M';
-    } else if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toString();
+    // Hiển thị số đầy đủ với dấu chấm phân cách hàng nghìn
+    // Ví dụ: 2000 -> 2.000, 1234567 -> 1.234.567
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
