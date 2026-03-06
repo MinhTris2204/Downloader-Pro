@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản - Downloader Pro</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=20260228k">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}?v=20260306a">
+</head>
+
+<body>
+    <div class="bg-animation">
+        <div class="bg-gradient"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+
+    <div class="auth-container account-container">
+        <div class="auth-card glass-card account-card">
+            <div class="auth-header">
+                <a href="/" class="auth-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Downloader Pro</span>
+                </a>
+                <h1>Tài Khoản</h1>
+            </div>
+
+            <!-- User Info Section -->
+            <div class="account-section">
+                <div class="user-avatar">
+                    <div class="avatar-circle {% if premium_info and premium_info.is_premium %}premium-avatar{% endif %}">
+                        {{ user.username[0]|upper }}
+                    </div>
+                    <div class="user-details">
+                        <h2>{{ user.username }}</h2>
+                        <p>{{ user.email }}</p>
+                        {% if user.has_google %}
+                        <span class="google-badge">
+                            <svg width="14" height="14" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+                            Đã liên kết Google
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Premium Status -->
+            <div class="account-section">
+                <h3 class="section-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    Trạng thái Premium
+                </h3>
+
+                {% if premium_info and premium_info.is_premium %}
+                <!-- Premium Active -->
+                <div class="premium-status premium-active">
+                    <div class="premium-badge">
+                        <span class="premium-icon">👑</span>
+                        <span class="premium-text">PREMIUM</span>
+                    </div>
+                    <div class="premium-details">
+                        <div class="premium-detail-item">
+                            <span class="detail-label">Hết hạn:</span>
+                            <span class="detail-value">{{ premium_info.premium_expires[:10] if premium_info.premium_expires else 'N/A' }}</span>
+                        </div>
+                        <div class="premium-detail-item">
+                            <span class="detail-label">Còn lại:</span>
+                            <span class="detail-value highlight">{{ premium_info.premium_days_left }} ngày</span>
+                        </div>
+                        <div class="premium-detail-item">
+                            <span class="detail-label">Lượt tải:</span>
+                            <span class="detail-value highlight">♾️ Không giới hạn</span>
+                        </div>
+                        <div class="premium-detail-item">
+                            <span class="detail-label">Quảng cáo:</span>
+                            <span class="detail-value highlight">🚫 Không có</span>
+                        </div>
+                    </div>
+                    <button class="premium-renew-btn" onclick="showPremiumPurchase()">
+                        🔄 Gia hạn Premium
+                    </button>
+                </div>
+                {% else %}
+                <!-- Free User -->
+                <div class="premium-status premium-free">
+                    <div class="free-badge">
+                        <span class="free-icon">🆓</span>
+                        <span class="free-text">Tài khoản Free</span>
+                    </div>
+                    <div class="download-quota">
+                        <div class="quota-bar">
+                            <div class="quota-fill" style="width: {{ ((premium_info.downloads_this_month or 0) / 2 * 100)|int }}%"></div>
+                        </div>
+                        <div class="quota-text">
+                            <span>Đã dùng: {{ premium_info.downloads_this_month or 0 }}/2 lượt tải</span>
+                            <span class="quota-remaining">
+                                {% if premium_info and premium_info.free_downloads_left|int > 0 %}
+                                    Còn {{ premium_info.free_downloads_left }} lượt
+                                {% else %}
+                                    ❌ Hết lượt tải
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="premium-benefits">
+                        <h4>⚡ Nâng cấp Premium để:</h4>
+                        <ul>
+                            <li>✅ Tải xuống không giới hạn</li>
+                            <li>✅ Không quảng cáo</li>
+                            <li>✅ Ưu tiên tốc độ tải</li>
+                            <li>✅ Hỗ trợ duy trì website</li>
+                        </ul>
+                    </div>
+                    
+                    <button class="premium-buy-btn" onclick="showPremiumPurchase()">
+                        👑 Nâng cấp Premium
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Premium Purchase Modal (inline) -->
+            <div class="premium-purchase-section" id="premiumPurchaseSection" style="display:none;">
+                <h3 class="section-label">💳 Thanh toán Premium</h3>
+                <p class="premium-note">Thanh toán bất kỳ số tiền nào bạn muốn → nhận 30 ngày Premium</p>
+                
+                <div class="amount-grid">
+                    <button class="amount-btn" onclick="selectAmount(10000)">10,000đ</button>
+                    <button class="amount-btn" onclick="selectAmount(20000)">20,000đ</button>
+                    <button class="amount-btn popular" onclick="selectAmount(50000)">
+                        50,000đ
+                        <span class="popular-badge">Phổ biến</span>
+                    </button>
+                    <button class="amount-btn" onclick="selectAmount(100000)">100,000đ</button>
+                </div>
+                
+                <div class="custom-amount">
+                    <label for="customAmount">Hoặc nhập số tiền tùy ý (VNĐ):</label>
+                    <input type="number" id="customAmount" placeholder="Tối thiểu 1,000đ" min="1000" step="1000">
+                </div>
+                
+                <button class="premium-pay-btn" id="premiumPayBtn" onclick="handlePremiumPurchase()">
+                    <span class="btn-text">💎 Thanh toán & Kích hoạt Premium</span>
+                    <span class="btn-loading" style="display:none;">
+                        <svg class="spinner" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle></svg>
+                        Đang tạo link thanh toán...
+                    </span>
+                </button>
+                <div class="auth-error" id="premiumError" style="display:none;"></div>
+            </div>
+
+            <!-- Actions -->
+            <div class="account-actions">
+                <a href="/" class="action-btn home-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Trang chủ
+                </a>
+                <button class="action-btn logout-btn" onclick="handleLogout()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Đăng xuất
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Success Alert -->
+    {% if request.args.get('premium') == 'success' %}
+    <div class="premium-success-overlay" id="premiumSuccessOverlay">
+        <div class="premium-success-modal">
+            <div class="success-icon">🎉</div>
+            <h2>Chúc mừng!</h2>
+            <p>Premium đã được kích hoạt thành công!</p>
+            <p>Bạn có thể tải xuống không giới hạn và không có quảng cáo.</p>
+            <button onclick="document.getElementById('premiumSuccessOverlay').style.display='none'">Tuyệt vời!</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/auth.js') }}?v=20260306a"></script>
+</body>
+</html>

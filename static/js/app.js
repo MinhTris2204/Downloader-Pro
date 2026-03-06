@@ -262,6 +262,12 @@ async function downloadYoutube() {
         return;
     }
 
+    // Check download permission (free limit)
+    if (typeof checkDownloadPermission === 'function') {
+        const canDownload = await checkDownloadPermission();
+        if (!canDownload) return;
+    }
+
     // Track conversion event
     if (typeof gtag_report_conversion === 'function') {
         gtag_report_conversion();
@@ -285,6 +291,11 @@ async function downloadYoutube() {
 
         if (data.success) {
             showProgress('youtube', data.download_id);
+            
+            // Record download for limit tracking
+            if (typeof recordDownload === 'function') {
+                recordDownload('youtube');
+            }
             
             // Show donation promo after starting download
             if (typeof showDonationPromoOnDownload === 'function') {
@@ -628,6 +639,12 @@ async function downloadTiktok() {
         return;
     }
 
+    // Check download permission (free limit)
+    if (typeof checkDownloadPermission === 'function') {
+        const canDownload = await checkDownloadPermission();
+        if (!canDownload) return;
+    }
+
     // Track conversion event
     if (typeof gtag_report_conversion === 'function') {
         gtag_report_conversion();
@@ -677,6 +694,11 @@ async function downloadTiktok() {
 
         if (data.success) {
             showProgress('tiktok', data.download_id);
+            
+            // Record download for limit tracking
+            if (typeof recordDownload === 'function') {
+                recordDownload('tiktok');
+            }
             
             // Show donation promo after starting download
             if (typeof showDonationPromoOnDownload === 'function') {

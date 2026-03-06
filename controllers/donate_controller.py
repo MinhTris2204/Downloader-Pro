@@ -370,8 +370,40 @@ def payos_webhook():
                     donor_name = donation_info[0] or 'Người ủng hộ'
                     message = donation_info[1]
                     
-                    # Only create message if there's actual content
-                    if message and message.strip() and not message.startswith('PREMIUM:'):
+                    # Check if this is a premium purchase
+                    if message and message.startswith('PREMIUM:'):
+                        try:
+                            from datetime import datetime, timedelta
+                            user_id_str = message.replace('PREMIUM:', '').split('|')[0]
+                            user_id = int(user_id_str)
+                            
+                            # Check existing premium
+                            cursor.execute("""
+                                SELECT expires_at FROM premium_subscriptions
+                                WHERE user_id = %s AND is_active = TRUE AND expires_at > NOW()
+                                ORDER BY expires_at DESC LIMIT 1
+                            """, (user_id,))
+                            
+                            existing = cursor.fetchone()
+                            if existing:
+                                starts_at = existing[0]
+                                expires_at = existing[0] + timedelta(days=30)
+                            else:
+                                starts_at = datetime.now()
+                                expires_at = datetime.now() + timedelta(days=30)
+                            
+                            cursor.execute("""
+                                INSERT INTO premium_subscriptions 
+                                (user_id, order_code, amount, starts_at, expires_at, is_active, created_at)
+                                VALUES (%s, %s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP)
+                            """, (user_id, str(order_code), amount, starts_at, expires_at))
+                            
+                            print(f">>> Webhook: Premium activated for user {user_id} until {expires_at}")
+                        except (ValueError, Exception) as prem_err:
+                            print(f">>> Webhook: Error activating premium: {prem_err}")
+                            
+                    # Only create message if there's actual content and not PREMIUM
+                    elif message and message.strip():
                         try:
                             cursor.execute("""
                                 INSERT INTO donation_messages 

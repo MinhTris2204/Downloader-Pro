@@ -26,6 +26,7 @@ from controllers.home_controller import HomeController
 from controllers.blog_controller import BlogController
 from controllers.news_controller import NewsController
 from controllers.donate_controller import donate_bp
+from controllers.auth_controller import auth_bp
 from utils.tracking import get_full_tracking_info
 
 app = Flask(__name__)
@@ -42,6 +43,7 @@ online_users = set()  # Set of session IDs
 
 # Register blueprints
 app.register_blueprint(donate_bp)
+app.register_blueprint(auth_bp)
 
 # ===== SOCKET.IO EVENTS FOR REAL-TIME ONLINE USERS =====
 @socketio.on('connect')
@@ -303,24 +305,108 @@ def init_db():
         
         print("[INFO] Essential tables created/verified")
         
-        # CLEANUP: Xóa các bảng không cần thiết
-        tables_to_drop = [
-            'donation_messages',
-            'email_verifications',
-            'page_visits',
-            'user_downloads',
-            'users',
-            'download_history',
-            'premium_users'
-        ]
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_user_downloads_user_time 
+            ON user_downloads(user_id, download_time)
+        """)
         
-        for table in tables_to_drop:
-            try:
-                cursor.execute(f"DROP TABLE IF EXISTS {table} CASCADE")
-                print(f"[CLEANUP] Dropped unused table: {table}")
-            except Exception as e:
-                print(f"[WARNING] Could not drop {table}: {e}")
-                conn.rollback()
+        # Create users table for authentication
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(30) UNIQUE NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255),
+                is_verified BOOLEAN DEFAULT FALSE,
+                google_id VARCHAR(100) UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_users_email 
+            ON users(email)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_users_username 
+            ON users(username)
+        """)
+        
+        # Create premium_subscriptions table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS premium_subscriptions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                order_code VARCHAR(50),
+                amount INTEGER NOT NULL DEFAULT 0,
+                starts_at TIMESTAMP NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_premium_user_active 
+            ON premium_subscriptions(user_id, is_active, expires_at)
+        """)
+        
+        # Create OTP codes table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS otp_codes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                email VARCHAR(100) NOT NULL,
+                otp_code VARCHAR(6) NOT NULL,
+                purpose VARCHAR(20) NOT NULL DEFAULT 'verify',
+                is_used BOOLEAN DEFAULT FALSE,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_otp_user_purpose 
+            ON otp_codes(user_id, purpose, expires_at)
+        """)
+        
+        print("[INFO] Users, premium_subscriptions, otp_codes tables created/verified")
+        
+        # Create page_visits table for real-time statistics
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS page_visits (
+                id SERIAL PRIMARY KEY,
+                ip_address VARCHAR(45) NOT NULL,
+                user_agent TEXT,
+                page_url VARCHAR(500),
+                referrer VARCHAR(500),
+                visit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                session_id VARCHAR(64),
+                country VARCHAR(100),
+                city VARCHAR(100),
+                device_type VARCHAR(50),
+                browser VARCHAR(100),
+                is_mobile BOOLEAN DEFAULT FALSE
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_page_visits_time 
+            ON page_visits(visit_time)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_page_visits_ip_time 
+            ON page_visits(ip_address, visit_time)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_page_visits_session 
+            ON page_visits(session_id, visit_time)
+        """)
+        
+        print("[INFO] Donations and donation_messages tables created/verified")
         
         # Initialize stats if empty
         cursor.execute("SELECT COUNT(*) FROM stats")
