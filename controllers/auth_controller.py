@@ -36,8 +36,7 @@ def generate_session_token():
     """Generate secure session token"""
     return secrets.token_hex(32)
 
-def send_otp_email(email, otp, purpose='verify'):
-    """Send OTP via email using Flask-Mail or SMTP"""
+def _send_email_task(email, otp, purpose):
     try:
         import smtplib
         from email.mime.text import MIMEText
@@ -50,8 +49,8 @@ def send_otp_email(email, otp, purpose='verify'):
         
         if not smtp_user or not smtp_pass:
             print(f"[AUTH] SMTP not configured. OTP for {email}: {otp}")
-            return True  # Return True in dev mode
-        
+            return
+            
         if purpose == 'verify':
             subject = '🔐 Mã xác thực OTP - Downloader Pro'
             body = f"""
@@ -95,18 +94,24 @@ def send_otp_email(email, otp, purpose='verify'):
         msg['To'] = email
         msg.attach(MIMEText(body, 'html', 'utf-8'))
         
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
             server.starttls()
             server.login(smtp_user, smtp_pass)
             server.sendmail(smtp_user, email, msg.as_string())
         
         print(f"[AUTH] OTP sent to {email}")
-        return True
     except Exception as e:
         print(f"[AUTH ERROR] Failed to send OTP email: {e}")
         import traceback
         traceback.print_exc()
-        return False
+
+def send_otp_email(email, otp, purpose='verify'):
+    """Send OTP via email asynchronously to avoid blocking API"""
+    import threading
+    thread = threading.Thread(target=_send_email_task, args=(email, otp, purpose))
+    thread.daemon = True
+    thread.start()
+    return True
 
 def get_current_user():
     """Get current logged in user from session"""
