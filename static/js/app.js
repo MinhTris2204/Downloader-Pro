@@ -932,6 +932,11 @@ async function fetchStats() {
             const element = document.getElementById('total-downloads');
             const badge = document.getElementById('stats-badge');
 
+            // Check if elements exist (they may not exist on all pages)
+            if (!element || !badge) {
+                return;
+            }
+
             // Get current value for comparison
             const currentText = element.textContent.replace(/[^\d]/g, ''); // Remove non-digits
             const currentValue = parseInt(currentText) || 0;
