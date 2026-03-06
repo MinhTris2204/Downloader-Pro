@@ -281,6 +281,14 @@
                 <i class="fas fa-home"></i>
                 <span>Tổng quan</span>
             </a>
+            <a class="menu-item" data-section="users">
+                <i class="fas fa-users"></i>
+                <span>Người dùng</span>
+            </a>
+            <a class="menu-item" data-section="premium">
+                <i class="fas fa-crown"></i>
+                <span>Premium</span>
+            </a>
             <a class="menu-item" data-section="tracking">
                 <i class="fas fa-map-marker-alt"></i>
                 <span>Tracking</span>
@@ -363,6 +371,140 @@
                 <h2>Hoạt động gần đây</h2>
             </div>
             <div id="recentActivity" class="loading">Đang tải...</div>
+        </div>
+
+        <!-- Users Management Section -->
+        <div class="content-section" id="users">
+            <div class="section-header">
+                <h2>Quản lý người dùng</h2>
+                <button onclick="loadUsers()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="usersTotal">0</h3>
+                        <p>Tổng người dùng</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="usersOnline">0</h3>
+                        <p>Đang online</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="usersPremium">0</h3>
+                        <p>Premium</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="usersToday">0</h3>
+                        <p>Mới hôm nay</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div style="margin: 20px 0; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="userSearchInput" placeholder="Tìm kiếm username hoặc email..." 
+                    style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px; min-width: 250px;">
+                <select id="userTypeFilter" onchange="loadUsers()" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    <option value="all">Tất cả</option>
+                    <option value="premium">Premium</option>
+                    <option value="free">Miễn phí</option>
+                    <option value="google">Đăng nhập Google</option>
+                </select>
+                <button onclick="loadUsers()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </button>
+            </div>
+            
+            <!-- Users Table -->
+            <div id="usersTable" class="loading">Đang tải...</div>
+        </div>
+
+        <!-- Premium Management Section -->
+        <div class="content-section" id="premium">
+            <div class="section-header">
+                <h2>Quản lý Premium</h2>
+                <button onclick="loadPremiumSubscriptions()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="premiumActive">0</h3>
+                        <p>Đang hoạt động</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="premiumRevenue">0 VNĐ</h3>
+                        <p>Tổng doanh thu</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="premiumExpiring">0</h3>
+                        <p>Sắp hết hạn (7 ngày)</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="premiumExpired">0</h3>
+                        <p>Đã hết hạn</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div style="margin: 20px 0; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <select id="premiumStatusFilter" onchange="loadPremiumSubscriptions()" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    <option value="all">Tất cả</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="expiring">Sắp hết hạn</option>
+                    <option value="expired">Đã hết hạn</option>
+                </select>
+                <button onclick="showAddPremiumModal()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-plus"></i> Thêm Premium thủ công
+                </button>
+            </div>
+            
+            <!-- Premium Table -->
+            <div id="premiumTable" class="loading">Đang tải...</div>
         </div>
 
         <!-- Tracking Section -->
@@ -643,5 +785,6 @@
     </div>
 
     <script src="/static/js/admin-dashboard.js"></script>
+    <script src="/static/js/admin-users-premium.js"></script>
 </body>
 </html>
