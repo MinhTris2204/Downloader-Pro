@@ -235,7 +235,7 @@ def api_register():
     """API đăng ký tài khoản"""
     try:
         from app import db_pool
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         
         username = data.get('username', '').strip().lower()
         email = data.get('email', '').strip().lower()
@@ -327,7 +327,7 @@ def api_verify_otp():
     """API xác thực OTP"""
     try:
         from app import db_pool
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         
         otp = data.get('otp', '').strip()
         purpose = data.get('purpose', 'verify')
@@ -409,7 +409,7 @@ def api_resend_otp():
     """API gửi lại OTP"""
     try:
         from app import db_pool
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         purpose = data.get('purpose', 'verify')
         
         if purpose == 'verify':
@@ -466,7 +466,7 @@ def api_login():
     """API đăng nhập"""
     try:
         from app import db_pool
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         
         login_id = data.get('login_id', '').strip().lower()
         password = data.get('password', '')
@@ -549,7 +549,7 @@ def api_google_login():
     """API đăng nhập bằng Google"""
     try:
         from app import db_pool
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         
         credential = data.get('credential', '')
         
@@ -682,7 +682,7 @@ def api_forgot_password():
     """API quên mật khẩu - gửi OTP"""
     try:
         from app import db_pool
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         email = data.get('email', '').strip().lower()
         
         if not email:
@@ -733,7 +733,7 @@ def api_reset_password():
     """API đặt lại mật khẩu"""
     try:
         from app import db_pool
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         
         new_password = data.get('new_password', '')
         confirm_password = data.get('confirm_password', '')
@@ -887,7 +887,7 @@ def api_record_download():
     from app import db_pool
     
     user = get_current_user()
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     platform = data.get('platform', 'unknown')
     
     if user:
@@ -932,7 +932,7 @@ def api_purchase_premium():
         if not user:
             return jsonify({'success': False, 'error': 'Vui lòng đăng nhập để mua Premium'}), 401
         
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         amount = int(data.get('amount', 0))
         
         if amount < 1000:
