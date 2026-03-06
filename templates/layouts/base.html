@@ -78,18 +78,6 @@
             
             function clickTbEventInit() {
                 document.addEventListener('click', function (e) {
-                    // Không mở quảng cáo nếu click vào link, button quan trọng
-                    var target = e.target;
-                    if (target.tagName === 'A' || 
-                        target.closest('a') || 
-                        target.closest('button') ||
-                        target.closest('.download-btn') ||
-                        target.closest('.auth-btn') ||
-                        target.closest('input') ||
-                        target.closest('select')) {
-                        return;
-                    }
-                    
                     clickCount++;
                     
                     // Chỉ mở quảng cáo sau N lần click và đã hết cooldown
