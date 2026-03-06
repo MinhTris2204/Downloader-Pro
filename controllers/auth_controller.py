@@ -244,22 +244,22 @@ def api_register():
         
         # Validation
         if not username or not email or not password:
-            return jsonify({'success': False, 'error': 'Vui lòng điền đầy đủ thông tin'}), 400
+            return jsonify({'success': False, 'error': 'Vui lòng điền đầy đủ thông tin'}), 200
         
         if len(username) < 3 or len(username) > 30:
-            return jsonify({'success': False, 'error': 'Tên đăng nhập phải từ 3-30 ký tự'}), 400
+            return jsonify({'success': False, 'error': 'Tên đăng nhập phải từ 3-30 ký tự'}), 200
         
         if not re.match(r'^[a-z0-9_]+$', username):
-            return jsonify({'success': False, 'error': 'Tên đăng nhập chỉ chứa chữ thường, số và dấu _'}), 400
+            return jsonify({'success': False, 'error': 'Tên đăng nhập chỉ chứa chữ thường, số và dấu _'}), 200
         
         if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-            return jsonify({'success': False, 'error': 'Email không hợp lệ'}), 400
+            return jsonify({'success': False, 'error': 'Email không hợp lệ'}), 200
         
         if len(password) < 6:
-            return jsonify({'success': False, 'error': 'Mật khẩu phải có ít nhất 6 ký tự'}), 400
+            return jsonify({'success': False, 'error': 'Mật khẩu phải có ít nhất 6 ký tự'}), 200
         
         if password != confirm_password:
-            return jsonify({'success': False, 'error': 'Mật khẩu xác nhận không khớp'}), 400
+            return jsonify({'success': False, 'error': 'Mật khẩu xác nhận không khớp'}), 200
         
         if not db_pool:
             return jsonify({'success': False, 'error': 'Lỗi hệ thống'}), 500
@@ -272,14 +272,14 @@ def api_register():
         if cursor.fetchone():
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Tên đăng nhập đã tồn tại'}), 400
+            return jsonify({'success': False, 'error': 'Tên đăng nhập đã tồn tại'}), 200
         
         # Check existing email
         cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
         if cursor.fetchone():
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Email đã được đăng ký'}), 400
+            return jsonify({'success': False, 'error': 'Email đã được đăng ký'}), 200
         
         # Create user (unverified)
         password_hash = hash_password(password)
@@ -333,7 +333,7 @@ def api_verify_otp():
         purpose = data.get('purpose', 'verify')
         
         if not otp or len(otp) != 6:
-            return jsonify({'success': False, 'error': 'Mã OTP không hợp lệ'}), 400
+            return jsonify({'success': False, 'error': 'Mã OTP không hợp lệ'}), 200
         
         if purpose == 'verify':
             user_id = session.get('pending_user_id')
@@ -343,7 +343,7 @@ def api_verify_otp():
             email = session.get('reset_email')
         
         if not user_id or not email:
-            return jsonify({'success': False, 'error': 'Phiên làm việc hết hạn. Vui lòng thử lại.'}), 400
+            return jsonify({'success': False, 'error': 'Phiên làm việc hết hạn. Vui lòng thử lại.'}), 200
         
         conn = db_pool.getconn()
         cursor = conn.cursor()
@@ -360,7 +360,7 @@ def api_verify_otp():
         if not otp_row:
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Mã OTP không đúng hoặc đã hết hạn'}), 400
+            return jsonify({'success': False, 'error': 'Mã OTP không đúng hoặc đã hết hạn'}), 200
         
         # Mark OTP as used
         cursor.execute("UPDATE otp_codes SET is_used = TRUE WHERE id = %s", (otp_row[0],))
@@ -420,7 +420,7 @@ def api_resend_otp():
             email = session.get('reset_email')
         
         if not user_id or not email:
-            return jsonify({'success': False, 'error': 'Phiên làm việc hết hạn'}), 400
+            return jsonify({'success': False, 'error': 'Phiên làm việc hết hạn'}), 200
         
         # Rate limit - max 1 OTP per 60 seconds
         conn = db_pool.getconn()
@@ -472,7 +472,7 @@ def api_login():
         password = data.get('password', '')
         
         if not login_id or not password:
-            return jsonify({'success': False, 'error': 'Vui lòng nhập đầy đủ thông tin'}), 400
+            return jsonify({'success': False, 'error': 'Vui lòng nhập đầy đủ thông tin'}), 200
         
         if not db_pool:
             return jsonify({'success': False, 'error': 'Lỗi hệ thống'}), 500
@@ -492,16 +492,16 @@ def api_login():
         db_pool.putconn(conn)
         
         if not user:
-            return jsonify({'success': False, 'error': 'Tài khoản không tồn tại'}), 400
+            return jsonify({'success': False, 'error': 'Tài khoản không tồn tại'}), 200
         
         user_id, username, email, password_hash, is_verified = user
         
         # Check if user registered via Google (no password)
         if not password_hash:
-            return jsonify({'success': False, 'error': 'Tài khoản này đăng nhập bằng Google. Vui lòng dùng nút "Đăng nhập với Google".'}), 400
+            return jsonify({'success': False, 'error': 'Tài khoản này đăng nhập bằng Google. Vui lòng dùng nút "Đăng nhập với Google".'}), 200
         
         if not check_password(password, password_hash):
-            return jsonify({'success': False, 'error': 'Mật khẩu không đúng'}), 400
+            return jsonify({'success': False, 'error': 'Mật khẩu không đúng'}), 200
         
         if not is_verified:
             # Resend OTP for unverified users
@@ -526,7 +526,7 @@ def api_login():
                 'error': 'Tài khoản chưa xác thực email. Đã gửi lại mã OTP.',
                 'need_otp': True,
                 'purpose': 'verify'
-            }), 400
+            }), 200
         
         # Login success
         session['user_id'] = user_id
@@ -554,7 +554,7 @@ def api_google_login():
         credential = data.get('credential', '')
         
         if not credential:
-            return jsonify({'success': False, 'error': 'Token Google không hợp lệ'}), 400
+            return jsonify({'success': False, 'error': 'Token Google không hợp lệ'}), 200
         
         # Decode Google JWT token
         import jwt
@@ -570,24 +570,24 @@ def api_google_login():
             resp = http_req.get(verify_url, timeout=10)
             
             if resp.status_code != 200:
-                return jsonify({'success': False, 'error': 'Token Google không hợp lệ'}), 400
+                return jsonify({'success': False, 'error': 'Token Google không hợp lệ'}), 200
             
             payload = resp.json()
             
             # Verify audience
             if payload.get('aud') != google_client_id:
-                return jsonify({'success': False, 'error': 'Token không hợp lệ cho ứng dụng này'}), 400
+                return jsonify({'success': False, 'error': 'Token không hợp lệ cho ứng dụng này'}), 200
             
         except Exception as e:
             print(f"[AUTH ERROR] Google token verification failed: {e}")
-            return jsonify({'success': False, 'error': 'Không thể xác thực Google token'}), 400
+            return jsonify({'success': False, 'error': 'Không thể xác thực Google token'}), 200
         
         google_id = payload.get('sub', '')
         email = payload.get('email', '').lower()
         name = payload.get('name', '')
         
         if not google_id or not email:
-            return jsonify({'success': False, 'error': 'Không lấy được thông tin Google'}), 400
+            return jsonify({'success': False, 'error': 'Không lấy được thông tin Google'}), 200
         
         conn = db_pool.getconn()
         cursor = conn.cursor()
@@ -686,7 +686,7 @@ def api_forgot_password():
         email = data.get('email', '').strip().lower()
         
         if not email:
-            return jsonify({'success': False, 'error': 'Vui lòng nhập email'}), 400
+            return jsonify({'success': False, 'error': 'Vui lòng nhập email'}), 200
         
         conn = db_pool.getconn()
         cursor = conn.cursor()
@@ -697,7 +697,7 @@ def api_forgot_password():
         if not user:
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Email không tồn tại trong hệ thống'}), 400
+            return jsonify({'success': False, 'error': 'Email không tồn tại trong hệ thống'}), 200
         
         user_id = user[0]
         
@@ -739,17 +739,17 @@ def api_reset_password():
         confirm_password = data.get('confirm_password', '')
         
         if not session.get('reset_verified'):
-            return jsonify({'success': False, 'error': 'Chưa xác thực OTP'}), 400
+            return jsonify({'success': False, 'error': 'Chưa xác thực OTP'}), 200
         
         user_id = session.get('reset_user_id')
         if not user_id:
-            return jsonify({'success': False, 'error': 'Phiên làm việc hết hạn'}), 400
+            return jsonify({'success': False, 'error': 'Phiên làm việc hết hạn'}), 200
         
         if len(new_password) < 6:
-            return jsonify({'success': False, 'error': 'Mật khẩu phải có ít nhất 6 ký tự'}), 400
+            return jsonify({'success': False, 'error': 'Mật khẩu phải có ít nhất 6 ký tự'}), 200
         
         if new_password != confirm_password:
-            return jsonify({'success': False, 'error': 'Mật khẩu xác nhận không khớp'}), 400
+            return jsonify({'success': False, 'error': 'Mật khẩu xác nhận không khớp'}), 200
         
         password_hash = hash_password(new_password)
         
@@ -936,7 +936,7 @@ def api_purchase_premium():
         amount = int(data.get('amount', 0))
         
         if amount < 1000:
-            return jsonify({'success': False, 'error': 'Số tiền tối thiểu là 1,000 VNĐ'}), 400
+            return jsonify({'success': False, 'error': 'Số tiền tối thiểu là 1,000 VNĐ'}), 200
         
         # Create PayOS instance
         if not PAYOS_CLIENT_ID or not PAYOS_API_KEY or not PAYOS_CHECKSUM_KEY:
