@@ -57,22 +57,55 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7227824042730456"
         crossorigin="anonymous"></script>
 
-    <!-- Click Tag Ad for Free Users -->
+    <!-- Click Tag Ad for Free Users (Anti-spam version) -->
     {% if not session.get('user_id') or not premium_info or not premium_info.is_premium %}
     <script>
         (function () {
             var clickUrl = "https://rm358.com/4/10678388";
+            var lastAdTime = 0;
+            var adCooldown = 60000; // 60 giây = 1 phút giữa các lần mở quảng cáo
+            var clickCount = 0;
+            var maxClicksBeforeAd = 3; // Sau 3 lần click mới mở quảng cáo
+            
+            function shouldShowAd() {
+                var now = Date.now();
+                // Kiểm tra xem đã đủ thời gian cooldown chưa
+                if (now - lastAdTime < adCooldown) {
+                    return false;
+                }
+                return true;
+            }
             
             function clickTbEventInit() {
-                document.addEventListener('click', function () {
-                    window.onbeforeunload = null;
-                    window.open(clickUrl, '_blank', 'noreferrer,noopener');
+                document.addEventListener('click', function (e) {
+                    // Không mở quảng cáo nếu click vào link, button quan trọng
+                    var target = e.target;
+                    if (target.tagName === 'A' || 
+                        target.closest('a') || 
+                        target.closest('button') ||
+                        target.closest('.download-btn') ||
+                        target.closest('.auth-btn') ||
+                        target.closest('input') ||
+                        target.closest('select')) {
+                        return;
+                    }
+                    
+                    clickCount++;
+                    
+                    // Chỉ mở quảng cáo sau N lần click và đã hết cooldown
+                    if (clickCount >= maxClicksBeforeAd && shouldShowAd()) {
+                        window.onbeforeunload = null;
+                        window.open(clickUrl, '_blank', 'noreferrer,noopener');
+                        lastAdTime = Date.now();
+                        clickCount = 0; // Reset counter
+                    }
                 });
             }
             
+            // Đợi 10 giây sau khi trang load mới bật quảng cáo
             setTimeout(function () {
                 clickTbEventInit();
-            }, 5000);
+            }, 10000);
         })();
     </script>
     {% endif %}
