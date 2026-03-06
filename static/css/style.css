@@ -1144,10 +1144,145 @@ body {
 
 }
 
+/* ====== Pulse Animation for Login & Account Links ====== */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.3);
+        transform: scale(1.05);
+    }
+}
 
+@keyframes text-glow {
+    0%, 100% {
+        text-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 15px rgba(59, 130, 246, 0.8), 0 0 25px rgba(59, 130, 246, 0.4);
+    }
+}
 
+/* Login button - attractive pulsing effect */
+.login-nav-link {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white !important;
+    font-weight: 600;
+    animation: pulse-glow 2s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+}
 
+.login-nav-link::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    animation: shine 3s ease-in-out infinite;
+}
 
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
+
+.login-nav-link:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    animation: pulse-glow 1s ease-in-out infinite;
+    transform: translateY(-2px);
+}
+
+/* Account link - subtle glow for logged in users */
+.account-nav-link {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    font-weight: 600;
+    position: relative;
+}
+
+.account-nav-link span {
+    animation: text-glow 2s ease-in-out infinite;
+    color: #3b82f6;
+}
+
+.account-nav-link::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+    opacity: 0;
+    animation: pulse-bg 2s ease-in-out infinite;
+    z-index: -1;
+}
+
+@keyframes pulse-bg {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+.account-nav-link:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+    border-color: rgba(59, 130, 246, 0.6);
+    transform: translateY(-2px);
+}
+
+[data-theme="light"] .account-nav-link {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="light"] .account-nav-link span {
+    color: #2563eb;
+}
+
+[data-theme="light"] .account-nav-link:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Reduce animation on mobile for performance */
+@media (max-width: 768px) {
+    .login-nav-link,
+    .account-nav-link {
+        animation: none;
+    }
+    
+    .login-nav-link::before {
+        animation: none;
+    }
+    
+    .account-nav-link span {
+        animation: none;
+    }
+    
+    .account-nav-link::after {
+        animation: none;
+    }
+}
 
 
 .logo {
