@@ -2,7 +2,6 @@
 Home Controller - Xử lý trang chủ
 """
 from flask import render_template, session
-from utils.db_helper import get_db_connection
 
 class HomeController:
     """Controller cho trang chủ"""
@@ -15,25 +14,28 @@ class HomeController:
         # Kiểm tra nếu user đã đăng nhập
         if session.get('user_id'):
             try:
-                conn = get_db_connection()
-                cursor = conn.cursor()
+                from app import db_pool
                 
-                # Lấy thông tin premium
-                cursor.execute("""
-                    SELECT is_premium, premium_expires 
-                    FROM users 
-                    WHERE id = %s
-                """, (session['user_id'],))
-                
-                result = cursor.fetchone()
-                if result:
-                    premium_info = {
-                        'is_premium': result[0],
-                        'premium_expires': result[1]
-                    }
-                
-                cursor.close()
-                conn.close()
+                if db_pool:
+                    conn = db_pool.getconn()
+                    cursor = conn.cursor()
+                    
+                    # Lấy thông tin premium
+                    cursor.execute("""
+                        SELECT is_premium, premium_expires 
+                        FROM users 
+                        WHERE id = %s
+                    """, (session['user_id'],))
+                    
+                    result = cursor.fetchone()
+                    if result:
+                        premium_info = {
+                            'is_premium': result[0],
+                            'premium_expires': result[1]
+                        }
+                    
+                    cursor.close()
+                    db_pool.putconn(conn)
             except Exception as e:
                 print(f"Error getting premium info: {e}")
         
