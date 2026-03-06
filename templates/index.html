@@ -354,25 +354,6 @@
             </div>
         </div>
     </section>
-    
-    <!-- Google AdSense - In-feed Ad for Free Users -->
-    {% if not session.get('user_id') or not premium_info or not premium_info.is_premium %}
-    <section class="info-section">
-        <div class="ad-container" style="text-align: center; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 15px; margin: 20px 0;">
-            <p style="font-size: 0.85em; opacity: 0.6; margin-bottom: 10px;">Quảng cáo</p>
-            <!-- In-feed Ad -->
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-format="fluid"
-                 data-ad-layout-key="-6t+ed+2i-1n-4w"
-                 data-ad-client="ca-pub-7227824042730456"
-                 data-ad-slot="9876543210"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-        </div>
-    </section>
-    {% endif %}
 
     <!-- Guide -->
     <section class="info-section">
@@ -535,25 +516,6 @@
     
     <!-- Donation Messages Widget -->
     {% include 'components/donation_messages.html' %}
-    
-    <!-- Google AdSense - Display Ad for Free Users -->
-    {% if not session.get('user_id') or not premium_info or not premium_info.is_premium %}
-    <section class="info-section">
-        <div class="ad-container" style="text-align: center; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 15px; margin: 30px 0;">
-            <p style="font-size: 0.85em; opacity: 0.6; margin-bottom: 10px;">Quảng cáo</p>
-            <!-- Display Ad -->
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-7227824042730456"
-                 data-ad-slot="1234567890"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-        </div>
-    </section>
-    {% endif %}
 </div>
 
 <!-- Exit Intent Popup -->
