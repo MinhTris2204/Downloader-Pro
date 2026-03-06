@@ -299,6 +299,11 @@
 .g_id_signin {
     display: flex;
     justify-content: center;
+    width: 100%;
+}
+
+.g_id_signin > div {
+    width: 100% !important;
 }
 
 /* Footer */
