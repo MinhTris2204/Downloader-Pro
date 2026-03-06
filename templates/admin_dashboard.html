@@ -285,9 +285,9 @@
                 <i class="fas fa-users"></i>
                 <span>Người dùng</span>
             </a>
-            <a class="menu-item" data-section="premium">
+            <a class="menu-item" data-section="premium-history">
                 <i class="fas fa-crown"></i>
-                <span>Premium</span>
+                <span>Lịch sử Premium</span>
             </a>
             <a class="menu-item" data-section="tracking">
                 <i class="fas fa-map-marker-alt"></i>
@@ -442,10 +442,10 @@
         </div>
 
         <!-- Premium Management Section -->
-        <div class="content-section" id="premium">
+        <div class="content-section" id="premium-history">
             <div class="section-header">
-                <h2>Quản lý Premium</h2>
-                <button onclick="loadPremiumSubscriptions()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                <h2>Lịch sử thanh toán Premium</h2>
+                <button onclick="loadPremiumHistory()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
                     <i class="fas fa-sync-alt"></i> Làm mới
                 </button>
             </div>
@@ -457,8 +457,8 @@
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="premiumActive">0</h3>
-                        <p>Đang hoạt động</p>
+                        <h3 id="premiumHistorySuccess">0</h3>
+                        <p>Thành công</p>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -466,45 +466,47 @@
                         <i class="fas fa-coins"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="premiumRevenue">0 VNĐ</h3>
+                        <h3 id="premiumHistoryRevenue">0 VNĐ</h3>
                         <p>Tổng doanh thu</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon orange">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-users"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="premiumExpiring">0</h3>
-                        <p>Sắp hết hạn (7 ngày)</p>
+                        <h3 id="premiumHistoryUsers">0</h3>
+                        <p>Người dùng Premium</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon red">
-                        <i class="fas fa-times-circle"></i>
+                        <i class="fas fa-calendar-day"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 id="premiumExpired">0</h3>
-                        <p>Đã hết hạn</p>
+                        <h3 id="premiumHistoryToday">0</h3>
+                        <p>Hôm nay</p>
                     </div>
                 </div>
             </div>
             
             <!-- Filters -->
             <div style="margin: 20px 0; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                <select id="premiumStatusFilter" onchange="loadPremiumSubscriptions()" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
-                    <option value="all">Tất cả</option>
-                    <option value="active">Đang hoạt động</option>
-                    <option value="expiring">Sắp hết hạn</option>
-                    <option value="expired">Đã hết hạn</option>
+                <input type="text" id="premiumHistorySearch" placeholder="Tìm kiếm username, email, mã đơn..." 
+                    style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px; min-width: 300px;">
+                <select id="premiumHistoryStatusFilter" onchange="loadPremiumHistory()" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="PAID">Thành công</option>
+                    <option value="PENDING">Đang chờ</option>
+                    <option value="CANCELLED">Đã hủy</option>
                 </select>
-                <button onclick="showAddPremiumModal()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                    <i class="fas fa-plus"></i> Thêm Premium thủ công
+                <button onclick="loadPremiumHistory()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-search"></i> Tìm kiếm
                 </button>
             </div>
             
-            <!-- Premium Table -->
-            <div id="premiumTable" class="loading">Đang tải...</div>
+            <!-- Premium History Table -->
+            <div id="premiumHistoryTable" class="loading">Đang tải...</div>
         </div>
 
         <!-- Tracking Section -->

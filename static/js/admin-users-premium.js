@@ -4,7 +4,7 @@
 const menuTitles = {
     'overview': 'Tổng quan',
     'users': 'Quản lý người dùng',
-    'premium': 'Quản lý Premium',
+    'premium-history': 'Lịch sử thanh toán Premium',
     'tracking': 'Thống kê Tracking',
     'donations': 'Quản lý Ủng hộ',
     'downloads': 'Lịch sử tải xuống',
@@ -31,11 +31,30 @@ document.querySelectorAll('.menu-item').forEach(item => {
         // Load data for section
         if (section === 'users') {
             loadUsers();
-        } else if (section === 'premium') {
-            loadPremiumSubscriptions();
+        } else if (section === 'premium-history') {
+            loadPremiumHistory();
         }
     });
 });
+
+// Track online users via Socket.IO
+let onlineUserIds = new Set();
+
+if (typeof io !== 'undefined') {
+    const socket = io();
+    
+    socket.on('user_status', function(data) {
+        if (data.user_id) {
+            if (data.status === 'online') {
+                onlineUserIds.add(data.user_id);
+            } else {
+                onlineUserIds.delete(data.user_id);
+            }
+            // Update online count in stats
+            document.getElementById('usersOnline').textContent = onlineUserIds.size;
+        }
+    });
+}
 
 // ==================== USERS MANAGEMENT ====================
 
@@ -73,6 +92,7 @@ async function loadUsers() {
                         <th>ID</th>
                         <th>Username</th>
                         <th>Email</th>
+                        <th>Online</th>
                         <th>Loại</th>
                         <th>Premium</th>
                         <th>Ngày tạo</th>
@@ -80,7 +100,9 @@ async function loadUsers() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.users.map(user => `
+                    ${data.users.map(user => {
+                        const isOnline = onlineUserIds.has(user.id);
+                        return `
                         <tr>
                             <td>${user.id}</td>
                             <td>
@@ -88,6 +110,12 @@ async function loadUsers() {
                                 ${user.has_google ? '<span style="color: #4285f4; margin-left: 5px;" title="Đăng nhập Google">🔗</span>' : ''}
                             </td>
                             <td>${user.email}</td>
+                            <td>
+                                ${isOnline ? 
+                                    '<span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">🟢 Online</span>' : 
+                                    '<span style="background: #f1f5f9; color: #64748b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">⚫ Offline</span>'
+                                }
+                            </td>
                             <td>
                                 ${user.is_premium ? 
                                     '<span style="background: linear-gradient(135deg, #fef3c7, #fed7aa); color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">👑 Premium</span>' : 
@@ -112,7 +140,7 @@ async function loadUsers() {
                                 </button>
                             </td>
                         </tr>
-                    `).join('')}
+                    `}).join('')}
                 </tbody>
             </table>
         `;
@@ -186,16 +214,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ==================== PREMIUM MANAGEMENT ====================
+// ==================== PREMIUM HISTORY ====================
 
-async function loadPremiumSubscriptions() {
-    const statusFilter = document.getElementById('premiumStatusFilter').value;
+async function loadPremiumHistory() {
+    const statusFilter = document.getElementById('premiumHistoryStatusFilter').value;
+    const search = document.getElementById('premiumHistorySearch').value;
     
-    const premiumTable = document.getElementById('premiumTable');
-    premiumTable.innerHTML = '<div class="loading">Đang tải...</div>';
+    const premiumHistoryTable = document.getElementById('premiumHistoryTable');
+    premiumHistoryTable.innerHTML = '<div class="loading">Đang tải...</div>';
     
     try {
-        const response = await fetch(`/api/admin/premium?status=${statusFilter}`);
+        const response = await fetch(`/api/admin/premium-history?status=${statusFilter}&search=${encodeURIComponent(search)}`);
         const data = await response.json();
         
         if (!data.success) {
@@ -203,14 +232,14 @@ async function loadPremiumSubscriptions() {
         }
         
         // Update stats
-        document.getElementById('premiumActive').textContent = data.stats.active.toLocaleString();
-        document.getElementById('premiumRevenue').textContent = data.stats.revenue.toLocaleString() + ' VNĐ';
-        document.getElementById('premiumExpiring').textContent = data.stats.expiring.toLocaleString();
-        document.getElementById('premiumExpired').textContent = data.stats.expired.toLocaleString();
+        document.getElementById('premiumHistorySuccess').textContent = data.stats.success.toLocaleString();
+        document.getElementById('premiumHistoryRevenue').textContent = data.stats.revenue.toLocaleString() + ' VNĐ';
+        document.getElementById('premiumHistoryUsers').textContent = data.stats.premium_users.toLocaleString();
+        document.getElementById('premiumHistoryToday').textContent = data.stats.today.toLocaleString();
         
         // Build table
-        if (data.subscriptions.length === 0) {
-            premiumTable.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Không có gói Premium nào</p>';
+        if (data.payments.length === 0) {
+            premiumHistoryTable.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Không có giao dịch nào</p>';
             return;
         }
         
@@ -223,110 +252,56 @@ async function loadPremiumSubscriptions() {
                         <th>Email</th>
                         <th>Mã đơn</th>
                         <th>Số tiền</th>
-                        <th>Bắt đầu</th>
-                        <th>Hết hạn</th>
                         <th>Trạng thái</th>
-                        <th>Thao tác</th>
+                        <th>Ngày tạo</th>
+                        <th>Ngày cập nhật</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.subscriptions.map(sub => {
-                        const isActive = sub.status === 'active';
-                        const daysLeft = isActive ? Math.ceil((new Date(sub.expires_at) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
-                        const isExpiring = daysLeft > 0 && daysLeft <= 7;
+                    ${data.payments.map(payment => {
+                        let statusBadge = '';
+                        if (payment.status === 'PAID') {
+                            statusBadge = '<span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">✓ Thành công</span>';
+                        } else if (payment.status === 'PENDING') {
+                            statusBadge = '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">⏳ Đang chờ</span>';
+                        } else if (payment.status === 'CANCELLED') {
+                            statusBadge = '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">✗ Đã hủy</span>';
+                        } else {
+                            statusBadge = `<span style="background: #f1f5f9; color: #64748b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">${payment.status}</span>`;
+                        }
                         
                         return `
                         <tr>
-                            <td>${sub.id}</td>
-                            <td><strong>${sub.username}</strong></td>
-                            <td style="font-size: 13px; color: #64748b;">${sub.email}</td>
-                            <td style="font-size: 12px; font-family: monospace;">${sub.order_code || '-'}</td>
-                            <td><strong>${sub.amount.toLocaleString()} VNĐ</strong></td>
-                            <td style="font-size: 13px; color: #64748b;">${new Date(sub.starts_at).toLocaleDateString('vi-VN')}</td>
-                            <td style="font-size: 13px; color: #64748b;">${new Date(sub.expires_at).toLocaleDateString('vi-VN')}</td>
-                            <td>
-                                ${isActive ? 
-                                    (isExpiring ? 
-                                        `<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">⚠️ Còn ${daysLeft} ngày</span>` :
-                                        `<span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">✓ Hoạt động</span>`
-                                    ) :
-                                    '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">✗ Hết hạn</span>'
-                                }
-                            </td>
-                            <td>
-                                <button onclick="extendPremium(${sub.id}, '${sub.username}')" 
-                                    style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 5px; font-size: 12px;">
-                                    <i class="fas fa-plus"></i> Gia hạn
-                                </button>
-                                <button onclick="deletePremium(${sub.id}, '${sub.username}')" 
-                                    style="padding: 6px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                    <i class="fas fa-trash"></i> Xóa
-                                </button>
-                            </td>
+                            <td>${payment.id}</td>
+                            <td><strong>${payment.username || '-'}</strong></td>
+                            <td style="font-size: 13px; color: #64748b;">${payment.email || '-'}</td>
+                            <td style="font-size: 12px; font-family: monospace;">${payment.order_code}</td>
+                            <td><strong>${payment.amount.toLocaleString()} VNĐ</strong></td>
+                            <td>${statusBadge}</td>
+                            <td style="font-size: 13px; color: #64748b;">${new Date(payment.created_at).toLocaleString('vi-VN')}</td>
+                            <td style="font-size: 13px; color: #64748b;">${payment.updated_at ? new Date(payment.updated_at).toLocaleString('vi-VN') : '-'}</td>
                         </tr>
                     `}).join('')}
                 </tbody>
             </table>
         `;
         
-        premiumTable.innerHTML = tableHTML;
+        premiumHistoryTable.innerHTML = tableHTML;
         
     } catch (error) {
-        console.error('Error loading premium:', error);
-        premiumTable.innerHTML = `<p style="text-align: center; padding: 40px; color: #ef4444;">Lỗi: ${error.message}</p>`;
+        console.error('Error loading premium history:', error);
+        premiumHistoryTable.innerHTML = `<p style="text-align: center; padding: 40px; color: #ef4444;">Lỗi: ${error.message}</p>`;
     }
 }
 
-// Extend premium subscription
-async function extendPremium(subscriptionId, username) {
-    const days = prompt(`Gia hạn thêm bao nhiêu ngày cho ${username}?`, '30');
-    if (!days || isNaN(days) || days <= 0) return;
-    
-    try {
-        const response = await fetch(`/api/admin/premium/${subscriptionId}/extend`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ days: parseInt(days) })
+// Search premium history on Enter key
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('premiumHistorySearch');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadPremiumHistory();
+            }
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert(data.message);
-            loadPremiumSubscriptions();
-        } else {
-            alert('Lỗi: ' + (data.error || 'Không thể gia hạn'));
-        }
-    } catch (error) {
-        alert('Lỗi: ' + error.message);
     }
-}
-
-// Delete premium subscription
-async function deletePremium(subscriptionId, username) {
-    if (!confirm(`Bạn có chắc muốn xóa gói Premium của "${username}"?\n\nThao tác này không thể hoàn tác!`)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/admin/premium/${subscriptionId}`, {
-            method: 'DELETE'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert(data.message);
-            loadPremiumSubscriptions();
-        } else {
-            alert('Lỗi: ' + (data.error || 'Không thể xóa'));
-        }
-    } catch (error) {
-        alert('Lỗi: ' + error.message);
-    }
-}
-
-// Show add premium modal (placeholder)
-function showAddPremiumModal() {
-    alert('Tính năng này sẽ được thêm sau. Hiện tại bạn có thể thêm Premium cho người dùng từ trang "Người dùng".');
-}
+});

@@ -1986,6 +1986,105 @@ def admin_extend_premium(subscription_id):
         print(f'[ERROR] Admin extend premium: {e}')
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/admin/premium-history', methods=['GET'])
+def admin_get_premium_history():
+    """Get premium payment history from donations table"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        status_filter = request.args.get('status', 'all')
+        search = request.args.get('search', '').strip()
+        
+        # Base query - get donations with user info
+        query = """
+            SELECT 
+                d.id,
+                d.user_id,
+                u.username,
+                u.email,
+                d.order_code,
+                d.amount,
+                d.status,
+                d.created_at,
+                d.updated_at
+            FROM donations d
+            LEFT JOIN users u ON d.user_id = u.id
+            WHERE 1=1
+        """
+        
+        params = []
+        
+        # Apply filters
+        if status_filter != 'all':
+            query += ' AND d.status = %s'
+            params.append(status_filter)
+        
+        if search:
+            query += ' AND (u.username ILIKE %s OR u.email ILIKE %s OR d.order_code ILIKE %s)'
+            params.extend([f'%{search}%', f'%{search}%', f'%{search}%'])
+        
+        query += ' ORDER BY d.created_at DESC LIMIT 200'
+        
+        cursor.execute(query, params)
+        payments = cursor.fetchall()
+        
+        # Get stats
+        cursor.execute("""
+            SELECT COUNT(*), COALESCE(SUM(amount), 0)
+            FROM donations 
+            WHERE status = 'PAID'
+        """)
+        success_count, total_revenue = cursor.fetchone()
+        
+        cursor.execute("""
+            SELECT COUNT(DISTINCT user_id) 
+            FROM premium_subscriptions 
+            WHERE is_active = true AND expires_at > NOW()
+        """)
+        premium_users = cursor.fetchone()[0]
+        
+        cursor.execute("""
+            SELECT COUNT(*) FROM donations 
+            WHERE status = 'PAID' AND created_at >= CURRENT_DATE
+        """)
+        today_count = cursor.fetchone()[0]
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({
+            'success': True,
+            'payments': [{
+                'id': p[0],
+                'user_id': p[1],
+                'username': p[2],
+                'email': p[3],
+                'order_code': p[4],
+                'amount': p[5],
+                'status': p[6],
+                'created_at': p[7].isoformat() if p[7] else None,
+                'updated_at': p[8].isoformat() if p[8] else None
+            } for p in payments],
+            'stats': {
+                'success': success_count,
+                'revenue': total_revenue,
+                'premium_users': premium_users,
+                'today': today_count
+            }
+        })
+        
+    except Exception as e:
+        print(f'[ERROR] Admin get premium history: {e}')
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/news')
 def api_news():
     return NewsController.get_news()
