@@ -488,10 +488,15 @@ def api_verify_otp():
             # Mark user as verified
             cursor.execute("UPDATE users SET is_verified = TRUE WHERE id = %s", (user_id,))
             
+            # Get username for session
+            cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+            username = cursor.fetchone()[0]
+            
             # Auto login after verification
             session.pop('pending_user_id', None)
             session.pop('pending_email', None)
             session['user_id'] = user_id
+            session['username'] = username
             
             conn.commit()
             cursor.close()
@@ -649,6 +654,7 @@ def api_login():
         
         # Login success
         session['user_id'] = user_id
+        session['username'] = username
         
         return jsonify({
             'success': True,
@@ -718,6 +724,7 @@ def api_google_login():
         if user:
             # Existing Google user - login
             session['user_id'] = user[0]
+            session['username'] = user[1]
             cursor.close()
             db_pool.putconn(conn)
             return jsonify({
@@ -736,6 +743,7 @@ def api_google_login():
                          (google_id, existing[0]))
             conn.commit()
             session['user_id'] = existing[0]
+            session['username'] = existing[1]
             cursor.close()
             db_pool.putconn(conn)
             return jsonify({
@@ -770,6 +778,7 @@ def api_google_login():
         db_pool.putconn(conn)
         
         session['user_id'] = user_id
+        session['username'] = username
         
         return jsonify({
             'success': True,

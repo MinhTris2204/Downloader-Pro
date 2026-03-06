@@ -10504,7 +10504,8 @@ body {
         gap: 4px;
     }
     
-    /* Hide items after Blog (Tin tức, Language dropdown, Theme toggle) */
+    /* Hide specific items on mobile */
+    .header-nav .nav-link-hide-mobile,
     .header-nav .nav-link:nth-child(4),
     .header-nav .lang-dropdown,
     .header-nav .lang-overlay,
