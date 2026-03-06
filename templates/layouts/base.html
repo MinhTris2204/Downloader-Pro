@@ -61,6 +61,18 @@
     {% if not session.get('user_id') or not premium_info or not premium_info.is_premium %}
     <script>
         (function () {
+            // Không hiển thị quảng cáo trên các trang auth
+            var authPages = ['/login', '/register', '/forgot-password', '/account', '/donate'];
+            var currentPath = window.location.pathname;
+            var isAuthPage = authPages.some(function(page) {
+                return currentPath.includes(page);
+            });
+            
+            if (isAuthPage) {
+                console.log('Auth page detected - ads disabled');
+                return; // Không chạy quảng cáo trên trang auth
+            }
+            
             var clickUrl = "https://rm358.com/4/10678388";
             var lastAdTime = 0;
             var adCooldown = 60000; // 60 giây = 1 phút giữa các lần mở quảng cáo
