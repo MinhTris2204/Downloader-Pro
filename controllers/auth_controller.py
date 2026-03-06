@@ -39,6 +39,7 @@ def generate_session_token():
 def _send_email_task(email, otp, purpose):
     try:
         import smtplib
+        import requests
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
         
@@ -46,9 +47,10 @@ def _send_email_task(email, otp, purpose):
         smtp_port = int(os.environ.get('MAIL_PORT', 587))
         smtp_user = os.environ.get('MAIL_USERNAME', '')
         smtp_pass = os.environ.get('MAIL_PASSWORD', '')
+        webhook_url = os.environ.get('GOOGLE_MAIL_WEBHOOK', '')
         
-        if not smtp_user or not smtp_pass:
-            print(f"[AUTH] SMTP not configured. OTP for {email}: {otp}")
+        if not webhook_url and (not smtp_user or not smtp_pass):
+            print(f"[AUTH] Email system not configured. OTP for {email}: {otp}")
             return
             
         if purpose == 'verify':
@@ -88,6 +90,16 @@ def _send_email_task(email, otp, purpose):
             </div>
             """
         
+        if webhook_url:
+            # Bypass SMTP entirely, use Google Apps Script HTTP Webhook
+            resp = requests.post(webhook_url, json={
+                'to': email,
+                'subject': subject,
+                'body': body
+            }, timeout=15)
+            print(f"[AUTH] OTP sent via Webhook to {email}. Status: {resp.status_code}")
+            return
+
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = f'Downloader Pro <{smtp_user}>'
@@ -99,7 +111,7 @@ def _send_email_task(email, otp, purpose):
             server.login(smtp_user, smtp_pass)
             server.sendmail(smtp_user, email, msg.as_string())
         
-        print(f"[AUTH] OTP sent to {email}")
+        print(f"[AUTH] OTP sent via SMTP to {email}")
     except Exception as e:
         print(f"[AUTH ERROR] Failed to send OTP email: {e}")
         import traceback
@@ -123,15 +135,31 @@ def api_test_email():
     """Endpoint để test lỗi gửi email trực tiếp trên trình duyệt"""
     try:
         import smtplib
+        import requests
         from email.mime.text import MIMEText
         
         smtp_host = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
         smtp_port = int(os.environ.get('MAIL_PORT', 587))
         smtp_user = os.environ.get('MAIL_USERNAME', '')
         smtp_pass = os.environ.get('MAIL_PASSWORD', '')
+        webhook_url = os.environ.get('GOOGLE_MAIL_WEBHOOK', '')
         
+        # Test Webhook if configured
+        if webhook_url:
+            test_email = smtp_user or "test@example.com"
+            resp = requests.post(webhook_url, json={
+                'to': test_email,
+                'subject': 'Test Cấu Hình Webhook Email',
+                'body': '<p>Đây là email test qua hệ thống Google Apps Script Webhook.</p>'
+            }, timeout=15)
+            return jsonify({
+                'success': True, 
+                'message': f'Đã gửi test qua Webhook. Status HTTP: {resp.status_code}', 
+                'method': 'webhook'
+            })
+            
         if not smtp_user or not smtp_pass:
-            return jsonify({'success': False, 'error': 'Chưa cấu hình MAIL_USERNAME / MAIL_PASSWORD'})
+            return jsonify({'success': False, 'error': 'Chưa cấu hình MAIL_USERNAME / MAIL_PASSWORD hoặc GOOGLE_MAIL_WEBHOOK'})
             
         msg = MIMEText('Đây là email test từ hệ thống Railway của bạn.', 'plain', 'utf-8')
         msg['Subject'] = 'Test Cấu Hình Email'
@@ -144,7 +172,7 @@ def api_test_email():
             server.login(smtp_user, smtp_pass)
             server.sendmail(smtp_user, smtp_user, msg.as_string())
             
-        return jsonify({'success': True, 'message': f'Gửi test thành công đến {smtp_user}'})
+        return jsonify({'success': True, 'message': f'Gửi test thành công đến {smtp_user}', 'method': 'smtp'})
     except Exception as e:
         import traceback
         return jsonify({'success': False, 'error': str(e), 'trace': traceback.format_exc()})
