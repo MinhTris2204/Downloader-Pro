@@ -3113,8 +3113,11 @@ def get_statistics():
         if total_pageviews == 0:
             cursor.execute("SELECT total_downloads FROM stats LIMIT 1")
             stats_result = cursor.fetchone()
-            baseline = stats_result[0] if stats_result else 1250
+            baseline = stats_result[0] if stats_result else 2000
             total_pageviews = baseline
+        
+        # Đảm bảo tối thiểu là 2000
+        total_pageviews = max(total_pageviews, 2000)
         
         print(f">>> Total pageviews: {total_pageviews}")
         
