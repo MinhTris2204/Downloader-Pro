@@ -1,4 +1,4 @@
-2.1.1
+2.1.2
 Release Date: 2026-03-06
 Features:
 - Complete i18n system with 3 languages (Vietnamese, English, Russian)
@@ -9,4 +9,5 @@ Features:
 - Enhanced UI with pulsing animations
 - Username display on header
 - Mobile optimizations
+- Updated stats: Minimum total pageviews set to 2000
 
