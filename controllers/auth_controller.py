@@ -106,12 +106,48 @@ def _send_email_task(email, otp, purpose):
         traceback.print_exc()
 
 def send_otp_email(email, otp, purpose='verify'):
-    """Send OTP via email asynchronously to avoid blocking API"""
-    import threading
-    thread = threading.Thread(target=_send_email_task, args=(email, otp, purpose))
-    thread.daemon = True
-    thread.start()
+    """Send OTP via email asynchronously using SocketIO background task"""
+    try:
+        from app import socketio
+        socketio.start_background_task(_send_email_task, email, otp, purpose)
+    except Exception as e:
+        # Fallback to threading if socketio fails
+        import threading
+        thread = threading.Thread(target=_send_email_task, args=(email, otp, purpose))
+        thread.daemon = True
+        thread.start()
     return True
+
+@auth_bp.route('/api/auth/test-email')
+def api_test_email():
+    """Endpoint để test lỗi gửi email trực tiếp trên trình duyệt"""
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        
+        smtp_host = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.environ.get('MAIL_PORT', 587))
+        smtp_user = os.environ.get('MAIL_USERNAME', '')
+        smtp_pass = os.environ.get('MAIL_PASSWORD', '')
+        
+        if not smtp_user or not smtp_pass:
+            return jsonify({'success': False, 'error': 'Chưa cấu hình MAIL_USERNAME / MAIL_PASSWORD'})
+            
+        msg = MIMEText('Đây là email test từ hệ thống Railway của bạn.', 'plain', 'utf-8')
+        msg['Subject'] = 'Test Cấu Hình Email'
+        msg['From'] = f'Downloader Pro <{smtp_user}>'
+        msg['To'] = smtp_user
+        
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            server.set_debuglevel(1)
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, smtp_user, msg.as_string())
+            
+        return jsonify({'success': True, 'message': f'Gửi test thành công đến {smtp_user}'})
+    except Exception as e:
+        import traceback
+        return jsonify({'success': False, 'error': str(e), 'trace': traceback.format_exc()})
 
 def get_current_user():
     """Get current logged in user from session"""
