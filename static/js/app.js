@@ -1553,6 +1553,16 @@ function initializeSocket() {
             
             // Request current online count immediately after connecting
             socket.emit('get_online_count');
+            
+            // If user is logged in, notify server
+            const userIdMeta = document.querySelector('meta[name="user-id"]');
+            if (userIdMeta && userIdMeta.content) {
+                const userId = parseInt(userIdMeta.content);
+                if (userId) {
+                    socket.emit('user_login', { user_id: userId });
+                    console.log('👤 Sent user_login event for user:', userId);
+                }
+            }
         });
         
         socket.on('disconnect', function() {

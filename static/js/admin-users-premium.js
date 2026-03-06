@@ -43,7 +43,20 @@ let onlineUserIds = new Set();
 if (typeof io !== 'undefined') {
     const socket = io();
     
+    socket.on('connect', function() {
+        console.log('Admin socket connected');
+        // Join admin room to receive user status updates
+        socket.emit('join_admin');
+    });
+    
+    socket.on('online_users_list', function(data) {
+        console.log('Received online users list:', data.user_ids);
+        onlineUserIds = new Set(data.user_ids);
+        document.getElementById('usersOnline').textContent = onlineUserIds.size;
+    });
+    
     socket.on('user_status', function(data) {
+        console.log('User status update:', data);
         if (data.user_id) {
             if (data.status === 'online') {
                 onlineUserIds.add(data.user_id);
@@ -52,6 +65,12 @@ if (typeof io !== 'undefined') {
             }
             // Update online count in stats
             document.getElementById('usersOnline').textContent = onlineUserIds.size;
+            
+            // Reload users table if currently viewing users section
+            const usersSection = document.getElementById('users');
+            if (usersSection && usersSection.classList.contains('active')) {
+                loadUsers();
+            }
         }
     });
 }

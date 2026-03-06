@@ -19,7 +19,7 @@ from psycopg2 import pool
 import hashlib
 
 # Socket.IO for real-time online users
-from flask_socketio import SocketIO, emit, disconnect
+from flask_socketio import SocketIO, emit, disconnect, join_room
 
 # Import controllers
 from controllers.home_controller import HomeController
@@ -46,6 +46,12 @@ app.register_blueprint(donate_bp)
 app.register_blueprint(auth_bp)
 
 # ===== SOCKET.IO EVENTS FOR REAL-TIME ONLINE USERS =====
+
+# Dictionary to map socket_id -> user_id
+socket_to_user = {}
+# Dictionary to map user_id -> set of socket_ids (user can have multiple tabs)
+user_to_sockets = {}
+
 @socketio.on('connect')
 def handle_connect():
     """Người dùng kết nối - tăng online count"""
@@ -71,6 +77,23 @@ def handle_disconnect():
         user_session = request.sid
         online_users.discard(user_session)
         
+        # Remove from user tracking
+        if user_session in socket_to_user:
+            user_id = socket_to_user[user_session]
+            del socket_to_user[user_session]
+            
+            # Remove socket from user's socket set
+            if user_id in user_to_sockets:
+                user_to_sockets[user_id].discard(user_session)
+                # If user has no more sockets, remove from online users
+                if not user_to_sockets[user_id]:
+                    del user_to_sockets[user_id]
+                    # Notify admin that user went offline
+                    socketio.emit('user_status', {
+                        'user_id': user_id,
+                        'status': 'offline'
+                    }, room='admin')
+        
         print(f"[SOCKET] User disconnected: {user_session} | Online: {len(online_users)}")
         
         # Broadcast số online mới cho tất cả clients
@@ -80,6 +103,48 @@ def handle_disconnect():
         
     except Exception as e:
         print(f"[SOCKET ERROR] Disconnect failed: {e}")
+
+@socketio.on('user_login')
+def handle_user_login(data):
+    """User logged in - track their user_id"""
+    try:
+        user_id = data.get('user_id')
+        if user_id:
+            socket_id = request.sid
+            socket_to_user[socket_id] = user_id
+            
+            # Add socket to user's socket set
+            if user_id not in user_to_sockets:
+                user_to_sockets[user_id] = set()
+                # First socket for this user - they just came online
+                socketio.emit('user_status', {
+                    'user_id': user_id,
+                    'status': 'online'
+                }, room='admin')
+            
+            user_to_sockets[user_id].add(socket_id)
+            
+            print(f"[SOCKET] User {user_id} logged in on socket {socket_id}")
+            
+    except Exception as e:
+        print(f"[SOCKET ERROR] User login failed: {e}")
+
+@socketio.on('join_admin')
+def handle_join_admin():
+    """Admin joins admin room to receive user status updates"""
+    try:
+        from flask import session as flask_session
+        if 'admin_logged_in' in flask_session:
+            join_room('admin')
+            print(f"[SOCKET] Admin joined admin room: {request.sid}")
+            
+            # Send current online users to admin
+            online_user_ids = list(user_to_sockets.keys())
+            emit('online_users_list', {
+                'user_ids': online_user_ids
+            })
+    except Exception as e:
+        print(f"[SOCKET ERROR] Join admin failed: {e}")
 
 @socketio.on('ping')
 def handle_ping():
