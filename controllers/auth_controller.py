@@ -273,18 +273,26 @@ def api_register():
         cursor = conn.cursor()
         
         # Check existing username
-        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
-        if cursor.fetchone():
+        cursor.execute("SELECT id, is_verified FROM users WHERE username = %s", (username,))
+        existing_username = cursor.fetchone()
+        
+        if existing_username and existing_username[1]:
             cursor.close()
             db_pool.putconn(conn)
             return jsonify({'success': False, 'error': 'Tên đăng nhập đã tồn tại'}), 200
-        
+            
         # Check existing email
-        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
-        if cursor.fetchone():
+        cursor.execute("SELECT id, is_verified FROM users WHERE email = %s", (email,))
+        existing_email = cursor.fetchone()
+        
+        if existing_email and existing_email[1]:
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Email đã được đăng ký'}), 200
+            return jsonify({'success': False, 'error': 'Email đã được sử dụng và xác thực'}), 200
+            
+        # If unverified account exists with this username or email, delete it so user can register again
+        if (existing_username and not existing_username[1]) or (existing_email and not existing_email[1]):
+            cursor.execute("DELETE FROM users WHERE (username = %s OR email = %s) AND is_verified = FALSE", (username, email))
         
         # Create user (unverified)
         password_hash = hash_password(password)
