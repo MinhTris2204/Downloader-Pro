@@ -2,6 +2,17 @@
 set -e
 
 echo "========================================="
+echo "Running database migrations..."
+echo "========================================="
+
+# Run migration to drop donation_messages table
+if [ -f "drop_donation_messages.py" ]; then
+    echo "Running drop_donation_messages.py..."
+    /opt/venv/bin/python drop_donation_messages.py || echo "⚠️ Migration failed or already applied"
+fi
+
+echo ""
+echo "========================================="
 echo "Starting bgutil POT provider..."
 echo "========================================="
 
