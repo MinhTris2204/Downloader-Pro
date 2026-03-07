@@ -935,45 +935,14 @@ def api_check_download():
     user = get_current_user()
     
     if not user:
-        # Guest user - check by IP
-        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-        if ip_address and ',' in ip_address:
-            ip_address = ip_address.split(',')[0].strip()
-        
-        user_id = hashlib.md5(ip_address.encode()).hexdigest()
-        
-        if db_pool:
-            conn = db_pool.getconn()
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT COUNT(*) FROM user_downloads 
-                WHERE user_id = %s 
-                AND download_time >= DATE_TRUNC('month', CURRENT_DATE)
-            """, (user_id,))
-            count = cursor.fetchone()[0]
-            cursor.close()
-            db_pool.putconn(conn)
-            
-            if count >= 2:
-                return jsonify({
-                    'success': False,
-                    'can_download': False,
-                    'reason': 'limit_reached',
-                    'message': 'Bạn đã hết lượt tải miễn phí trong tháng này. Đăng ký tài khoản và nâng cấp Premium để tải không giới hạn!',
-                    'downloads_used': count,
-                    'max_free': 2,
-                    'logged_in': False
-                })
-            
-            return jsonify({
-                'success': True,
-                'can_download': True,
-                'downloads_left': 2 - count,
-                'max_free': 2,
-                'logged_in': False
-            })
-        
-        return jsonify({'success': True, 'can_download': True, 'logged_in': False})
+        # Require login - no guest downloads allowed
+        return jsonify({
+            'success': False,
+            'can_download': False,
+            'reason': 'require_login',
+            'message': 'Vui lòng đăng nhập để tải video. Đăng ký miễn phí để nhận 2 lượt tải mỗi tháng!',
+            'logged_in': False
+        })
     
     # Logged in user
     premium_info = get_user_premium_info(user['id'])

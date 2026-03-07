@@ -292,11 +292,6 @@ async function downloadYoutube() {
         if (data.success) {
             showProgress('youtube', data.download_id);
             
-            // Record download for limit tracking
-            if (typeof recordDownload === 'function') {
-                recordDownload('youtube');
-            }
-            
             // Show donation promo after starting download
             if (typeof showDonationPromoOnDownload === 'function') {
                 showDonationPromoOnDownload();
@@ -695,11 +690,6 @@ async function downloadTiktok() {
         if (data.success) {
             showProgress('tiktok', data.download_id);
             
-            // Record download for limit tracking
-            if (typeof recordDownload === 'function') {
-                recordDownload('tiktok');
-            }
-            
             // Show donation promo after starting download
             if (typeof showDonationPromoOnDownload === 'function') {
                 showDonationPromoOnDownload();
@@ -754,6 +744,11 @@ function showProgress(platform, downloadId) {
                 // Update preview with actual title if available
                 if (data.title && platform === 'youtube') {
                     document.getElementById('youtube-title').textContent = data.title;
+                }
+
+                // Record download for limit tracking when download is successful
+                if (typeof recordDownload === 'function') {
+                    recordDownload(platform);
                 }
 
                 setTimeout(() => {
