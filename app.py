@@ -2841,6 +2841,11 @@ def test_stats():
     """Test page for realtime statistics"""
     return render_template('test_stats.html')
 
+@app.route('/premium')
+def premium_page():
+    """Premium subscription page"""
+    return render_template('premium.html')
+
 @app.route('/api/youtube/info', methods=['POST'])
 def youtube_info():
     try:
