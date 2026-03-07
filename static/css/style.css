@@ -10641,7 +10641,6 @@ body {
     
     /* Hide specific items on mobile */
     .header-nav .nav-link-hide-mobile,
-    .header-nav .nav-link:nth-child(4),
     .header-nav .lang-dropdown,
     .header-nav .lang-overlay,
     .header-nav .theme-toggle {
