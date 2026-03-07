@@ -1122,6 +1122,14 @@ def try_invidious_download(video_id, format_type, quality, download_id, temp_dir
 
 def download_youtube_video(url, format_type, quality, download_id):
     """Download YouTube video using yt-dlp with advanced bypass techniques"""
+    print(f"\n{'='*80}")
+    print(f"[YOUTUBE DOWNLOAD START]")
+    print(f"URL: {url}")
+    print(f"Format: {format_type}")
+    print(f"Quality: {quality}")
+    print(f"Download ID: {download_id}")
+    print(f"{'='*80}\n")
+    
     try:
         import yt_dlp
         import random
@@ -1400,12 +1408,18 @@ def download_youtube_video(url, format_type, quality, download_id):
                     mime_type = 'video/mp4'
                 
                 # Try to download with this strategy
-                print(f"[DEBUG] Trying strategy: {strategy['name']} (UA: {selected_ua[:50]}...)")
+                print(f"\n[STRATEGY {idx+1}/{len(strategies)}] Trying: {strategy['name']}")
+                print(f"  - User-Agent: {selected_ua[:80]}...")
+                print(f"  - Use cookies: {strategy.get('use_cookies', True)}")
+                print(f"  - Extractor args: {strategy['opts'].get('extractor_args', {})}")
+                
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=True)
                     title = info.get('title', 'video')
                 
-                print(f"[DEBUG] Success with strategy: {strategy['name']}")
+                print(f"[SUCCESS] ✅ Strategy '{strategy['name']}' worked!")
+                print(f"  - Title: {title}")
+                print(f"  - File: {final_filename}\n")
                 # Success! Break out of strategy loop
                 filepath = os.path.join(temp_dir, final_filename)
                 
@@ -1430,18 +1444,22 @@ def download_youtube_video(url, format_type, quality, download_id):
             except Exception as e:
                 last_error = e
                 error_str = str(e)
-                print(f"[DEBUG] Strategy {strategy['name']} failed: {error_str[:150]}")
+                print(f"[FAILED] ❌ Strategy '{strategy['name']}' failed")
+                print(f"  - Error: {error_str[:200]}")
                 
                 # If it's a fatal error (video unavailable, private, etc.), don't retry
                 if any(fatal in error_str for fatal in ['Video unavailable', 'Private video', 'removed', 'deleted', 'copyright']):
-                    print(f"[DEBUG] Fatal error detected, stopping retries")
+                    print(f"[FATAL ERROR] 🛑 Fatal error detected, stopping all retries")
+                    print(f"  - Reason: {error_str[:300]}\n")
                     break
                     
                 # Try next strategy
+                print(f"  - Will try next strategy...\n")
                 continue
         
         # All yt-dlp strategies failed - try Invidious as last resort
-        print(f"[DEBUG] All yt-dlp strategies failed, trying Invidious...")
+        print(f"\n[FALLBACK] All yt-dlp strategies failed, trying Invidious API...")
+        print(f"  - Last error: {str(last_error)[:200]}\n")
         
         # Extract video ID from URL
         video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})', url)
@@ -1520,8 +1538,14 @@ def download_youtube_video(url, format_type, quality, download_id):
             download_progress[download_id]['error'] = '📺 Video đang phát trực tiếp hoặc chưa công chiếu. Hãy đợi video kết thúc'
         else:
             download_progress[download_id]['error'] = f'❌ Lỗi: {error_msg[:200]}'
-            
-        print(f"YouTube download error: {e}")
+        
+        print(f"\n{'='*80}")
+        print(f"[YOUTUBE DOWNLOAD FAILED]")
+        print(f"Error: {e}")
+        print(f"Full traceback:")
+        import traceback
+        traceback.print_exc()
+        print(f"{'='*80}\n")
 
 def download_tiktok_video(url, format_type, download_id, quality='best'):
     """Download TikTok video/photo using yt-dlp"""
