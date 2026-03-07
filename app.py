@@ -1555,7 +1555,7 @@ def download_youtube_video(url, format_type, quality, download_id):
             available_countries = available_match.group(1) if available_match else 'một số quốc gia khác'
             download_progress[download_id]['error'] = f'🌍 Video bị chặn theo khu vực.\n\n📍 Video chỉ khả dụng tại: {available_countries}\n\n💡 Giải pháp:\n🔹 Sử dụng VPN để đổi vị trí\n🔹 Thử video khác không bị chặn vùng\n\n⚙️ Nếu có VPN, thêm --proxy vào cấu hình yt-dlp'
         elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg or 'confirm you' in error_msg.lower():
-            download_progress[download_id]['error'] = '⏳ YouTube phát hiện tải tự động.\n\n✅ Đã thử 6 phương pháp bypass khác nhau.\n\n💡 Giải pháp:\n🔹 Đợi 5-10 phút rồi thử lại\n🔹 Thử video ngắn hơn (<10 phút)\n🔹 Thử video từ kênh khác\n\n🍪 Mẹo nâng cao: Thêm file cookies.txt để bypass hoàn toàn'
+            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử 6 phương pháp bypass.\n\n💡 Giải pháp:\n🔹 Đợi 5-10 phút rồi thử lại\n🔹 Thử video ngắn hơn (<10 phút)\n🔹 Thử video từ kênh khác\n\n⚙️ Admin: Cần thêm cookies.txt - Xem YOUTUBE_COOKIES_SETUP.md'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
