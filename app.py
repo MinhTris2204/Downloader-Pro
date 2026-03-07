@@ -1762,6 +1762,11 @@ def terms_of_service():
     from datetime import datetime
     return render_template('terms.html', current_date=datetime.now().strftime('%d/%m/%Y'))
 
+@app.route('/delete-data')
+def delete_data_info():
+    """Facebook Data Deletion Instructions page"""
+    return render_template('facebook_delete_data.html')
+
 @app.route('/blog')
 def blog_index():
     return BlogController.index()
