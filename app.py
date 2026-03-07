@@ -3175,19 +3175,12 @@ def get_statistics():
         # 4. Tổng pageviews (tất cả visits)
         cursor.execute("SELECT COUNT(*) FROM page_visits")
         total_result = cursor.fetchone()
-        total_pageviews = total_result[0] if total_result else 0
+        actual_pageviews = total_result[0] if total_result else 0
         
-        # Nếu chưa có dữ liệu, lấy từ bảng downloads để có baseline
-        if total_pageviews == 0:
-            cursor.execute("SELECT total_downloads FROM stats LIMIT 1")
-            stats_result = cursor.fetchone()
-            baseline = stats_result[0] if stats_result else 2000
-            total_pageviews = baseline
+        # Cộng thêm baseline 2000 để có số đẹp hơn
+        total_pageviews = actual_pageviews + 2000
         
-        # Đảm bảo tối thiểu là 2000
-        total_pageviews = max(total_pageviews, 2000)
-        
-        print(f">>> Total pageviews: {total_pageviews}")
+        print(f">>> Actual pageviews: {actual_pageviews}, Total with baseline: {total_pageviews}")
         
         cursor.close()
         db_pool.putconn(conn)
