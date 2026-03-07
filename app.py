@@ -1194,9 +1194,39 @@ def download_youtube_video(url, format_type, quality, download_id):
         
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
-        # UPDATED: android_embed moved to top (currently working best)
+        # PRIORITY: Try cookies-based strategies FIRST if cookies available
         strategies = [
-            # Strategy 0: Android Embedded (WORKING - Currently most reliable!)
+            # Strategy 0: iOS with Cookies (BEST - Most reliable with valid cookies!)
+            {
+                'name': 'ios_cookies',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios'],
+                        }
+                    },
+                },
+                'delay': 0,
+                'use_cookies': True  # Requires cookies
+            },
+            # Strategy 1: Web with Cookies (Traditional method)
+            {
+                'name': 'web_cookies',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['web'],
+                        }
+                    },
+                },
+                'delay': 1,
+                'use_cookies': True
+            },
+            # Strategy 2: Android Embedded (Fallback - no cookies needed)
             {
                 'name': 'android_embed',
                 'opts': {
@@ -1208,10 +1238,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 0,
+                'delay': 2,
                 'use_cookies': False  # Android client doesn't need cookies
             },
-            # Strategy 1: Android Music (Alternative Android client)
+            # Strategy 3: Android Music (Alternative Android client)
             {
                 'name': 'android_music',
                 'opts': {
@@ -1223,10 +1253,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 2,
+                'delay': 3,
                 'use_cookies': False
             },
-            # Strategy 2: TV Embedded (Low bot detection)
+            # Strategy 4: TV Embedded (Low bot detection)
             {
                 'name': 'tv_embed',
                 'opts': {
@@ -1238,24 +1268,11 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 3,
+                'delay': 4,
                 'use_cookies': False
             },
-            # Strategy 3: iOS (Using cookies)
-            {
-                'name': 'ios_classic',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['ios'],
-                        }
-                    },
-                },
-                'delay': 4
-            },
-            # Strategy 4: bgutil POT Provider (Requires bgutil server)
+            # Strategy 5: bgutil POT Provider (Requires bgutil server)
+            # Strategy 5: bgutil POT Provider (Requires bgutil server)
             {
                 'name': 'bgutil_pot',
                 'opts': {
@@ -1271,9 +1288,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 6
+                'delay': 5,
+                'use_cookies': True
             },
-            # Strategy 5: PO Token with Web Client (Deno auto-generation)
+            # Strategy 6: PO Token with Web Client (Deno auto-generation)
             {
                 'name': 'po_token_web',
                 'opts': {
