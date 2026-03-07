@@ -17,6 +17,30 @@
 3. Chọn "Web" platform
 4. Nhập URL website của bạn (vd: https://downloaderpro.io.vn)
 
+### Cấu hình Facebook Login Settings
+
+1. Vào **Facebook Login** > **Settings** trong menu bên trái
+2. Bật các tùy chọn sau:
+   - ✅ **Client OAuth Login**: Yes
+   - ✅ **Web OAuth Login**: Yes
+   - ✅ **Use Strict Mode for Redirect URIs**: Yes (khuyến nghị)
+
+3. Trong **Valid OAuth Redirect URIs**, thêm các URL sau (mỗi URL một dòng):
+   ```
+   https://downloaderpro.io.vn/
+   https://downloaderpro.io.vn/login
+   https://downloaderpro.io.vn/register
+   ```
+
+4. Trong **Allowed Domains for the JavaScript SDK**, thêm:
+   ```
+   downloaderpro.io.vn
+   ```
+   
+   **Lưu ý:** Chỉ nhập domain, không có `https://` hay `www.`
+
+5. Nhấn **Save Changes**
+
 ## Bước 3: Cấu hình OAuth Redirect URIs
 
 1. Vào "Facebook Login" > "Settings" trong menu bên trái

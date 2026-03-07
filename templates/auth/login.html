@@ -153,10 +153,16 @@ window.fbAsyncInit = function() {
         appId: '{{ facebook_app_id }}',
         cookie: true,
         xfbml: true,
-        version: 'v18.0'
+        version: 'v21.0'  // Updated to latest stable version
+    });
+    
+    // Check login status on page load
+    FB.getLoginStatus(function(response) {
+        console.log('Facebook login status:', response.status);
     });
 };
 
+// Load Facebook SDK asynchronously
 (function(d, s, id){
     var js, fjs = d.getElementsByTagName(s)[0];
     if (d.getElementById(id)) {return;}
@@ -165,9 +171,10 @@ window.fbAsyncInit = function() {
     fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));
 
-async function handleFacebookLogin() {
+function handleFacebookLogin() {
     FB.login(function(response) {
         if (response.authResponse) {
+            console.log('Facebook login successful');
             const accessToken = response.authResponse.accessToken;
             
             // Send to backend
