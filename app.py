@@ -351,11 +351,6 @@ def init_db():
         
         print("[INFO] Essential tables created/verified")
         
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_user_downloads_user_time 
-            ON user_downloads(user_id, download_time)
-        """)
-        
         # Create users table for authentication
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -422,6 +417,23 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_premium_user_active 
             ON premium_subscriptions(user_id, is_active, expires_at)
         """)
+        
+        # Create user_downloads table for tracking download limits
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_downloads (
+                id SERIAL PRIMARY KEY,
+                user_id VARCHAR(100) NOT NULL,
+                platform VARCHAR(20) NOT NULL,
+                download_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_user_downloads_user_time 
+            ON user_downloads(user_id, download_time)
+        """)
+        
+        print("[INFO] user_downloads table created/verified")
         
         # Create OTP codes table
         cursor.execute("""
