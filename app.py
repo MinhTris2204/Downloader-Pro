@@ -2095,7 +2095,7 @@ def admin_extend_premium(subscription_id):
 
 @app.route('/api/admin/premium-history', methods=['GET'])
 def admin_get_premium_history():
-    """Get premium payment history from donations table"""
+    """Get premium payment history from premium_subscriptions table"""
     if 'admin_logged_in' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
@@ -2109,35 +2109,43 @@ def admin_get_premium_history():
         status_filter = request.args.get('status', 'all')
         search = request.args.get('search', '').strip()
         
-        # Base query - get donations with user info
+        # Base query - get premium subscriptions with user and donation info
         query = """
             SELECT 
-                d.id,
-                d.user_id,
+                ps.id,
+                ps.user_id,
                 u.username,
                 u.email,
-                d.order_code,
-                d.amount,
-                d.status,
-                d.created_at,
-                d.updated_at
-            FROM donations d
-            LEFT JOIN users u ON d.user_id = u.id
+                ps.order_code,
+                ps.amount,
+                CASE 
+                    WHEN ps.is_active AND ps.expires_at > NOW() THEN 'PAID'
+                    WHEN ps.expires_at <= NOW() THEN 'EXPIRED'
+                    ELSE 'CANCELLED'
+                END as status,
+                ps.created_at,
+                ps.expires_at,
+                ps.starts_at
+            FROM premium_subscriptions ps
+            LEFT JOIN users u ON ps.user_id = u.id
             WHERE 1=1
         """
         
         params = []
         
         # Apply filters
-        if status_filter != 'all':
-            query += ' AND d.status = %s'
-            params.append(status_filter)
+        if status_filter == 'PAID':
+            query += ' AND ps.is_active = true AND ps.expires_at > NOW()'
+        elif status_filter == 'EXPIRED':
+            query += ' AND ps.expires_at <= NOW()'
+        elif status_filter == 'CANCELLED':
+            query += ' AND ps.is_active = false'
         
         if search:
-            query += ' AND (u.username ILIKE %s OR u.email ILIKE %s OR d.order_code ILIKE %s)'
+            query += ' AND (u.username ILIKE %s OR u.email ILIKE %s OR ps.order_code ILIKE %s)'
             params.extend([f'%{search}%', f'%{search}%', f'%{search}%'])
         
-        query += ' ORDER BY d.created_at DESC LIMIT 200'
+        query += ' ORDER BY ps.created_at DESC LIMIT 200'
         
         cursor.execute(query, params)
         payments = cursor.fetchall()
@@ -2145,8 +2153,8 @@ def admin_get_premium_history():
         # Get stats
         cursor.execute("""
             SELECT COUNT(*), COALESCE(SUM(amount), 0)
-            FROM donations 
-            WHERE status = 'PAID'
+            FROM premium_subscriptions 
+            WHERE is_active = true AND expires_at > NOW()
         """)
         success_count, total_revenue = cursor.fetchone()
         
@@ -2158,8 +2166,8 @@ def admin_get_premium_history():
         premium_users = cursor.fetchone()[0]
         
         cursor.execute("""
-            SELECT COUNT(*) FROM donations 
-            WHERE status = 'PAID' AND created_at >= CURRENT_DATE
+            SELECT COUNT(*) FROM premium_subscriptions 
+            WHERE created_at >= CURRENT_DATE
         """)
         today_count = cursor.fetchone()[0]
         
@@ -2177,7 +2185,8 @@ def admin_get_premium_history():
                 'amount': p[5],
                 'status': p[6],
                 'created_at': p[7].isoformat() if p[7] else None,
-                'updated_at': p[8].isoformat() if p[8] else None
+                'expires_at': p[8].isoformat() if p[8] else None,
+                'starts_at': p[9].isoformat() if p[9] else None
             } for p in payments],
             'stats': {
                 'success': success_count,
@@ -2189,6 +2198,8 @@ def admin_get_premium_history():
         
     except Exception as e:
         print(f'[ERROR] Admin get premium history: {e}')
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/news')
