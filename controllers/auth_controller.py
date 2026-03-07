@@ -1084,16 +1084,19 @@ def api_purchase_premium():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        stored_message = f"PREMIUM:{user['id']}"
+        # Create pending premium subscription
+        from datetime import datetime, timedelta
+        starts_at = datetime.now()
+        expires_at = datetime.now() + timedelta(days=30)
         
         cursor.execute("""
-            INSERT INTO donations 
-            (order_code, amount, donor_name, donor_email, message, 
-             payment_status, ip_address, user_agent, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+            INSERT INTO premium_subscriptions 
+            (user_id, order_code, amount, starts_at, expires_at, is_active,
+             payment_status, donor_email, ip_address, user_agent, created_at)
+            VALUES (%s, %s, %s, %s, %s, FALSE, %s, %s, %s, %s, CURRENT_TIMESTAMP)
         """, (
-            str(order_code), amount, user['username'], user['email'],
-            stored_message, 'pending', ip_address, user_agent
+            user['id'], str(order_code), amount, starts_at, expires_at,
+            'pending', user['email'], ip_address, user_agent
         ))
         
         conn.commit()
@@ -1162,60 +1165,19 @@ def premium_return():
             conn = db_pool.getconn()
             cursor = conn.cursor()
             
-            # Get donation info
+            # Update premium subscription to active
             cursor.execute("""
-                SELECT message, amount FROM donations
+                UPDATE premium_subscriptions 
+                SET payment_status = 'success',
+                    is_active = TRUE,
+                    paid_at = CURRENT_TIMESTAMP
                 WHERE order_code = %s
             """, (order_code,))
-            
-            result = cursor.fetchone()
-            if result:
-                message = result[0] or ''
-                amount = result[1]
-                
-                # Check if this is a premium purchase
-                if message.startswith('PREMIUM:'):
-                    user_id_str = message.replace('PREMIUM:', '').split('|')[0]
-                    try:
-                        user_id = int(user_id_str)
-                        
-                        # Activate premium - 30 days
-                        # Check if user already has active premium, then extend
-                        cursor.execute("""
-                            SELECT expires_at FROM premium_subscriptions
-                            WHERE user_id = %s AND is_active = TRUE AND expires_at > NOW()
-                            ORDER BY expires_at DESC LIMIT 1
-                        """, (user_id,))
-                        
-                        existing = cursor.fetchone()
-                        if existing:
-                            # Extend from current expiry
-                            starts_at = existing[0]
-                            expires_at = existing[0] + timedelta(days=30)
-                        else:
-                            starts_at = datetime.now()
-                            expires_at = datetime.now() + timedelta(days=30)
-                        
-                        cursor.execute("""
-                            INSERT INTO premium_subscriptions 
-                            (user_id, order_code, amount, starts_at, expires_at, is_active, created_at)
-                            VALUES (%s, %s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP)
-                        """, (user_id, order_code, amount, starts_at, expires_at))
-                        
-                        print(f">>> Premium activated for user {user_id} until {expires_at}")
-                    except ValueError:
-                        print(f">>> Invalid user_id in premium message: {user_id_str}")
-                
-                # Update donation status
-                cursor.execute("""
-                    UPDATE donations 
-                    SET payment_status = 'success', paid_at = CURRENT_TIMESTAMP
-                    WHERE order_code = %s
-                """, (order_code,))
             
             conn.commit()
             cursor.close()
             db_pool.putconn(conn)
+            print(f">>> Premium subscription {order_code} activated")
         except Exception as e:
             print(f">>> Error processing premium return: {e}")
             import traceback
@@ -1227,4 +1189,25 @@ def premium_return():
 @auth_bp.route('/premium/cancel')
 def premium_cancel():
     """Xử lý khi hủy thanh toán premium"""
+    from app import db_pool
+    
+    order_code = request.args.get('orderCode', '')
+    
+    if db_pool and order_code:
+        try:
+            conn = db_pool.getconn()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE premium_subscriptions 
+                SET payment_status = 'cancelled'
+                WHERE order_code = %s
+            """, (order_code,))
+            
+            conn.commit()
+            cursor.close()
+            db_pool.putconn(conn)
+        except Exception as e:
+            print(f">>> Error processing premium cancel: {e}")
+    
     return redirect('/account?premium=cancel')

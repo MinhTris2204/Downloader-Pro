@@ -11,6 +11,12 @@ if [ -f "drop_donation_messages.py" ]; then
     /opt/venv/bin/python drop_donation_messages.py || echo "⚠️ Migration failed or already applied"
 fi
 
+# Run migration to remove donations table
+if [ -f "migrate_remove_donations.py" ]; then
+    echo "Running migrate_remove_donations.py..."
+    /opt/venv/bin/python migrate_remove_donations.py || echo "⚠️ Migration failed or already applied"
+fi
+
 echo ""
 echo "========================================="
 echo "Starting bgutil POT provider..."

@@ -349,25 +349,6 @@ def init_db():
             )
         """)
         
-        # Create donations table (payment tracking)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS donations (
-                id SERIAL PRIMARY KEY,
-                order_code VARCHAR(50) UNIQUE NOT NULL,
-                amount INTEGER NOT NULL,
-                donor_name VARCHAR(100) DEFAULT 'Anonymous',
-                donor_email VARCHAR(100),
-                message TEXT,
-                payment_status VARCHAR(20) DEFAULT 'pending',
-                payment_method VARCHAR(50),
-                transaction_id VARCHAR(100),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                paid_at TIMESTAMP,
-                ip_address VARCHAR(45),
-                user_agent TEXT
-            )
-        """)
-        
         print("[INFO] Essential tables created/verified")
         
         cursor.execute("""
@@ -408,9 +389,34 @@ def init_db():
                 starts_at TIMESTAMP NOT NULL,
                 expires_at TIMESTAMP NOT NULL,
                 is_active BOOLEAN DEFAULT TRUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                payment_status VARCHAR(20) DEFAULT 'success',
+                payment_method VARCHAR(50),
+                transaction_id VARCHAR(100),
+                donor_email VARCHAR(100),
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                paid_at TIMESTAMP
             )
         """)
+        
+        # Add payment columns if they don't exist (for existing databases)
+        payment_columns = [
+            ("payment_status", "VARCHAR(20) DEFAULT 'success'"),
+            ("payment_method", "VARCHAR(50)"),
+            ("transaction_id", "VARCHAR(100)"),
+            ("donor_email", "VARCHAR(100)"),
+            ("ip_address", "VARCHAR(45)"),
+            ("user_agent", "TEXT"),
+            ("paid_at", "TIMESTAMP")
+        ]
+        
+        for col_name, col_type in payment_columns:
+            try:
+                cursor.execute(f"ALTER TABLE premium_subscriptions ADD COLUMN IF NOT EXISTS {col_name} {col_type}")
+            except Exception as e:
+                print(f"[INFO] Column {col_name} check: {e}")
+                conn.rollback()
         
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_premium_user_active 

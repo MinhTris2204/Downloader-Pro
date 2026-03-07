@@ -68,33 +68,33 @@ def create_donation():
             ip_address = ip_address.split(',')[0].strip()
         user_agent = request.headers.get('User-Agent', '')
         
-        # Lưu thông tin donation vào database (status: pending)
-        if db_pool:
+        # Lưu thông tin premium subscription vào database (status: pending)
+        if db_pool and is_premium and user_id:
             try:
+                from datetime import datetime, timedelta
                 conn = db_pool.getconn()
                 cursor = conn.cursor()
                 
-                # Store user_id in message field if premium purchase
-                stored_message = message
-                if is_premium and user_id:
-                    stored_message = f"PREMIUM:{user_id}|{message}" if message else f"PREMIUM:{user_id}"
+                # Create pending premium subscription
+                starts_at = datetime.now()
+                expires_at = datetime.now() + timedelta(days=30)
                 
                 cursor.execute("""
-                    INSERT INTO donations 
-                    (order_code, amount, donor_name, donor_email, message, 
-                     payment_status, ip_address, user_agent, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                    INSERT INTO premium_subscriptions 
+                    (user_id, order_code, amount, starts_at, expires_at, is_active,
+                     payment_status, donor_email, ip_address, user_agent, created_at)
+                    VALUES (%s, %s, %s, %s, %s, FALSE, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                 """, (
-                    str(order_code), amount, name, email if email else None, 
-                    stored_message if stored_message else None, 'pending', ip_address, user_agent
+                    int(user_id), str(order_code), amount, starts_at, expires_at,
+                    'pending', email if email else None, ip_address, user_agent
                 ))
                 
                 conn.commit()
                 cursor.close()
                 db_pool.putconn(conn)
-                print(f">>> Donation record created: {order_code} (Premium: {is_premium})")
+                print(f">>> Premium subscription created (pending): {order_code}")
             except Exception as e:
-                print(f">>> Error saving donation: {e}")
+                print(f">>> Error saving premium subscription: {e}")
                 # Continue anyway, payment link is more important
         
         # Tạo description (PayOS yêu cầu tối đa 25 ký tự)
@@ -123,12 +123,12 @@ def create_donation():
         
         if 'error' in result:
             # Update status to failed
-            if db_pool:
+            if db_pool and is_premium and user_id:
                 try:
                     conn = db_pool.getconn()
                     cursor = conn.cursor()
                     cursor.execute("""
-                        UPDATE donations 
+                        UPDATE premium_subscriptions 
                         SET payment_status = 'failed'
                         WHERE order_code = %s
                     """, (str(order_code),))
@@ -149,12 +149,12 @@ def create_donation():
             print(f">>> PayOS Error: {error_msg}")
             
             # Update status to failed
-            if db_pool:
+            if db_pool and is_premium and user_id:
                 try:
                     conn = db_pool.getconn()
                     cursor = conn.cursor()
                     cursor.execute("""
-                        UPDATE donations 
+                        UPDATE premium_subscriptions 
                         SET payment_status = 'failed'
                         WHERE order_code = %s
                     """, (str(order_code),))
@@ -208,84 +208,59 @@ def payos_return():
     order_code = request.args.get('orderCode', '')
     status = request.args.get('status', '')
     
-    donation_info = None
+    premium_info = None
     
-    # Update donation status to success and get info
+    # Update premium subscription status to success
     if db_pool and order_code:
         try:
+            from datetime import datetime, timedelta
             conn = db_pool.getconn()
             cursor = conn.cursor()
             
-            # Get donation info
+            # Get premium subscription info
             cursor.execute("""
-                SELECT message, amount, donor_name FROM donations
-                WHERE order_code = %s
+                SELECT ps.user_id, ps.amount, u.username, ps.expires_at, ps.is_active
+                FROM premium_subscriptions ps
+                LEFT JOIN users u ON ps.user_id = u.id
+                WHERE ps.order_code = %s
             """, (order_code,))
             
             result = cursor.fetchone()
             if result:
-                message = result[0] or ''
+                user_id = result[0]
                 amount = result[1]
-                donor_name = result[2] or 'Người ủng hộ'
+                username = result[2] or 'User'
+                current_expires = result[3]
+                is_active = result[4]
                 
-                donation_info = {
-                    'donor_name': donor_name,
-                    'message': message,
-                    'amount': amount
+                premium_info = {
+                    'username': username,
+                    'amount': amount,
+                    'message': f'PREMIUM:{user_id}'
                 }
                 
-                # Check if this is a premium purchase
-                if message and message.startswith('PREMIUM:'):
-                    try:
-                        from datetime import datetime, timedelta
-                        user_id_str = message.replace('PREMIUM:', '').split('|')[0]
-                        user_id = int(user_id_str)
-                        
-                        # Check existing premium
-                        cursor.execute("""
-                            SELECT expires_at FROM premium_subscriptions
-                            WHERE user_id = %s AND is_active = TRUE AND expires_at > NOW()
-                            ORDER BY expires_at DESC LIMIT 1
-                        """, (user_id,))
-                        
-                        existing = cursor.fetchone()
-                        if existing:
-                            starts_at = existing[0]
-                            expires_at = existing[0] + timedelta(days=30)
-                        else:
-                            starts_at = datetime.now()
-                            expires_at = datetime.now() + timedelta(days=30)
-                        
-                        cursor.execute("""
-                            INSERT INTO premium_subscriptions 
-                            (user_id, order_code, amount, starts_at, expires_at, is_active, created_at)
-                            VALUES (%s, %s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP)
-                        """, (user_id, str(order_code), amount, starts_at, expires_at))
-                        
-                        print(f">>> Premium activated for user {user_id} until {expires_at}")
-                    except (ValueError, Exception) as prem_err:
-                        print(f">>> Error activating premium: {prem_err}")
-            
-            # Update donation status
-            cursor.execute("""
-                UPDATE donations 
-                SET payment_status = 'success',
-                    paid_at = CURRENT_TIMESTAMP
-                WHERE order_code = %s
-            """, (order_code,))
+                # Update subscription to active and set paid_at
+                cursor.execute("""
+                    UPDATE premium_subscriptions 
+                    SET payment_status = 'success',
+                        is_active = TRUE,
+                        paid_at = CURRENT_TIMESTAMP
+                    WHERE order_code = %s
+                """, (order_code,))
+                
+                print(f">>> Premium subscription {order_code} activated for user {user_id}")
             
             conn.commit()
             cursor.close()
             db_pool.putconn(conn)
-            print(f">>> Donation {order_code} marked as success")
         except Exception as e:
-            print(f">>> Error updating donation status: {e}")
+            print(f">>> Error updating premium subscription: {e}")
     
     return render_template('donate_result.html', 
                          success=True,
                          order_code=order_code,
                          status=status,
-                         donation_info=donation_info)
+                         donation_info=premium_info)
 
 @donate_bp.route('/payos/cancel')
 def payos_cancel():
@@ -294,14 +269,14 @@ def payos_cancel():
     
     order_code = request.args.get('orderCode', '')
     
-    # Update donation status to cancelled
+    # Update premium subscription status to cancelled
     if db_pool and order_code:
         try:
             conn = db_pool.getconn()
             cursor = conn.cursor()
             
             cursor.execute("""
-                UPDATE donations 
+                UPDATE premium_subscriptions 
                 SET payment_status = 'cancelled'
                 WHERE order_code = %s
             """, (order_code,))
@@ -309,9 +284,9 @@ def payos_cancel():
             conn.commit()
             cursor.close()
             db_pool.putconn(conn)
-            print(f">>> Donation {order_code} marked as cancelled")
+            print(f">>> Premium subscription {order_code} marked as cancelled")
         except Exception as e:
-            print(f">>> Error updating donation status: {e}")
+            print(f">>> Error updating premium subscription: {e}")
     
     return render_template('donate_result.html',
                          success=False,
@@ -346,68 +321,24 @@ def payos_webhook():
                 conn = db_pool.getconn()
                 cursor = conn.cursor()
                 
-                # Get donation details first
+                # Update premium subscription status
                 cursor.execute("""
-                    SELECT donor_name, message FROM donations
-                    WHERE order_code = %s
-                """, (str(order_code),))
-                
-                donation_info = cursor.fetchone()
-                
-                # Update donation status
-                cursor.execute("""
-                    UPDATE donations 
+                    UPDATE premium_subscriptions 
                     SET payment_status = 'success',
+                        is_active = TRUE,
                         paid_at = CURRENT_TIMESTAMP,
                         transaction_id = %s,
                         payment_method = %s
                     WHERE order_code = %s
                 """, (transaction_id, payment_method, str(order_code)))
                 
-                # Auto-create donation message if donor provided name and message
-                if donation_info:
-                    donor_name = donation_info[0] or 'Người ủng hộ'
-                    message = donation_info[1]
-                    
-                    # Check if this is a premium purchase
-                    if message and message.startswith('PREMIUM:'):
-                        try:
-                            from datetime import datetime, timedelta
-                            user_id_str = message.replace('PREMIUM:', '').split('|')[0]
-                            user_id = int(user_id_str)
-                            
-                            # Check existing premium
-                            cursor.execute("""
-                                SELECT expires_at FROM premium_subscriptions
-                                WHERE user_id = %s AND is_active = TRUE AND expires_at > NOW()
-                                ORDER BY expires_at DESC LIMIT 1
-                            """, (user_id,))
-                            
-                            existing = cursor.fetchone()
-                            if existing:
-                                starts_at = existing[0]
-                                expires_at = existing[0] + timedelta(days=30)
-                            else:
-                                starts_at = datetime.now()
-                                expires_at = datetime.now() + timedelta(days=30)
-                            
-                            cursor.execute("""
-                                INSERT INTO premium_subscriptions 
-                                (user_id, order_code, amount, starts_at, expires_at, is_active, created_at)
-                                VALUES (%s, %s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP)
-                            """, (user_id, str(order_code), amount, starts_at, expires_at))
-                            
-                            print(f">>> Webhook: Premium activated for user {user_id} until {expires_at}")
-                        except (ValueError, Exception) as prem_err:
-                            print(f">>> Webhook: Error activating premium: {prem_err}")
-                
                 conn.commit()
                 cursor.close()
                 db_pool.putconn(conn)
                 
-                print(f">>> Webhook: Donation {order_code} updated successfully")
+                print(f">>> Webhook: Premium subscription {order_code} updated successfully")
             except Exception as e:
-                print(f">>> Webhook: Error updating donation: {e}")
+                print(f">>> Webhook: Error updating premium subscription: {e}")
         
         return jsonify({'success': True}), 200
         
@@ -417,160 +348,3 @@ def payos_webhook():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
-@donate_bp.route('/api/donate/stats')
-def get_donation_stats():
-    """Lấy thống kê donations"""
-    try:
-        from app import db_pool
-        
-        if not db_pool:
-            return jsonify({
-                'success': False,
-                'error': 'Database not available'
-            }), 500
-        
-        conn = db_pool.getconn()
-        cursor = conn.cursor()
-        
-        # Total donations
-        cursor.execute("""
-            SELECT 
-                COUNT(*) as total_count,
-                COALESCE(SUM(amount), 0) as total_amount,
-                COUNT(CASE WHEN payment_status = 'success' THEN 1 END) as success_count,
-                COALESCE(SUM(CASE WHEN payment_status = 'success' THEN amount ELSE 0 END), 0) as success_amount
-            FROM donations
-        """)
-        
-        row = cursor.fetchone()
-        stats = {
-            'total_donations': row[0],
-            'total_amount': row[1],
-            'successful_donations': row[2],
-            'successful_amount': row[3]
-        }
-        
-        # Recent donations (last 10 successful)
-        cursor.execute("""
-            SELECT donor_name, amount, paid_at
-            FROM donations
-            WHERE payment_status = 'success'
-            ORDER BY paid_at DESC
-            LIMIT 10
-        """)
-        
-        recent = []
-        for row in cursor.fetchall():
-            recent.append({
-                'donor_name': row[0],
-                'amount': row[1],
-                'paid_at': row[2].isoformat() if row[2] else None
-            })
-        
-        stats['recent_donations'] = recent
-        
-        cursor.close()
-        db_pool.putconn(conn)
-        
-        return jsonify({
-            'success': True,
-            'stats': stats
-        })
-        
-    except Exception as e:
-        print(f">>> Get donation stats error: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@donate_bp.route('/api/admin/donations')
-def admin_get_donations():
-    """Admin: Lấy danh sách donations (requires login)"""
-    try:
-        from app import db_pool
-        from flask import session
-        
-        # Check admin login
-        if not session.get('admin_logged_in'):
-            return jsonify({
-                'success': False,
-                'error': 'Unauthorized'
-            }), 401
-        
-        if not db_pool:
-            return jsonify({
-                'success': False,
-                'error': 'Database not available'
-            }), 500
-        
-        # Pagination
-        page = int(request.args.get('page', 1))
-        limit = int(request.args.get('limit', 20))
-        offset = (page - 1) * limit
-        
-        # Filter by status
-        status_filter = request.args.get('status', 'all')
-        
-        conn = db_pool.getconn()
-        cursor = conn.cursor()
-        
-        # Build query
-        where_clause = ""
-        params = []
-        if status_filter != 'all':
-            where_clause = "WHERE payment_status = %s"
-            params.append(status_filter)
-        
-        # Get total count
-        cursor.execute(f"SELECT COUNT(*) FROM donations {where_clause}", params)
-        total_count = cursor.fetchone()[0]
-        
-        # Get donations
-        query = f"""
-            SELECT 
-                order_code, amount, donor_name, donor_email, 
-                payment_status, payment_method, transaction_id,
-                created_at, paid_at, ip_address
-            FROM donations
-            {where_clause}
-            ORDER BY created_at DESC
-            LIMIT %s OFFSET %s
-        """
-        params.extend([limit, offset])
-        
-        cursor.execute(query, params)
-        
-        donations = []
-        for row in cursor.fetchall():
-            donations.append({
-                'order_code': row[0],
-                'amount': row[1],
-                'donor_name': row[2],
-                'donor_email': row[3],
-                'payment_status': row[4],
-                'payment_method': row[5],
-                'transaction_id': row[6],
-                'created_at': row[7].isoformat() if row[7] else None,
-                'paid_at': row[8].isoformat() if row[8] else None,
-                'ip_address': row[9]
-            })
-        
-        cursor.close()
-        db_pool.putconn(conn)
-        
-        return jsonify({
-            'success': True,
-            'donations': donations,
-            'total': total_count,
-            'page': page,
-            'limit': limit
-        })
-        
-    except Exception as e:
-        print(f">>> Admin get donations error: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
