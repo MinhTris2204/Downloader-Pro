@@ -566,43 +566,11 @@ async function loadUserStatus() {
 }
 
 function updateHeaderForUser(user, premium) {
-    const headerNav = document.querySelector('.header-nav');
-    if (!headerNav) return;
-    
-    // Check if auth elements already exist
-    if (document.getElementById('authHeaderBtn')) return;
-    
-    const isPremium = premium && premium.is_premium;
-    
-    // Create user status element
-    const statusEl = document.createElement('div');
-    statusEl.id = 'authHeaderBtn';
-    statusEl.className = 'user-status-bar';
-    statusEl.innerHTML = `
-        <div class="user-status-info">
-            ${isPremium ? 
-                `<span class="premium-tag">👑 PREMIUM</span>
-                 <span class="downloads-left">${premium.premium_days_left} ngày</span>` :
-                `<span class="free-tag">Còn ${premium ? premium.free_downloads_left : '?'}/2 lượt</span>`
-            }
-        </div>
-        <a href="/account" class="user-mini-avatar ${isPremium ? 'premium' : ''}" title="Tài khoản">
-            ${user.username[0].toUpperCase()}
-        </a>
-    `;
-    
-    // Insert before theme toggle
-    const themeToggle = headerNav.querySelector('.theme-toggle');
-    if (themeToggle) {
-        headerNav.insertBefore(statusEl, themeToggle);
-    } else {
-        headerNav.appendChild(statusEl);
-    }
-    
-    // Also update mobile sidebar
+    // Don't create user-status-bar anymore, just update mobile menu
     updateMobileMenuForUser(user, premium);
     
     // Hide donation promo if premium
+    const isPremium = premium && premium.is_premium;
     if (isPremium) {
         hideDonationPromo();
         hideAds();
@@ -610,24 +578,9 @@ function updateHeaderForUser(user, premium) {
 }
 
 function updateHeaderForGuest() {
-    const headerNav = document.querySelector('.header-nav');
-    if (!headerNav || document.getElementById('authHeaderBtn')) return;
-    
-    const authEl = document.createElement('a');
-    authEl.id = 'authHeaderBtn';
-    authEl.href = '/login';
-    authEl.className = 'auth-nav-link';
-    authEl.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-            <polyline points="10 17 15 12 10 7"></polyline>
-            <line x1="15" y1="12" x2="3" y2="12"></line>
-        </svg>
-        Đăng nhập
-    `;
-    
-    const themeToggle = headerNav.querySelector('.theme-toggle');
-    if (themeToggle) {
+    // Don't create auth button in header anymore
+    // Guest users will see the login link in the nav menu
+}
         headerNav.insertBefore(authEl, themeToggle);
     } else {
         headerNav.appendChild(authEl);
