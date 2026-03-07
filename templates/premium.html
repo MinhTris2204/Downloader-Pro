@@ -210,9 +210,9 @@
                     </h3>
                     <div style="display: inline-block; padding: 6px 16px; background: {% if user.is_premium %}linear-gradient(135deg, #f59e0b, #ef4444){% else %}#94a3b8{% endif %}; color: white; border-radius: 20px; font-weight: 600; font-size: 0.9em;">
                         {% if user.is_premium %}
-                            ⭐ Premium Member
+                            <span data-i18n="premium_member_badge">⭐ Premium Member</span>
                         {% else %}
-                            🆓 Free Member
+                            <span data-i18n="premium_free_badge">🆓 Free Member</span>
                         {% endif %}
                     </div>
                 </div>
@@ -220,17 +220,17 @@
                 <div style="text-align: right;">
                     {% if user.is_premium and premium %}
                         <div style="font-size: 0.9em; color: #64748b; margin-bottom: 4px;">
-                            Hết hạn: <strong style="color: #0f172a;">{{ premium.expires_at }}</strong>
+                            <span data-i18n="premium_expires">Hết hạn</span>: <strong style="color: #0f172a;">{{ premium.expires_at }}</strong>
                         </div>
                         <div style="font-size: 1.2em; font-weight: 700; color: #f59e0b;">
-                            ⏰ Còn {{ premium.days_left }} ngày
+                            ⏰ <span data-i18n="premium_days_left">Còn</span> {{ premium.days_left }} <span data-i18n="premium_days">ngày</span>
                         </div>
                     {% else %}
                         <div style="font-size: 0.9em; color: #64748b; margin-bottom: 4px;">
-                            Lượt tải miễn phí tuần này
+                            <span data-i18n="premium_free_downloads_week">Lượt tải miễn phí tuần này</span>
                         </div>
                         <div style="font-size: 1.2em; font-weight: 700; color: #3b82f6;">
-                            📥 {{ usage.free_downloads_left }}/{{ usage.total_free_downloads }} lượt
+                            📥 {{ usage.free_downloads_left }}/{{ usage.total_free_downloads }} <span data-i18n="account_times">lượt</span>
                         </div>
                     {% endif %}
                 </div>
@@ -240,16 +240,16 @@
             <div style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed rgba(0,0,0,0.1);">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; font-size: 0.9em;">
                     <div>
-                        <div style="color: #64748b; margin-bottom: 4px;">Bắt đầu</div>
+                        <div style="color: #64748b; margin-bottom: 4px;" data-i18n="premium_start_date">Bắt đầu</div>
                         <div style="font-weight: 600; color: #0f172a;">{{ premium.starts_at }}</div>
                     </div>
                     <div>
-                        <div style="color: #64748b; margin-bottom: 4px;">Số tiền</div>
+                        <div style="color: #64748b; margin-bottom: 4px;" data-i18n="premium_amount">Số tiền</div>
                         <div style="font-weight: 600; color: #0f172a;">{{ "{:,}".format(premium.amount) }} VNĐ</div>
                     </div>
                     <div>
-                        <div style="color: #64748b; margin-bottom: 4px;">Trạng thái</div>
-                        <div style="font-weight: 600; color: #10b981;">✓ Đang hoạt động</div>
+                        <div style="color: #64748b; margin-bottom: 4px;" data-i18n="premium_status">Trạng thái</div>
+                        <div style="font-weight: 600; color: #10b981;"><span data-i18n="premium_active">✓ Đang hoạt động</span></div>
                     </div>
                 </div>
             </div>
@@ -267,28 +267,28 @@
                     <div class="benefit-icon">✓</div>
                     <div class="benefit-text">
                         <h3 data-i18n="account_benefit_unlimited">Tải không giới hạn</h3>
-                        <p>Tải video không giới hạn mỗi tháng</p>
+                        <p data-i18n="premium_benefit_unlimited_desc">Tải video không giới hạn mỗi tháng</p>
                     </div>
                 </div>
                 <div class="benefit-item">
                     <div class="benefit-icon">✓</div>
                     <div class="benefit-text">
                         <h3 data-i18n="account_benefit_no_ads">Không quảng cáo</h3>
-                        <p>Trải nghiệm mượt mà, không bị làm phiền</p>
+                        <p data-i18n="premium_benefit_no_ads_desc">Trải nghiệm mượt mà, không bị làm phiền</p>
                     </div>
                 </div>
                 <div class="benefit-item">
                     <div class="benefit-icon">✓</div>
                     <div class="benefit-text">
                         <h3 data-i18n="account_benefit_priority">Tốc độ tối đa</h3>
-                        <p>Ưu tiên xử lý, tải nhanh hơn</p>
+                        <p data-i18n="premium_benefit_priority_desc">Ưu tiên xử lý, tải nhanh hơn</p>
                     </div>
                 </div>
                 <div class="benefit-item">
                     <div class="benefit-icon">✓</div>
                     <div class="benefit-text">
                         <h3 data-i18n="account_benefit_support">Hỗ trợ ưu tiên</h3>
-                        <p>Được hỗ trợ nhanh chóng khi cần</p>
+                        <p data-i18n="premium_benefit_support_desc">Được hỗ trợ nhanh chóng khi cần</p>
                     </div>
                 </div>
             </div>
@@ -329,7 +329,7 @@
                     <svg class="spinner" viewBox="0 0 24 24" style="width: 24px; height: 24px; animation: spin 1s linear infinite;">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
                     </svg>
-                    Đang xử lý...
+                    <span data-i18n="premium_processing">Đang xử lý...</span>
                 </span>
             </button>
             <div class="auth-error" id="premiumError" style="display:none; margin-top: 20px; padding: 15px; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; border-radius: 12px; text-align: center;"></div>

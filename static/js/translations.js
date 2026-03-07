@@ -298,7 +298,22 @@ const translations = {
         nav_premium: 'Premium',
         premium_page_title: 'Nâng Cấp Premium',
         premium_page_subtitle: 'Trải nghiệm đầy đủ tính năng không giới hạn',
-        premium_benefits_title: 'Đặc Quyền Premium'
+        premium_benefits_title: 'Đặc Quyền Premium',
+        premium_member_badge: '⭐ Premium Member',
+        premium_free_badge: '🆓 Free Member',
+        premium_expires: 'Hết hạn',
+        premium_days_left: 'Còn',
+        premium_days: 'ngày',
+        premium_free_downloads_week: 'Lượt tải miễn phí tuần này',
+        premium_start_date: 'Bắt đầu',
+        premium_amount: 'Số tiền',
+        premium_status: 'Trạng thái',
+        premium_active: '✓ Đang hoạt động',
+        premium_benefit_unlimited_desc: 'Tải video không giới hạn mỗi tháng',
+        premium_benefit_no_ads_desc: 'Trải nghiệm mượt mà, không bị làm phiền',
+        premium_benefit_priority_desc: 'Ưu tiên xử lý, tải nhanh hơn',
+        premium_benefit_support_desc: 'Được hỗ trợ nhanh chóng khi cần',
+        premium_processing: 'Đang xử lý...'
     },
     en: {
         // Navigation
@@ -598,7 +613,22 @@ const translations = {
         nav_premium: 'Premium',
         premium_page_title: 'Upgrade to Premium',
         premium_page_subtitle: 'Experience full features without limits',
-        premium_benefits_title: 'Premium Benefits'
+        premium_benefits_title: 'Premium Benefits',
+        premium_member_badge: '⭐ Premium Member',
+        premium_free_badge: '🆓 Free Member',
+        premium_expires: 'Expires',
+        premium_days_left: 'Remaining',
+        premium_days: 'days',
+        premium_free_downloads_week: 'Free downloads this week',
+        premium_start_date: 'Start Date',
+        premium_amount: 'Amount',
+        premium_status: 'Status',
+        premium_active: '✓ Active',
+        premium_benefit_unlimited_desc: 'Unlimited video downloads per month',
+        premium_benefit_no_ads_desc: 'Smooth experience, no interruptions',
+        premium_benefit_priority_desc: 'Priority processing, faster downloads',
+        premium_benefit_support_desc: 'Quick support when needed',
+        premium_processing: 'Processing...'
     },
     ru: {
         // Navigation
@@ -898,7 +928,22 @@ const translations = {
         nav_premium: 'Premium',
         premium_page_title: 'Обновить до Premium',
         premium_page_subtitle: 'Используйте все функции без ограничений',
-        premium_benefits_title: 'Преимущества Premium'
+        premium_benefits_title: 'Преимущества Premium',
+        premium_member_badge: '⭐ Premium участник',
+        premium_free_badge: '🆓 Бесплатный участник',
+        premium_expires: 'Истекает',
+        premium_days_left: 'Осталось',
+        premium_days: 'дней',
+        premium_free_downloads_week: 'Бесплатные загрузки на этой неделе',
+        premium_start_date: 'Дата начала',
+        premium_amount: 'Сумма',
+        premium_status: 'Статус',
+        premium_active: '✓ Активен',
+        premium_benefit_unlimited_desc: 'Неограниченные загрузки видео в месяц',
+        premium_benefit_no_ads_desc: 'Плавный опыт, без прерываний',
+        premium_benefit_priority_desc: 'Приоритетная обработка, быстрые загрузки',
+        premium_benefit_support_desc: 'Быстрая поддержка при необходимости',
+        premium_processing: 'Обработка...'
     }
 };
 
