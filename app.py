@@ -2861,7 +2861,74 @@ def test_stats():
 @app.route('/premium')
 def premium_page():
     """Premium subscription page"""
-    return render_template('premium.html')
+    user_info = None
+    premium_info = None
+    usage_info = {'free_downloads_left': 5, 'total_free_downloads': 5}
+    
+    # Get user info if logged in
+    if 'user_id' in session and db_pool:
+        try:
+            conn = db_pool.getconn()
+            cursor = conn.cursor()
+            
+            user_id = session['user_id']
+            
+            # Get user basic info
+            cursor.execute("""
+                SELECT username, email FROM users WHERE id = %s
+            """, (user_id,))
+            user_row = cursor.fetchone()
+            
+            if user_row:
+                user_info = {
+                    'username': user_row[0],
+                    'email': user_row[1],
+                    'is_premium': False
+                }
+                
+                # Check premium status
+                cursor.execute("""
+                    SELECT expires_at, starts_at, amount 
+                    FROM premium_subscriptions 
+                    WHERE user_id = %s AND is_active = TRUE AND expires_at > NOW()
+                    ORDER BY expires_at DESC LIMIT 1
+                """, (user_id,))
+                
+                premium_row = cursor.fetchone()
+                if premium_row:
+                    from datetime import datetime
+                    expires_at = premium_row[0]
+                    starts_at = premium_row[1]
+                    amount = premium_row[2]
+                    
+                    days_left = (expires_at - datetime.now()).days
+                    
+                    user_info['is_premium'] = True
+                    premium_info = {
+                        'expires_at': expires_at.strftime('%d/%m/%Y'),
+                        'starts_at': starts_at.strftime('%d/%m/%Y'),
+                        'days_left': days_left,
+                        'amount': amount
+                    }
+                
+                # Get usage info (downloads today for free users)
+                if not user_info['is_premium']:
+                    cursor.execute("""
+                        SELECT COUNT(*) FROM user_downloads 
+                        WHERE user_id = %s AND DATE(download_time) = CURRENT_DATE
+                    """, (user_id,))
+                    downloads_today = cursor.fetchone()[0]
+                    usage_info['free_downloads_left'] = max(0, 5 - downloads_today)
+            
+            cursor.close()
+            db_pool.putconn(conn)
+        except Exception as e:
+            print(f"[ERROR] Get premium page info: {e}")
+    
+    return render_template('premium.html', 
+                         user=user_info, 
+                         premium=premium_info,
+                         usage=usage_info)
 
 @app.route('/api/youtube/info', methods=['POST'])
 def youtube_info():

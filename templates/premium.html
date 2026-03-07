@@ -200,6 +200,63 @@
             <p data-i18n="premium_page_subtitle">Trải nghiệm đầy đủ tính năng không giới hạn</p>
         </div>
 
+        {% if user %}
+        <!-- User Status Card -->
+        <div class="premium-card" style="margin-bottom: 30px; background: {% if user.is_premium %}linear-gradient(135deg, #fef3c7 0%, #fde68a 100%){% else %}#f8fafc{% endif %};">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                <div>
+                    <h3 style="font-size: 1.3em; margin-bottom: 8px; color: #0f172a;">
+                        👤 {{ user.username }}
+                    </h3>
+                    <div style="display: inline-block; padding: 6px 16px; background: {% if user.is_premium %}linear-gradient(135deg, #f59e0b, #ef4444){% else %}#94a3b8{% endif %}; color: white; border-radius: 20px; font-weight: 600; font-size: 0.9em;">
+                        {% if user.is_premium %}
+                            ⭐ Premium Member
+                        {% else %}
+                            🆓 Free Member
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div style="text-align: right;">
+                    {% if user.is_premium and premium %}
+                        <div style="font-size: 0.9em; color: #64748b; margin-bottom: 4px;">
+                            Hết hạn: <strong style="color: #0f172a;">{{ premium.expires_at }}</strong>
+                        </div>
+                        <div style="font-size: 1.2em; font-weight: 700; color: #f59e0b;">
+                            ⏰ Còn {{ premium.days_left }} ngày
+                        </div>
+                    {% else %}
+                        <div style="font-size: 0.9em; color: #64748b; margin-bottom: 4px;">
+                            Lượt tải miễn phí hôm nay
+                        </div>
+                        <div style="font-size: 1.2em; font-weight: 700; color: #3b82f6;">
+                            📥 {{ usage.free_downloads_left }}/{{ usage.total_free_downloads }} lượt
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user.is_premium and premium %}
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px dashed rgba(0,0,0,0.1);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; font-size: 0.9em;">
+                    <div>
+                        <div style="color: #64748b; margin-bottom: 4px;">Bắt đầu</div>
+                        <div style="font-weight: 600; color: #0f172a;">{{ premium.starts_at }}</div>
+                    </div>
+                    <div>
+                        <div style="color: #64748b; margin-bottom: 4px;">Số tiền</div>
+                        <div style="font-weight: 600; color: #0f172a;">{{ "{:,}".format(premium.amount) }} VNĐ</div>
+                    </div>
+                    <div>
+                        <div style="color: #64748b; margin-bottom: 4px;">Trạng thái</div>
+                        <div style="font-weight: 600; color: #10b981;">✓ Đang hoạt động</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <div class="premium-card">
             <h2 style="text-align: center; font-size: 1.8em; margin-bottom: 30px; color: #0f172a;">
                 💎 <span data-i18n="premium_benefits_title">Đặc Quyền Premium</span>
