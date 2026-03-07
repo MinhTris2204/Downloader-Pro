@@ -106,23 +106,34 @@
             <span data-i18n="auth_or_continue">Hoặc đăng nhập với</span>
         </div>
 
-        {% if google_client_id %}
-        <div class="g-signin-wrapper">
-            <div id="g_id_onload"
-                data-client_id="{{ google_client_id }}"
-                data-callback="handleGoogleLogin"
-                data-auto_prompt="false">
+        <div class="social-login-buttons">
+            {% if google_client_id %}
+            <div class="g-signin-wrapper">
+                <div id="g_id_onload"
+                    data-client_id="{{ google_client_id }}"
+                    data-callback="handleGoogleLogin"
+                    data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin" 
+                     data-type="standard" 
+                     data-size="large" 
+                     data-theme="outline" 
+                     data-text="signin_with" 
+                     data-shape="pill" 
+                     data-logo_alignment="left">
+                </div>
             </div>
-            <div class="g_id_signin" 
-                 data-type="standard" 
-                 data-size="large" 
-                 data-theme="outline" 
-                 data-text="signin_with" 
-                 data-shape="pill" 
-                 data-logo_alignment="left">
-            </div>
+            {% endif %}
+
+            {% if facebook_app_id %}
+            <button type="button" class="btn-facebook" onclick="handleFacebookLogin()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                <span data-i18n="auth_facebook_login">Đăng nhập với Facebook</span>
+            </button>
+            {% endif %}
         </div>
-        {% endif %}
 
         <div class="auth-footer">
             <p><span data-i18n="auth_no_account">Bạn chưa có tài khoản?</span> <a href="/register" data-i18n="auth_create_account">Tạo tài khoản mới</a></p>
@@ -133,4 +144,58 @@
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/auth.js') }}?v=20260306b"></script>
+
+{% if facebook_app_id %}
+<!-- Facebook SDK -->
+<script>
+window.fbAsyncInit = function() {
+    FB.init({
+        appId: '{{ facebook_app_id }}',
+        cookie: true,
+        xfbml: true,
+        version: 'v18.0'
+    });
+};
+
+(function(d, s, id){
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) {return;}
+    js = d.createElement(s); js.id = id;
+    js.src = "https://connect.facebook.net/vi_VN/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+
+async function handleFacebookLogin() {
+    FB.login(function(response) {
+        if (response.authResponse) {
+            const accessToken = response.authResponse.accessToken;
+            
+            // Send to backend
+            fetch('/api/auth/facebook-login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({accessToken: accessToken})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/';
+                    }, 1000);
+                } else {
+                    showToast(data.error || 'Đăng nhập Facebook thất bại', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Facebook login error:', err);
+                showToast('Lỗi kết nối', 'error');
+            });
+        } else {
+            console.log('User cancelled login or did not fully authorize.');
+        }
+    }, {scope: 'public_profile,email'});
+}
+</script>
+{% endif %}
 {% endblock %}

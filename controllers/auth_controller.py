@@ -291,7 +291,8 @@ def login_page():
     
     # Google OAuth Client ID for frontend
     google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
-    return render_template('auth/login.html', google_client_id=google_client_id)
+    facebook_app_id = os.environ.get('FACEBOOK_APP_ID', '')
+    return render_template('auth/login.html', google_client_id=google_client_id, facebook_app_id=facebook_app_id)
 
 @auth_bp.route('/register')
 def register_page():
@@ -791,6 +792,138 @@ def api_google_login():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': 'Lỗi đăng nhập Google'}), 500
+
+
+@auth_bp.route('/api/auth/facebook-login', methods=['POST'])
+def api_facebook_login():
+    """API đăng nhập bằng Facebook"""
+    from app import db_pool
+    
+    if not db_pool:
+        return jsonify({'success': False, 'error': 'Database không khả dụng'}), 500
+    
+    try:
+        data = request.get_json()
+        access_token = data.get('accessToken', '')
+        
+        if not access_token:
+            return jsonify({'success': False, 'error': 'Access token không hợp lệ'}), 200
+        
+        # Verify Facebook access token and get user info
+        import requests as http_req
+        
+        # Get user info from Facebook Graph API
+        graph_url = f'https://graph.facebook.com/me?fields=id,name,email&access_token={access_token}'
+        resp = http_req.get(graph_url, timeout=10)
+        
+        if resp.status_code != 200:
+            return jsonify({'success': False, 'error': 'Token Facebook không hợp lệ'}), 200
+        
+        fb_data = resp.json()
+        
+        if 'error' in fb_data:
+            return jsonify({'success': False, 'error': 'Không thể xác thực Facebook token'}), 200
+        
+        facebook_id = fb_data.get('id', '')
+        email = fb_data.get('email', '').lower() if fb_data.get('email') else ''
+        name = fb_data.get('name', '')
+        
+        if not facebook_id:
+            return jsonify({'success': False, 'error': 'Không lấy được thông tin Facebook'}), 200
+        
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Check if user exists with this Facebook ID
+        cursor.execute("SELECT id, username FROM users WHERE facebook_id = %s", (facebook_id,))
+        user = cursor.fetchone()
+        
+        if user:
+            # Existing Facebook user - login
+            session['user_id'] = user[0]
+            session['username'] = user[1]
+            cursor.close()
+            db_pool.putconn(conn)
+            return jsonify({
+                'success': True,
+                'message': f'Chào mừng, {user[1]}!',
+                'redirect': '/'
+            })
+        
+        # Check if email already exists (linking account)
+        if email:
+            cursor.execute("SELECT id, username FROM users WHERE email = %s", (email,))
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Link Facebook to existing account
+                cursor.execute("UPDATE users SET facebook_id = %s, is_verified = TRUE WHERE id = %s", 
+                             (facebook_id, existing[0]))
+                conn.commit()
+                session['user_id'] = existing[0]
+                session['username'] = existing[1]
+                cursor.close()
+                db_pool.putconn(conn)
+                return jsonify({
+                    'success': True,
+                    'message': f'Đã liên kết Facebook. Chào mừng, {existing[1]}!',
+                    'redirect': '/'
+                })
+        
+        # New user - create account
+        if email:
+            username = email.split('@')[0].lower()
+        else:
+            # If no email, use Facebook name
+            username = re.sub(r'[^a-z0-9_]', '', name.lower())[:20]
+            if not username:
+                username = f'fbuser{facebook_id[:8]}'
+        
+        username = re.sub(r'[^a-z0-9_]', '', username)[:20]
+        
+        # Ensure unique username
+        base_username = username
+        counter = 1
+        while True:
+            cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+            if not cursor.fetchone():
+                break
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        # Insert new user
+        if email:
+            cursor.execute("""
+                INSERT INTO users (username, email, facebook_id, is_verified, created_at)
+                VALUES (%s, %s, %s, TRUE, CURRENT_TIMESTAMP)
+                RETURNING id
+            """, (username, email, facebook_id))
+        else:
+            cursor.execute("""
+                INSERT INTO users (username, facebook_id, is_verified, created_at)
+                VALUES (%s, %s, TRUE, CURRENT_TIMESTAMP)
+                RETURNING id
+            """, (username, facebook_id))
+        
+        user_id = cursor.fetchone()[0]
+        conn.commit()
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        session['user_id'] = user_id
+        session['username'] = username
+        
+        return jsonify({
+            'success': True,
+            'message': f'Đăng ký thành công! Chào mừng, {username}!',
+            'redirect': '/'
+        })
+        
+    except Exception as e:
+        print(f"[AUTH ERROR] Facebook login failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': 'Lỗi đăng nhập Facebook'}), 500
 
 
 @auth_bp.route('/api/auth/logout', methods=['POST'])
