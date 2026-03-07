@@ -2863,7 +2863,7 @@ def premium_page():
     """Premium subscription page"""
     user_info = None
     premium_info = None
-    usage_info = {'free_downloads_left': 5, 'total_free_downloads': 5}
+    usage_info = {'free_downloads_left': 2, 'total_free_downloads': 2}
     
     # Get user info if logged in
     if 'user_id' in session and db_pool:
@@ -2911,14 +2911,15 @@ def premium_page():
                         'amount': amount
                     }
                 
-                # Get usage info (downloads today for free users)
+                # Get usage info (downloads this week for free users)
                 if not user_info['is_premium']:
                     cursor.execute("""
                         SELECT COUNT(*) FROM user_downloads 
-                        WHERE user_id = %s AND DATE(download_time) = CURRENT_DATE
+                        WHERE user_id = %s 
+                        AND download_time >= DATE_TRUNC('week', CURRENT_DATE)
                     """, (user_id,))
-                    downloads_today = cursor.fetchone()[0]
-                    usage_info['free_downloads_left'] = max(0, 5 - downloads_today)
+                    downloads_this_week = cursor.fetchone()[0]
+                    usage_info['free_downloads_left'] = max(0, 2 - downloads_this_week)
             
             cursor.close()
             db_pool.putconn(conn)
