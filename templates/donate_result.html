@@ -7,6 +7,14 @@
     {% if success %}
     <div class="result-box success">
         <div class="result-icon">✅</div>
+        {% if donation_info and donation_info.message and donation_info.message.startswith('PREMIUM:') %}
+        <h1 data-i18n="premium_success_title">Cảm ơn bạn rất nhiều!</h1>
+        <p data-i18n="premium_success_message">Giao dịch thành công. Tài khoản Premium đã được kích hoạt.</p>
+        <p class="order-code">Mã đơn hàng: <strong>{{ order_code }}</strong></p>
+        <p class="thank-you-message" data-i18n="premium_success_support">
+            Sự ủng hộ của bạn giúp chúng tôi phát triển Downloader Pro tốt hơn!
+        </p>
+        {% else %}
         <h1>Cảm ơn bạn rất nhiều!</h1>
         <p>Giao dịch của bạn đã được xử lý thành công.</p>
         <p class="order-code">Mã đơn hàng: <strong>{{ order_code }}</strong></p>
@@ -14,8 +22,9 @@
             Sự ủng hộ của bạn giúp chúng tôi duy trì và phát triển website tốt hơn. 
             Chúng tôi rất trân trọng điều đó! 💝
         </p>
+        {% endif %}
         
-        {% if donation_info and donation_info.message %}
+        {% if donation_info and donation_info.message and not donation_info.message.startswith('PREMIUM:') %}
         <div class="message-section">
             <h3>💬 Lời nhắn của bạn</h3>
             <div class="submitted-message">
@@ -28,7 +37,7 @@
                 <p class="message-note">✅ Lời nhắn của bạn đã được gửi và sẽ hiển thị trên trang chủ!</p>
             </div>
         </div>
-        {% elif can_post_message %}
+        {% elif can_post_message and not (donation_info and donation_info.message and donation_info.message.startswith('PREMIUM:')) %}
         <div class="message-section" id="messageSection">
             <h3>💬 Để lại lời nhắn của bạn</h3>
             <p class="message-hint">Lời nhắn sẽ được hiển thị trên trang chủ (tùy chọn, 1 lần duy nhất)</p>
@@ -81,9 +90,13 @@
     {% endif %}
     
     <div class="action-buttons">
-        <a href="/" class="btn btn-primary">🏠 Về trang chủ</a>
+        {% if success and donation_info and donation_info.message and donation_info.message.startswith('PREMIUM:') %}
+        <a href="/account" class="btn btn-primary"><span data-i18n="premium_success_btn">🎉 Bắt đầu trải nghiệm</span></a>
+        {% else %}
+        <a href="/" class="btn btn-primary" data-i18n="account_btn_home">🏠 Về trang chủ</a>
+        {% endif %}
         {% if not success %}
-        <a href="/donate" class="btn btn-secondary">🔄 Thử lại</a>
+        <a href="/premium" class="btn btn-secondary">🔄 Thử lại</a>
         {% endif %}
     </div>
 </div>

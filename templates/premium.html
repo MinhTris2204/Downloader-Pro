@@ -25,6 +25,7 @@
     font-size: 3em;
     font-weight: 800;
     background: linear-gradient(135deg, #f59e0b, #ef4444);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 16px;
@@ -195,13 +196,13 @@
 <div class="premium-page-wrapper">
     <div class="premium-container">
         <div class="premium-header">
-            <h1>👑 Nâng Cấp Premium</h1>
-            <p>Trải nghiệm đầy đủ tính năng không giới hạn</p>
+            <h1>👑 <span data-i18n="premium_page_title">Nâng Cấp Premium</span></h1>
+            <p data-i18n="premium_page_subtitle">Trải nghiệm đầy đủ tính năng không giới hạn</p>
         </div>
 
         <div class="premium-card">
             <h2 style="text-align: center; font-size: 1.8em; margin-bottom: 30px; color: #0f172a;">
-                💎 Đặc Quyền Premium
+                💎 <span data-i18n="premium_benefits_title">Đặc Quyền Premium</span>
             </h2>
 
             <div class="benefits-grid">
@@ -236,9 +237,9 @@
             </div>
 
             <h3 style="text-align: center; margin: 40px 0 20px; font-size: 1.5em; color: #0f172a;">
-                💳 Chọn Gói Premium
+                💳 <span data-i18n="account_payment_title">Chọn Gói Premium</span>
             </h3>
-            <p style="text-align: center; color: #64748b; margin-bottom: 30px;">
+            <p style="text-align: center; color: #64748b; margin-bottom: 30px;" data-i18n="account_payment_subtitle">
                 Ủng hộ bất kỳ số tiền nào để nhận 30 ngày Premium
             </p>
 
@@ -317,21 +318,50 @@ async function handlePremiumPurchase() {
         return;
     }
     
+    // Check if user is logged in
+    const userId = '{{ session.get("user_id", "") }}';
+    if (!userId) {
+        errorDiv.textContent = 'Vui lòng đăng nhập để mua Premium';
+        errorDiv.style.display = 'block';
+        setTimeout(() => {
+            window.location.href = '/login?redirect=/premium';
+        }, 2000);
+        return;
+    }
+    
     btn.disabled = true;
     btn.querySelector('.btn-text').style.display = 'none';
     btn.querySelector('.btn-loading').style.display = 'flex';
     errorDiv.style.display = 'none';
     
     try {
-        const response = await fetch('/donate/create-payment', {
+        const response = await fetch('/api/donate/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ amount: amount })
+            body: JSON.stringify({ 
+                amount: amount,
+                is_premium: true,
+                user_id: '{{ session.get("user_id", "") }}'
+            })
         });
         
-        const data = await response.json();
+        // Check if response is OK
+        if (!response.ok) {
+            const text = await response.text();
+            console.error('Server response:', text);
+            throw new Error(`Server error: ${response.status}`);
+        }
+        
+        // Try to parse JSON
+        let data;
+        try {
+            data = await response.json();
+        } catch (jsonError) {
+            console.error('JSON parse error:', jsonError);
+            throw new Error('Lỗi xử lý dữ liệu từ server');
+        }
         
         if (data.success && data.checkoutUrl) {
             window.location.href = data.checkoutUrl;
@@ -339,6 +369,7 @@ async function handlePremiumPurchase() {
             throw new Error(data.error || 'Không thể tạo thanh toán');
         }
     } catch (error) {
+        console.error('Payment error:', error);
         errorDiv.textContent = error.message || 'Có lỗi xảy ra, vui lòng thử lại';
         errorDiv.style.display = 'block';
         btn.disabled = false;

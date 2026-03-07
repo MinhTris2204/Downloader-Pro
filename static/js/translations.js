@@ -292,7 +292,13 @@ const translations = {
         premium_success_title: 'Cảm ơn bạn rất nhiều!',
         premium_success_message: 'Giao dịch thành công. Tài khoản Premium đã được kích hoạt.',
         premium_success_support: 'Sự ủng hộ của bạn giúp chúng tôi phát triển Downloader Pro tốt hơn!',
-        premium_success_btn: 'Bắt đầu trải nghiệm'
+        premium_success_btn: 'Bắt đầu trải nghiệm',
+        
+        // Premium Page
+        nav_premium: 'Premium',
+        premium_page_title: 'Nâng Cấp Premium',
+        premium_page_subtitle: 'Trải nghiệm đầy đủ tính năng không giới hạn',
+        premium_benefits_title: 'Đặc Quyền Premium'
     },
     en: {
         // Navigation
@@ -586,7 +592,13 @@ const translations = {
         premium_success_title: 'Thank You So Much!',
         premium_success_message: 'Transaction successful. Premium account has been activated.',
         premium_success_support: 'Your support helps us develop Downloader Pro better!',
-        premium_success_btn: 'Start Experience'
+        premium_success_btn: 'Start Experience',
+        
+        // Premium Page
+        nav_premium: 'Premium',
+        premium_page_title: 'Upgrade to Premium',
+        premium_page_subtitle: 'Experience full features without limits',
+        premium_benefits_title: 'Premium Benefits'
     },
     ru: {
         // Navigation
@@ -880,7 +892,13 @@ const translations = {
         premium_success_title: 'Большое спасибо!',
         premium_success_message: 'Транзакция успешна. Premium аккаунт активирован.',
         premium_success_support: 'Ваша поддержка помогает нам развивать Downloader Pro!',
-        premium_success_btn: 'Начать использование'
+        premium_success_btn: 'Начать использование',
+        
+        // Premium Page
+        nav_premium: 'Premium',
+        premium_page_title: 'Обновить до Premium',
+        premium_page_subtitle: 'Используйте все функции без ограничений',
+        premium_benefits_title: 'Преимущества Premium'
     }
 };
 
