@@ -581,11 +581,6 @@ function updateHeaderForGuest() {
     // Don't create auth button in header anymore
     // Guest users will see the login link in the nav menu
 }
-        headerNav.insertBefore(authEl, themeToggle);
-    } else {
-        headerNav.appendChild(authEl);
-    }
-}
 
 function updateMobileMenuForUser(user, premium) {
     const sidebar = document.querySelector('.mobile-sidebar-content');
