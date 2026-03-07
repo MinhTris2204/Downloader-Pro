@@ -177,11 +177,11 @@ const translations = {
         
         // Require login modal
         require_login_title: 'Yêu cầu đăng nhập',
-        require_login_message: 'Vui lòng đăng nhập để tải video. Đăng ký miễn phí để nhận 2 lượt tải mỗi tháng!',
+        require_login_message: 'Vui lòng đăng nhập để tải xuống. Đăng ký miễn phí để nhận 2 lượt tải mỗi tuần!',
         require_login_btn: '🔑 Đăng nhập ngay',
         require_register_btn: '📝 Đăng ký miễn phí',
         limit_reached_title: 'Hết lượt tải miễn phí!',
-        limit_reached_message: 'Bạn đã sử dụng hết 2 lượt tải miễn phí trong tháng này. Nâng cấp Premium để tải không giới hạn!',
+        limit_reached_message: 'Bạn đã sử dụng hết 2 lượt tải miễn phí trong tuần này. Nâng cấp Premium để tải không giới hạn!',
         upgrade_premium_btn: '👑 Nâng cấp Premium - Tải không giới hạn',
         register_premium_btn: '📝 Đăng ký & Nâng cấp Premium',
         close_btn: 'Đóng',
@@ -503,11 +503,11 @@ const translations = {
         
         // Require login modal
         require_login_title: 'Login Required',
-        require_login_message: 'Please login to download videos. Sign up for free to get 2 downloads per month!',
+        require_login_message: 'Please login to download. Sign up for free to get 2 downloads per week!',
         require_login_btn: '🔑 Login Now',
         require_register_btn: '📝 Sign Up Free',
         limit_reached_title: 'Free Downloads Limit Reached!',
-        limit_reached_message: 'You have used all 2 free downloads this month. Upgrade to Premium for unlimited downloads!',
+        limit_reached_message: 'You have used all 2 free downloads this week. Upgrade to Premium for unlimited downloads!',
         upgrade_premium_btn: '👑 Upgrade Premium - Unlimited Downloads',
         register_premium_btn: '📝 Sign Up & Upgrade Premium',
         close_btn: 'Close',
@@ -829,11 +829,11 @@ const translations = {
         
         // Require login modal
         require_login_title: 'Требуется вход',
-        require_login_message: 'Пожалуйста, войдите, чтобы скачать видео. Зарегистрируйтесь бесплатно и получите 2 загрузки в месяц!',
+        require_login_message: 'Пожалуйста, войдите, чтобы скачать. Зарегистрируйтесь бесплатно и получите 2 загрузки в неделю!',
         require_login_btn: '🔑 Войти сейчас',
         require_register_btn: '📝 Бесплатная регистрация',
         limit_reached_title: 'Лимит бесплатных загрузок исчерпан!',
-        limit_reached_message: 'Вы использовали все 2 бесплатные загрузки в этом месяце. Обновитесь до Premium для неограниченных загрузок!',
+        limit_reached_message: 'Вы использовали все 2 бесплатные загрузки на этой неделе. Обновитесь до Premium для неограниченных загрузок!',
         upgrade_premium_btn: '👑 Обновить Premium - Неограниченные загрузки',
         register_premium_btn: '📝 Зарегистрироваться и обновить Premium',
         close_btn: 'Закрыть',

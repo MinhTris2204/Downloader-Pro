@@ -940,7 +940,7 @@ def api_check_download():
             'success': False,
             'can_download': False,
             'reason': 'require_login',
-            'message': 'Vui lòng đăng nhập để tải video. Đăng ký miễn phí để nhận 2 lượt tải mỗi tháng!',
+            'message': 'Vui lòng đăng nhập để tải xuống. Đăng ký miễn phí để nhận 2 lượt tải mỗi tuần!',
             'logged_in': False
         })
     
@@ -961,7 +961,7 @@ def api_check_download():
             'success': False,
             'can_download': False,
             'reason': 'limit_reached',
-            'message': 'Bạn đã hết 2 lượt tải miễn phí trong tháng này. Nâng cấp Premium để tải không giới hạn!',
+            'message': 'Bạn đã hết 2 lượt tải miễn phí trong tuần này. Nâng cấp Premium để tải không giới hạn!',
             'downloads_used': premium_info['downloads_this_month'],
             'max_free': 2,
             'is_premium': False,
