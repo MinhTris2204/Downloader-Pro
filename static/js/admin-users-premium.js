@@ -6,7 +6,6 @@ const menuTitles = {
     'users': 'Quản lý người dùng',
     'premium-history': 'Lịch sử thanh toán Premium',
     'tracking': 'Thống kê Tracking',
-    'donations': 'Quản lý Ủng hộ',
     'downloads': 'Lịch sử tải xuống',
     'analytics': 'Phân tích chi tiết',
     'settings': 'Cài đặt hệ thống'
