@@ -265,19 +265,6 @@ def payos_return():
                         print(f">>> Premium activated for user {user_id} until {expires_at}")
                     except (ValueError, Exception) as prem_err:
                         print(f">>> Error activating premium: {prem_err}")
-                
-                # Auto-create donation message for regular donations (not premium)
-                elif message and message.strip():
-                        try:
-                            cursor.execute("""
-                                INSERT INTO donation_messages 
-                                (order_code, donor_name, message, created_at, is_approved)
-                                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, TRUE)
-                                ON CONFLICT (order_code) DO NOTHING
-                            """, (order_code, donor_name, message.strip()))
-                            print(f">>> Auto-created donation message for {order_code}")
-                        except Exception as msg_err:
-                            print(f">>> Error creating donation message: {msg_err}")
             
             # Update donation status
             cursor.execute("""
@@ -294,30 +281,10 @@ def payos_return():
         except Exception as e:
             print(f">>> Error updating donation status: {e}")
     
-    # Lưu order_code vào session để cho phép post message
-    session['pending_donation'] = order_code
-    
-    # Check if message already exists
-    message_exists = False
-    if db_pool and order_code:
-        try:
-            conn = db_pool.getconn()
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT COUNT(*) FROM donation_messages 
-                WHERE order_code = %s
-            """, (order_code,))
-            message_exists = cursor.fetchone()[0] > 0
-            cursor.close()
-            db_pool.putconn(conn)
-        except:
-            pass
-    
     return render_template('donate_result.html', 
                          success=True,
                          order_code=order_code,
                          status=status,
-                         can_post_message=not message_exists,
                          donation_info=donation_info)
 
 @donate_bp.route('/payos/cancel')
@@ -433,19 +400,6 @@ def payos_webhook():
                             print(f">>> Webhook: Premium activated for user {user_id} until {expires_at}")
                         except (ValueError, Exception) as prem_err:
                             print(f">>> Webhook: Error activating premium: {prem_err}")
-                            
-                    # Only create message if there's actual content and not PREMIUM
-                    elif message and message.strip():
-                        try:
-                            cursor.execute("""
-                                INSERT INTO donation_messages 
-                                (order_code, donor_name, message, created_at, is_approved)
-                                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, TRUE)
-                                ON CONFLICT (order_code) DO NOTHING
-                            """, (str(order_code), donor_name, message.strip()))
-                            print(f">>> Auto-created donation message for {order_code}")
-                        except Exception as msg_err:
-                            print(f">>> Error creating donation message: {msg_err}")
                 
                 conn.commit()
                 cursor.close()
@@ -462,139 +416,6 @@ def payos_webhook():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
-
-@donate_bp.route('/api/donate/message', methods=['POST'])
-def post_donation_message():
-    """Lưu lời nhắn sau khi donate thành công"""
-    try:
-        from app import db_pool
-        
-        data = request.get_json()
-        order_code = data.get('order_code', '')
-        message = data.get('message', '').strip()
-        donor_name = data.get('donor_name', 'Anonymous').strip()
-        
-        # Kiểm tra session
-        pending_donation = session.get('pending_donation')
-        if not pending_donation or pending_donation != order_code:
-            return jsonify({
-                'success': False,
-                'error': 'Phiên làm việc không hợp lệ'
-            }), 403
-        
-        # Validate message
-        if not message or len(message) > 500:
-            return jsonify({
-                'success': False,
-                'error': 'Lời nhắn phải từ 1-500 ký tự'
-            }), 400
-        
-        if not donor_name or len(donor_name) > 100:
-            donor_name = 'Anonymous'
-        
-        # Lưu vào database
-        if db_pool:
-            conn = db_pool.getconn()
-            cursor = conn.cursor()
-            
-            # Kiểm tra xem order_code đã post message chưa
-            cursor.execute("""
-                SELECT COUNT(*) FROM donation_messages 
-                WHERE order_code = %s
-            """, (order_code,))
-            
-            count = cursor.fetchone()[0]
-            if count > 0:
-                cursor.close()
-                db_pool.putconn(conn)
-                return jsonify({
-                    'success': False,
-                    'error': 'Bạn đã gửi lời nhắn cho đơn hàng này rồi'
-                }), 400
-            
-            # Insert message
-            cursor.execute("""
-                INSERT INTO donation_messages 
-                (order_code, donor_name, message, created_at, is_approved)
-                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, TRUE)
-            """, (order_code, donor_name, message))
-            
-            conn.commit()
-            cursor.close()
-            db_pool.putconn(conn)
-            
-            # Xóa pending donation khỏi session
-            session.pop('pending_donation', None)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Cảm ơn bạn đã chia sẻ!'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': 'Database không khả dụng'
-            }), 500
-            
-    except Exception as e:
-        print(f">>> Post message error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@donate_bp.route('/api/donate/messages')
-def get_donation_messages():
-    """Lấy danh sách lời nhắn donate (hiển thị trên trang chủ)"""
-    try:
-        from app import db_pool
-        
-        limit = int(request.args.get('limit', 10))
-        if limit > 50:
-            limit = 50
-        
-        if db_pool:
-            conn = db_pool.getconn()
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                SELECT donor_name, message, created_at
-                FROM donation_messages
-                WHERE is_approved = TRUE
-                ORDER BY created_at DESC
-                LIMIT %s
-            """, (limit,))
-            
-            messages = []
-            for row in cursor.fetchall():
-                messages.append({
-                    'donor_name': row[0],
-                    'message': row[1],
-                    'created_at': row[2].isoformat() if row[2] else None
-                })
-            
-            cursor.close()
-            db_pool.putconn(conn)
-            
-            return jsonify({
-                'success': True,
-                'messages': messages
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'messages': []
-            })
-            
-    except Exception as e:
-        print(f">>> Get messages error: {e}")
-        return jsonify({
-            'success': False,
-            'messages': []
-        })
 
 
 @donate_bp.route('/api/donate/stats')
