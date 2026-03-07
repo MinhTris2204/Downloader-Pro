@@ -956,13 +956,14 @@ def api_check_download():
             'logged_in': True
         })
     
-    if premium_info and premium_info['free_downloads_left'] <= 0:
+    # Check if user has exceeded free download limit (2 per week)
+    if premium_info and premium_info['downloads_this_week'] >= 2:
         return jsonify({
             'success': False,
             'can_download': False,
             'reason': 'limit_reached',
             'message': 'Bạn đã hết 2 lượt tải miễn phí trong tuần này. Nâng cấp Premium để tải không giới hạn!',
-            'downloads_used': premium_info['downloads_this_month'],
+            'downloads_used': premium_info['downloads_this_week'],
             'max_free': 2,
             'is_premium': False,
             'logged_in': True
