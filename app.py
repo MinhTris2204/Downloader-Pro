@@ -697,7 +697,48 @@ def before_request():
             url = request.url.replace('http://', 'https://', 1)
             return redirect(url, code=301)
     
-    # Record page visit removed - no longer tracking page visits
+    # Track page visits for statistics
+    try:
+        # Skip tracking for static files and API endpoints
+        if request.path.startswith('/static/') or request.path.startswith('/api/'):
+            return
+        
+        # Get visitor info
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+        if ip_address and ',' in ip_address:
+            ip_address = ip_address.split(',')[0].strip()
+        
+        user_agent = request.headers.get('User-Agent', '')
+        page_url = request.path
+        referrer = request.headers.get('Referer', '')
+        
+        # Simple session tracking using IP + User-Agent hash
+        import hashlib
+        session_id = hashlib.md5(f"{ip_address}{user_agent}".encode()).hexdigest()
+        
+        # Insert page visit asynchronously (don't block request)
+        if db_pool:
+            try:
+                conn = db_pool.getconn()
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    INSERT INTO page_visits (ip_address, user_agent, page_url, referrer, session_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (ip_address, user_agent, page_url, referrer, session_id))
+                
+                conn.commit()
+                cursor.close()
+                db_pool.putconn(conn)
+            except Exception as e:
+                print(f"[TRACKING ERROR] {e}")
+                if 'conn' in locals():
+                    try:
+                        db_pool.putconn(conn)
+                    except:
+                        pass
+    except Exception as e:
+        print(f"[TRACKING ERROR] {e}")
 
 # Helper function to extract images (Shared logic)
 def extract_tiktok_images_direct(url):
