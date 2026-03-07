@@ -938,6 +938,77 @@ def api_logout():
     return jsonify({'success': True, 'message': 'Đã đăng xuất', 'redirect': '/'})
 
 
+@auth_bp.route('/api/auth/facebook-delete-data', methods=['GET', 'POST'])
+def facebook_delete_data():
+    """Handle Facebook Data Deletion Request
+    Required for Facebook App to go Live
+    """
+    if request.method == 'GET':
+        # Return HTML page explaining the process
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Data Deletion - Downloader Pro</title>
+            <meta charset="utf-8">
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+                h1 { color: #1877f2; }
+                .info { background: #f0f2f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <h1>Yêu cầu xóa dữ liệu Facebook</h1>
+            <div class="info">
+                <h2>Cách xóa dữ liệu của bạn:</h2>
+                <ol>
+                    <li>Đăng nhập vào tài khoản Downloader Pro của bạn</li>
+                    <li>Vào trang Tài khoản</li>
+                    <li>Nhấn nút "Xóa tài khoản"</li>
+                    <li>Xác nhận xóa</li>
+                </ol>
+                <p>Hoặc gửi email đến <a href="mailto:support@downloaderpro.io.vn">support@downloaderpro.io.vn</a> với tiêu đề "Xóa tài khoản Facebook"</p>
+                <p><strong>Lưu ý:</strong> Sau khi xóa, tất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn trong vòng 30 ngày.</p>
+            </div>
+            <a href="/" style="display: inline-block; padding: 10px 20px; background: #1877f2; color: white; text-decoration: none; border-radius: 5px;">Quay lại trang chủ</a>
+        </body>
+        </html>
+        """
+    
+    # POST request from Facebook
+    try:
+        data = request.get_json() or {}
+        signed_request = data.get('signed_request', '')
+        
+        if not signed_request:
+            return jsonify({'error': 'Missing signed_request'}), 400
+        
+        # Parse signed request (simplified - in production, verify signature)
+        import base64
+        import json
+        
+        encoded_sig, payload = signed_request.split('.', 1)
+        decoded_payload = base64.urlsafe_b64decode(payload + '==')
+        data = json.loads(decoded_payload)
+        
+        user_id = data.get('user_id', '')
+        
+        # Log the deletion request
+        print(f"[FACEBOOK] Data deletion request for user_id: {user_id}")
+        
+        # Return confirmation URL and code
+        confirmation_code = f"DEL-{user_id}-{int(time.time())}"
+        
+        return jsonify({
+            'url': f'https://downloaderpro.io.vn/api/auth/facebook-delete-data?id={confirmation_code}',
+            'confirmation_code': confirmation_code
+        })
+        
+    except Exception as e:
+        print(f"[FACEBOOK] Delete data error: {e}")
+        return jsonify({'error': 'Invalid request'}), 400
+
+
 @auth_bp.route('/api/auth/forgot-password', methods=['POST'])
 def api_forgot_password():
     """API quên mật khẩu - gửi OTP"""

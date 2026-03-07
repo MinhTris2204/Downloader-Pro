@@ -1750,6 +1750,18 @@ def download_tiktok_video(url, format_type, download_id, quality='best'):
 def index():
     return HomeController.index()
 
+@app.route('/privacy')
+def privacy_policy():
+    """Privacy Policy page"""
+    from datetime import datetime
+    return render_template('privacy.html', current_date=datetime.now().strftime('%d/%m/%Y'))
+
+@app.route('/terms')
+def terms_of_service():
+    """Terms of Service page"""
+    from datetime import datetime
+    return render_template('terms.html', current_date=datetime.now().strftime('%d/%m/%Y'))
+
 @app.route('/blog')
 def blog_index():
     return BlogController.index()
