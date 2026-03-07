@@ -505,8 +505,8 @@ function showDownloadLimitModal(data) {
                 <h3>${t.require_login_title}</h3>
                 <p>${t.require_login_message}</p>
                 <div class="limit-actions">
-                    <a href="/login" class="premium-action-btn" style="text-decoration:none; text-align:center; background: linear-gradient(135deg, #6366f1, #8b5cf6);">${t.require_login_btn}</a>
-                    <a href="/register" class="premium-action-btn" style="text-decoration:none; text-align:center;">${t.require_register_btn}</a>
+                    <a href="/login" class="premium-action-btn">${t.require_login_btn}</a>
+                    <a href="/register" class="premium-action-btn">${t.require_register_btn}</a>
                     <button class="close-limit-btn" onclick="this.closest('.download-limit-overlay').remove()">${t.close_btn}</button>
                 </div>
             </div>
@@ -520,9 +520,9 @@ function showDownloadLimitModal(data) {
                 <p>${data.message || t.limit_reached_message}</p>
                 <div class="limit-actions">
                     ${isLoggedIn ? 
-                        `<a href="/account" class="premium-action-btn" style="text-decoration:none; text-align:center;">${t.upgrade_premium_btn}</a>` :
-                        `<a href="/register" class="premium-action-btn" style="text-decoration:none; text-align:center;">${t.register_premium_btn}</a>
-                         <a href="/login" class="premium-action-btn" style="text-decoration:none; text-align:center; background: linear-gradient(135deg, #6366f1, #8b5cf6);">${t.require_login_btn}</a>`
+                        `<a href="/account" class="premium-action-btn">${t.upgrade_premium_btn}</a>` :
+                        `<a href="/register" class="premium-action-btn">${t.register_premium_btn}</a>
+                         <a href="/login" class="premium-action-btn">${t.require_login_btn}</a>`
                     }
                     <button class="close-limit-btn" onclick="this.closest('.download-limit-overlay').remove()">${t.close_btn}</button>
                 </div>
