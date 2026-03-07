@@ -2795,6 +2795,11 @@ def debug_page():
     """Debug page to check server environment"""
     return render_template('debug.html')
 
+@app.route('/test-stats')
+def test_stats():
+    """Test page for realtime statistics"""
+    return render_template('test_stats.html')
+
 @app.route('/api/youtube/info', methods=['POST'])
 def youtube_info():
     try:

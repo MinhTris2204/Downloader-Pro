@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Stats Realtime</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+        .stat-box {
+            background: #16213e;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #0f3460;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00f2ea;
+        }
+        .log {
+            background: #000;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #00f2ea;
+            padding-left: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .status.connected {
+            background: #28a745;
+        }
+        .status.disconnected {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔴 Test Thống Kê Realtime</h1>
+    
+    <div class="stat-box">
+        <div>Socket.IO Status: <span class="status disconnected" id="socketStatus">Disconnected</span></div>
+    </div>
+    
+    <div class="stat-box">
+        <div>👥 Đang online:</div>
+        <div class="stat-value" id="onlineUsers">--</div>
+    </div>
+    
+    <div class="stat-box">
+        <div>📅 Hôm nay:</div>
+        <div class="stat-value" id="todayVisits">--</div>
+    </div>
+    
+    <div class="stat-box">
+        <div>📈 Trong tháng:</div>
+        <div class="stat-value" id="monthlyVisits">--</div>
+    </div>
+    
+    <div class="stat-box">
+        <div>🌍 Tổng pageview:</div>
+        <div class="stat-value" id="totalPageviews">--</div>
+    </div>
+    
+    <div class="log" id="logContainer">
+        <div class="log-entry">Waiting for connection...</div>
+    </div>
+    
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script>
+        function addLog(message, color = '#00f2ea') {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.style.borderLeftColor = color;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        // Initialize Socket.IO
+        addLog('Initializing Socket.IO...', '#ffc107');
+        const socket = io();
+        
+        socket.on('connect', function() {
+            addLog('✅ Socket.IO connected!', '#28a745');
+            document.getElementById('socketStatus').textContent = 'Connected';
+            document.getElementById('socketStatus').className = 'status connected';
+            
+            socket.emit('get_online_count');
+            addLog('Requested online count', '#00f2ea');
+        });
+        
+        socket.on('disconnect', function() {
+            addLog('❌ Socket.IO disconnected', '#dc3545');
+            document.getElementById('socketStatus').textContent = 'Disconnected';
+            document.getElementById('socketStatus').className = 'status disconnected';
+        });
+        
+        socket.on('online_count_update', function(data) {
+            addLog(`📊 Online count update: ${data.online_users}`, '#00f2ea');
+            document.getElementById('onlineUsers').textContent = formatNumber(data.online_users);
+        });
+        
+        // Load full stats from API
+        async function loadStats() {
+            try {
+                addLog('Fetching stats from API...', '#ffc107');
+                const response = await fetch('/api/site-stats');
+                const data = await response.json();
+                
+                if (data.success && data.stats) {
+                    addLog(`✅ Stats loaded: Online=${data.stats.online_users}, Today=${data.stats.today_visits}`, '#28a745');
+                    
+                    document.getElementById('onlineUsers').textContent = formatNumber(data.stats.online_users);
+                    document.getElementById('todayVisits').textContent = formatNumber(data.stats.today_visits);
+                    document.getElementById('monthlyVisits').textContent = formatNumber(data.stats.monthly_visits);
+                    document.getElementById('totalPageviews').textContent = formatNumber(data.stats.total_pageviews);
+                }
+            } catch (error) {
+                addLog(`❌ Error loading stats: ${error.message}`, '#dc3545');
+            }
+        }
+        
+        // Load stats immediately
+        loadStats();
+        
+        // Reload stats every 5 seconds
+        setInterval(loadStats, 5000);
+        
+        addLog('Test page ready! Open multiple tabs to see realtime updates.', '#28a745');
+    </script>
+</body>
+</html>
