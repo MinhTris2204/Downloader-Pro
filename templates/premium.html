@@ -196,8 +196,8 @@
 <div class="premium-page-wrapper">
     <div class="premium-container">
         <div class="premium-header">
-            <h1>👑 <span data-i18n="premium_page_title">Nâng Cấp Premium</span></h1>
-            <p data-i18n="premium_page_subtitle">Trải nghiệm đầy đủ tính năng không giới hạn</p>
+            <h1>👑 <span data-i18n="{% if user and user.is_premium %}premium_page_title_renew{% else %}premium_page_title{% endif %}">{% if user and user.is_premium %}Gia Hạn Premium{% else %}Nâng Cấp Premium{% endif %}</span></h1>
+            <p data-i18n="{% if user and user.is_premium %}premium_page_subtitle_renew{% else %}premium_page_subtitle{% endif %}">{% if user and user.is_premium %}Gia hạn để tiếp tục trải nghiệm không giới hạn{% else %}Trải nghiệm đầy đủ tính năng không giới hạn{% endif %}</p>
         </div>
 
         {% if user %}
@@ -294,10 +294,14 @@
             </div>
 
             <h3 style="text-align: center; margin: 40px 0 20px; font-size: 1.5em; color: #0f172a;">
-                💳 <span data-i18n="account_payment_title">Chọn Gói Premium</span>
+                💳 <span data-i18n="{% if user and user.is_premium %}premium_renew_title{% else %}account_payment_title{% endif %}">{% if user and user.is_premium %}Gia Hạn Premium{% else %}Chọn Gói Premium{% endif %}</span>
             </h3>
-            <p style="text-align: center; color: #64748b; margin-bottom: 30px;" data-i18n="account_payment_subtitle">
-                Ủng hộ bất kỳ số tiền nào để nhận 30 ngày Premium
+            <p style="text-align: center; color: #64748b; margin-bottom: 30px;" data-i18n="{% if user and user.is_premium %}premium_renew_subtitle{% else %}account_payment_subtitle{% endif %}">
+                {% if user and user.is_premium %}
+                    Gia hạn thêm 30 ngày Premium với bất kỳ số tiền nào
+                {% else %}
+                    Ủng hộ bất kỳ số tiền nào để nhận 30 ngày Premium
+                {% endif %}
             </p>
 
             <div class="amount-options">
@@ -324,7 +328,10 @@
                    oninput="formatCurrency(this)">
 
             <button class="btn-premium" id="premiumPayBtn" onclick="handlePremiumPurchase()">
-                <span class="btn-text"><span>🚀</span> <span data-i18n="account_btn_pay">Thanh toán ngay</span></span>
+                <span class="btn-text">
+                    <span>{% if user and user.is_premium %}⏰{% else %}🚀{% endif %}</span> 
+                    <span data-i18n="{% if user and user.is_premium %}premium_btn_renew{% else %}account_btn_pay{% endif %}">{% if user and user.is_premium %}Gia hạn ngay{% else %}Thanh toán ngay{% endif %}</span>
+                </span>
                 <span class="btn-loading" style="display:none;">
                     <svg class="spinner" viewBox="0 0 24 24" style="width: 24px; height: 24px; animation: spin 1s linear infinite;">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"></circle>
