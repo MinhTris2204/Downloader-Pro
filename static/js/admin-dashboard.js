@@ -181,6 +181,81 @@ async function loadTrackingData() {
     }
 }
 
+// Helper function to get platform color
+function getPlatformColor(platform) {
+    const colors = {
+        'youtube': '#ff0000',
+        'tiktok': '#000000',
+        'instagram': '#e4405f',
+        'facebook': '#1877f2'
+    };
+    return colors[platform?.toLowerCase()] || '#6c757d';
+}
+
+// Load downloads history
+async function loadDownloadsHistory() {
+    const limit = document.getElementById('limitSelect')?.value || 50;
+    const container = document.getElementById('downloadsTable');
+    container.innerHTML = '<div class="loading">Đang tải...</div>';
+    
+    try {
+        const response = await fetch(`/api/admin/downloads/recent?limit=${limit}`);
+        const data = await response.json();
+        
+        if (data.downloads && data.downloads.length > 0) {
+            container.innerHTML = `
+                <div style="margin-bottom: 15px; padding: 10px; background: #e8f5e8; border-radius: 6px; font-size: 14px;">
+                    <i class="fas fa-info-circle" style="color: #28a745;"></i> 
+                    Hiển thị ${data.downloads.length} lượt tải gần nhất | 
+                    Cập nhật lúc: ${formatDateTime(data.timestamp)} |
+                    <button onclick="loadDownloadsHistory()" style="margin-left: 10px; padding: 4px 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-sync-alt"></i> Làm mới
+                    </button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Tài khoản</th>
+                            <th>Platform</th>
+                            <th>Format</th>
+                            <th>Chất lượng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.downloads.map(d => `
+                            <tr>
+                                <td style="white-space: nowrap; font-size: 12px;">${formatDateTime(d.download_time)}</td>
+                                <td style="font-size: 12px;">
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <span style="font-weight: 600; color: #2c3e50;">👤 ${d.username}</span>
+                                        <span style="font-size: 10px; color: #7f8c8d;">${d.email || ''}</span>
+                                    </div>
+                                </td>
+                                <td><span style="padding: 3px 6px; background: ${getPlatformColor(d.platform)}; color: white; border-radius: 3px; font-size: 10px; font-weight: bold;">${(d.platform || 'N/A').toUpperCase()}</span></td>
+                                <td><span style="padding: 2px 6px; background: #6c757d; color: white; border-radius: 3px; font-size: 10px;">${d.format || 'N/A'}</span></td>
+                                <td style="font-size: 12px;">${d.quality || 'N/A'}</td>
+                                <td style="text-align: center;">
+                                    <button onclick='showDownloadDetail(${JSON.stringify(d)})' style="padding: 6px 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s;">
+                                        <i class="fas fa-eye"></i> Chi tiết
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu tải xuống</p>';
+        }
+        
+    } catch (error) {
+        console.error('Error loading downloads:', error);
+        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu: ' + error.message + '</p>';
+    }
+}
+
 // Helper function to display country with flag
 function getCountryDisplay(country) {
     if (!country || country === 'Unknown') return 'Unknown';
