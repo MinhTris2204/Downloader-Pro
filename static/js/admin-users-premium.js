@@ -54,11 +54,8 @@ if (typeof io !== 'undefined') {
         onlineUserIds = new Set(data.user_ids.map(id => parseInt(id)));
         document.getElementById('usersOnline').textContent = onlineUserIds.size;
         
-        // Reload users table if currently viewing users section
-        const usersSection = document.getElementById('users');
-        if (usersSection && usersSection.classList.contains('active')) {
-            loadUsers();
-        }
+        // DON'T reload users table here - it causes infinite loop
+        // The table will use the updated onlineUserIds on next manual load
     });
     
     socket.on('user_status', function(data) {
@@ -93,11 +90,6 @@ async function loadUsers() {
     
     const usersTable = document.getElementById('usersTable');
     usersTable.innerHTML = '<div class="loading">Đang tải...</div>';
-    
-    // Request fresh online users list from server
-    if (window.adminSocket && window.adminSocket.connected) {
-        window.adminSocket.emit('join_admin');
-    }
     
     try {
         const response = await fetch(`/api/admin/users?type=${userType}&search=${encodeURIComponent(search)}`);
