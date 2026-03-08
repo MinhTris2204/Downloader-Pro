@@ -1128,6 +1128,216 @@ def try_invidious_download(video_id, format_type, quality, download_id, temp_dir
             
         except Exception as e:
             print(f"[DEBUG] Invidious {instance} failed: {str(e)[:100]}")
+            continue
+    
+    return None, None, None
+
+
+def try_cobalt_api(video_id, format_type, quality, download_id, temp_dir, progress_hook):
+    """Try to download via Cobalt API (cobalt.tools) - Free, no auth needed"""
+    try:
+        print(f"[DEBUG] Trying Cobalt API...")
+        
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        
+        # Cobalt API endpoint
+        api_url = "https://api.cobalt.tools/api/json"
+        
+        payload = {
+            "url": url,
+            "vCodec": "h264",  # Compatible codec
+            "vQuality": quality if quality != 'best' else "1080",
+            "aFormat": "mp3" if format_type == 'mp3' else "best",
+            "isAudioOnly": format_type == 'mp3'
+        }
+        
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+        
+        response = http_requests.post(api_url, json=payload, headers=headers, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"[DEBUG] Cobalt API returned {response.status_code}")
+            return None, None, None
+        
+        data = response.json()
+        
+        if data.get('status') != 'success' and data.get('status') != 'redirect':
+            print(f"[DEBUG] Cobalt API status: {data.get('status')}")
+            return None, None, None
+        
+        download_url = data.get('url')
+        if not download_url:
+            print(f"[DEBUG] No download URL from Cobalt")
+            return None, None, None
+        
+        # Download the file
+        print(f"[DEBUG] Downloading from Cobalt: {download_url[:100]}...")
+        
+        ext = 'mp3' if format_type == 'mp3' else 'mp4'
+        output_path = os.path.join(temp_dir, f"{download_id}.{ext}")
+        
+        with http_requests.get(download_url, stream=True, timeout=120) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get('content-length', 0))
+            downloaded = 0
+            
+            with open(output_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    
+                    if total_size > 0:
+                        progress = int((downloaded / total_size) * 100)
+                        progress_hook({
+                            'status': 'downloading',
+                            'downloaded_bytes': downloaded,
+                            'total_bytes': total_size,
+                            '_percent_str': f'{progress}%',
+                            '_speed_str': '',
+                            '_eta_str': ''
+                        })
+        
+        print(f"[SUCCESS] Downloaded via Cobalt API")
+        return output_path, f"video_{video_id}", ext
+        
+    except Exception as e:
+        print(f"[DEBUG] Cobalt API failed: {str(e)[:100]}")
+        return None, None, None
+
+
+def try_y2mate_api(video_id, format_type, quality, download_id, temp_dir, progress_hook):
+    """Try to download via Y2Mate API - Free, no auth needed"""
+    try:
+        print(f"[DEBUG] Trying Y2Mate API...")
+        
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        
+        # Y2Mate API endpoints
+        # Step 1: Get video info
+        info_url = "https://www.y2mate.com/mates/analyzeV2/ajax"
+        
+        payload = {
+            "k_query": url,
+            "k_page": "home",
+            "hl": "en",
+            "q_auto": 0
+        }
+        
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        }
+        
+        response = http_requests.post(info_url, data=payload, headers=headers, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"[DEBUG] Y2Mate API returned {response.status_code}")
+            return None, None, None
+        
+        data = response.json()
+        
+        if data.get('status') != 'ok':
+            print(f"[DEBUG] Y2Mate status: {data.get('status')}")
+            return None, None, None
+        
+        # Parse links from HTML response
+        import re
+        links_html = data.get('links', {})
+        
+        # Find the appropriate format
+        k_value = None
+        
+        if format_type == 'mp3':
+            # Look for mp3 format
+            mp3_links = links_html.get('mp3', {})
+            for quality_key in ['128', '320', '192']:
+                if quality_key in mp3_links:
+                    match = re.search(r'k__id="([^"]+)"', mp3_links[quality_key])
+                    if match:
+                        k_value = match.group(1)
+                        break
+        else:
+            # Look for mp4 format
+            mp4_links = links_html.get('mp4', {})
+            target_quality = quality.replace('p', '') if quality != 'best' else '720'
+            
+            for q in [target_quality, '720', '480', '360']:
+                if q in mp4_links:
+                    match = re.search(r'k__id="([^"]+)"', mp4_links[q])
+                    if match:
+                        k_value = match.group(1)
+                        break
+        
+        if not k_value:
+            print(f"[DEBUG] No suitable format found in Y2Mate")
+            return None, None, None
+        
+        # Step 2: Get download link
+        convert_url = "https://www.y2mate.com/mates/convertV2/index"
+        
+        convert_payload = {
+            "vid": video_id,
+            "k": k_value
+        }
+        
+        response = http_requests.post(convert_url, data=convert_payload, headers=headers, timeout=30)
+        
+        if response.status_code != 200:
+            print(f"[DEBUG] Y2Mate convert returned {response.status_code}")
+            return None, None, None
+        
+        data = response.json()
+        
+        if data.get('status') != 'ok':
+            print(f"[DEBUG] Y2Mate convert status: {data.get('status')}")
+            return None, None, None
+        
+        # Extract download URL from HTML
+        result_html = data.get('result', '')
+        match = re.search(r'href="([^"]+)"', result_html)
+        
+        if not match:
+            print(f"[DEBUG] No download URL found in Y2Mate response")
+            return None, None, None
+        
+        download_url = match.group(1)
+        
+        # Download the file
+        print(f"[DEBUG] Downloading from Y2Mate: {download_url[:100]}...")
+        
+        ext = 'mp3' if format_type == 'mp3' else 'mp4'
+        output_path = os.path.join(temp_dir, f"{download_id}.{ext}")
+        
+        with http_requests.get(download_url, stream=True, timeout=120, headers=headers) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get('content-length', 0))
+            downloaded = 0
+            
+            with open(output_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    
+                    if total_size > 0:
+                        progress = int((downloaded / total_size) * 100)
+                        progress_hook({
+                            'status': 'downloading',
+                            'downloaded_bytes': downloaded,
+                            'total_bytes': total_size,
+                            '_percent_str': f'{progress}%',
+                            '_speed_str': '',
+                            '_eta_str': ''
+                        })
+        
+        print(f"[SUCCESS] Downloaded via Y2Mate API")
+        return output_path, f"video_{video_id}", ext
+        
+    except Exception as e:
+        print(f"[DEBUG] Y2Mate API failed: {str(e)[:100]}")
+        return None, None, None
             time_module.sleep(1)
             continue
     
@@ -1208,39 +1418,15 @@ def download_youtube_video(url, format_type, quality, download_id):
         
         # Advanced strategies optimized for Railway/Cloud deployment
         # Order matters: try most reliable strategies first
-        # PRIORITY: Try cookies-based strategies FIRST if cookies available
+        # PRIORITY ORDER:
+        # 1. Try NO-COOKIES strategies first (more stable, no expiration)
+        # 2. Then try cookies-based strategies if available
+        # 3. Finally try advanced methods (bgutil, PO token)
+        
         strategies = [
-            # Strategy 0: iOS with Cookies (BEST - Most reliable with valid cookies!)
-            {
-                'name': 'ios_cookies',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['ios'],
-                        }
-                    },
-                },
-                'delay': 0,
-                'use_cookies': True  # Requires cookies
-            },
-            # Strategy 1: Web with Cookies (Traditional method)
-            {
-                'name': 'web_cookies',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['web'],
-                        }
-                    },
-                },
-                'delay': 1,
-                'use_cookies': True
-            },
-            # Strategy 2: Android Embedded (Fallback - no cookies needed)
+            # ===== NO-COOKIES STRATEGIES (Try these first!) =====
+            
+            # Strategy 0: Android Embedded (BEST for no-cookies - Most stable!)
             {
                 'name': 'android_embed',
                 'opts': {
@@ -1248,14 +1434,14 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['android_embedded', 'android'],
+                            'player_client': ['android_embedded'],
                         }
                     },
                 },
-                'delay': 2,
-                'use_cookies': False  # Android client doesn't need cookies
+                'delay': 0,
+                'use_cookies': False  # No cookies needed!
             },
-            # Strategy 3: Android Music (Alternative Android client)
+            # Strategy 1: Android Music (Alternative Android client)
             {
                 'name': 'android_music',
                 'opts': {
@@ -1267,10 +1453,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 3,
+                'delay': 1,
                 'use_cookies': False
             },
-            # Strategy 4: TV Embedded (Low bot detection)
+            # Strategy 2: TV Embedded (Low bot detection)
             {
                 'name': 'tv_embed',
                 'opts': {
@@ -1282,45 +1468,76 @@ def download_youtube_video(url, format_type, quality, download_id):
                         }
                     },
                 },
-                'delay': 4,
+                'delay': 2,
                 'use_cookies': False
             },
-            # Strategy 5: bgutil POT Provider (Requires bgutil server)
-            # Strategy 5: bgutil POT Provider (Requires bgutil server)
+            # Strategy 3: iOS (Works without cookies for many videos)
             {
-                'name': 'bgutil_pot',
+                'name': 'ios_no_cookies',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['web'],
-                            # bgutil POT provider - professional token generation
-                            'pot_bgutilhttp': {
-                                'base_url': 'http://127.0.0.1:4416'
-                            }
+                            'player_client': ['ios'],
+                        }
+                    },
+                },
+                'delay': 3,
+                'use_cookies': False
+            },
+            # Strategy 4: Android VR (New client type)
+            {
+                'name': 'android_vr',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['android_vr'],
+                        }
+                    },
+                },
+                'delay': 4,
+                'use_cookies': False
+            },
+            
+            # ===== COOKIES-BASED STRATEGIES (Only if cookies available) =====
+            
+            # Strategy 5: iOS with Cookies (Best with valid cookies)
+            {
+                'name': 'ios_cookies',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['ios'],
                         }
                     },
                 },
                 'delay': 5,
-                'use_cookies': True
+                'use_cookies': True  # Requires cookies
             },
-            # Strategy 6: PO Token with Web Client (Deno auto-generation)
+            # Strategy 6: Web with Cookies (Traditional method)
             {
-                'name': 'po_token_web',
+                'name': 'web_cookies',
                 'opts': {
                     'quiet': True,
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
                             'player_client': ['web'],
-                            # PO Token will be auto-generated by yt-dlp with Deno
                         }
                     },
                 },
-                'delay': 8
+                'delay': 6,
+                'use_cookies': True
             },
-            # Strategy 6: Web Mobile with cleanup
+            
+            # ===== ADVANCED METHODS =====
+            
+            # Strategy 7: Web Mobile with cleanup (No cookies)
             {
                 'name': 'mweb_clean',
                 'opts': {
@@ -1328,12 +1545,28 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'no_warnings': True,
                     'extractor_args': {
                         'youtube': {
-                            'player_client': ['mweb', 'web_embedded'],
+                            'player_client': ['mweb'],
                             'player_skip': ['webpage', 'configs'],
                         }
                     },
                 },
-                'delay': 10
+                'delay': 7,
+                'use_cookies': False
+            },
+            # Strategy 8: Media Connect (New method)
+            {
+                'name': 'mediaconnect',
+                'opts': {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'extractor_args': {
+                        'youtube': {
+                            'player_client': ['mediaconnect'],
+                        }
+                    },
+                },
+                'delay': 8,
+                'use_cookies': False
             },
         ]
         
@@ -1489,8 +1722,8 @@ def download_youtube_video(url, format_type, quality, download_id):
                 print(f"  - Will try next strategy...\n")
                 continue
         
-        # All yt-dlp strategies failed - try Invidious as last resort
-        print(f"\n[FALLBACK] All yt-dlp strategies failed, trying Invidious API...")
+        # All yt-dlp strategies failed - try FREE APIs as fallback
+        print(f"\n[FALLBACK] All yt-dlp strategies failed, trying FREE APIs...")
         print(f"  - Last error: {str(last_error)[:200]}\n")
         
         # Extract video ID from URL
@@ -1498,8 +1731,8 @@ def download_youtube_video(url, format_type, quality, download_id):
         if video_id_match:
             video_id = video_id_match.group(1)
             
-            # Define progress hook for Invidious
-            def invidious_progress_hook(d):
+            # Define progress hook for APIs
+            def api_progress_hook(d):
                 if d['status'] == 'downloading':
                     percent_str = d.get('_percent_str', '0%').replace('%', '')
                     try:
@@ -1509,37 +1742,54 @@ def download_youtube_video(url, format_type, quality, download_id):
                     download_progress[download_id]['status'] = 'downloading'
                     download_progress[download_id]['progress'] = percent
             
-            inv_path, inv_title, inv_ext = try_invidious_download(
-                video_id, format_type, quality, download_id, temp_dir, invidious_progress_hook
-            )
+            # Try multiple FREE APIs in order
+            api_methods = [
+                ('Cobalt API', try_cobalt_api),
+                ('Invidious API', try_invidious_download),
+                ('Y2Mate API', try_y2mate_api),
+            ]
             
-            if inv_path and os.path.exists(inv_path):
-                print(f"[SUCCESS] Download completed via Invidious!")
-                
-                mime_type = 'audio/mpeg' if inv_ext == 'mp3' else 'video/mp4'
-                
-                download_data[download_id] = {
-                    'filepath': inv_path,
-                    'title': inv_title or 'video',
-                    'mime_type': mime_type,
-                    'ext': inv_ext,
-                    'timestamp': time.time(),
-                    'platform': 'youtube',
-                    'format': format_type,
-                    'quality': quality
-                }
-                
-                download_progress[download_id]['status'] = 'completed'
-                download_progress[download_id]['progress'] = 100
-                download_progress[download_id]['title'] = inv_title or 'video'
-                
-                # Record in database
+            for api_name, api_func in api_methods:
                 try:
-                    record_download('youtube', inv_title or 'video', format_type, quality)
-                except Exception as db_err:
-                    print(f"DB record error: {db_err}")
+                    print(f"[FALLBACK] Trying {api_name}...")
                     
-                return
+                    api_path, api_title, api_ext = api_func(
+                        video_id, format_type, quality, download_id, temp_dir, api_progress_hook
+                    )
+                    
+                    if api_path and os.path.exists(api_path):
+                        print(f"[SUCCESS] ✅ Download completed via {api_name}!")
+                        
+                        mime_type = 'audio/mpeg' if api_ext == 'mp3' else 'video/mp4'
+                        
+                        download_data[download_id] = {
+                            'filepath': api_path,
+                            'title': api_title or 'video',
+                            'mime_type': mime_type,
+                            'ext': api_ext,
+                            'timestamp': time.time(),
+                            'platform': 'youtube',
+                            'format': format_type,
+                            'quality': quality
+                        }
+                        
+                        download_progress[download_id]['status'] = 'completed'
+                        download_progress[download_id]['progress'] = 100
+                        download_progress[download_id]['title'] = api_title or 'video'
+                        
+                        # Record in database
+                        try:
+                            record_download('youtube', api_title or 'video', format_type, quality)
+                        except Exception as db_err:
+                            print(f"DB record error: {db_err}")
+                            
+                        return
+                    else:
+                        print(f"[FALLBACK] ❌ {api_name} failed or returned no file")
+                        
+                except Exception as api_err:
+                    print(f"[FALLBACK] ❌ {api_name} error: {str(api_err)[:100]}")
+                    continue
         
         # Everything failed
         raise last_error if last_error else Exception("Không thể tải video")
@@ -1557,7 +1807,7 @@ def download_youtube_video(url, format_type, quality, download_id):
             available_countries = available_match.group(1) if available_match else 'một số quốc gia khác'
             download_progress[download_id]['error'] = f'🌍 Video bị chặn theo khu vực.\n\n📍 Video chỉ khả dụng tại: {available_countries}\n\n💡 Giải pháp:\n🔹 Sử dụng VPN để đổi vị trí\n🔹 Thử video khác không bị chặn vùng\n\n⚙️ Nếu có VPN, thêm --proxy vào cấu hình yt-dlp'
         elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg or 'confirm you' in error_msg.lower():
-            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử 6 phương pháp bypass.\n\n💡 Giải pháp:\n🔹 Đợi 5-10 phút rồi thử lại\n🔹 Thử video ngắn hơn (<10 phút)\n🔹 Thử video từ kênh khác\n\n⚙️ Admin: Cần thêm cookies.txt - Xem YOUTUBE_COOKIES_SETUP.md'
+            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử TẤT CẢ phương pháp có thể:\n\n📱 yt-dlp Strategies (8 phương pháp):\n• Android Embedded (no cookies) ❌\n• Android Music (no cookies) ❌\n• TV Embedded (no cookies) ❌\n• iOS (no cookies) ❌\n• Android VR (no cookies) ❌\n• iOS (with cookies) ❌\n• Web (with cookies) ❌\n• Mobile Web (no cookies) ❌\n\n🌐 FREE APIs (3 phương pháp):\n• Cobalt API ❌\n• Invidious API ❌\n• Y2Mate API ❌\n\n💡 Giải pháp cho người dùng:\n🔹 Đợi 10-15 phút rồi thử lại\n🔹 Thử video ngắn hơn (<5 phút)\n🔹 Thử video từ kênh khác (kênh lớn thường dễ tải hơn)\n🔹 Thử lại vào giờ khác trong ngày\n🔹 Thử video khác - video này có thể bị giới hạn đặc biệt\n\n⚙️ Thông báo cho Admin:\n📊 Hệ thống đã thử 11 phương pháp:\n✓ 5 phương pháp yt-dlp KHÔNG CẦN cookies\n✓ 3 phương pháp yt-dlp với cookies (nếu có)\n✓ 3 FREE APIs (Cobalt, Invidious, Y2Mate)\n\n🔧 Để cải thiện:\n1. Cập nhật yt-dlp: pip install -U yt-dlp\n2. Thêm cookies mới (tùy chọn): YOUTUBE_COOKIES_SETUP.md\n3. Restart server\n\n⏰ Lưu ý: Nếu video cụ thể này không tải được sau khi thử 11 phương pháp, có thể:\n• Video có giới hạn vùng địa lý nghiêm ngặt\n• Video yêu cầu xác thực đặc biệt\n• YouTube đang tăng cường bảo mật tạm thời cho video này'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():

@@ -788,7 +788,17 @@ function showProgress(platform, downloadId) {
                 }, 300);
             } else if (data.status === 'error') {
                 clearInterval(progressInterval);
-                showToast(data.error || 'Có lỗi xảy ra khi tải', 'error');
+                
+                // Format error message for better display
+                let errorMsg = data.error || 'Có lỗi xảy ra khi tải';
+                
+                // If it's a long error message (like YouTube bot detection), show in modal instead of toast
+                if (errorMsg.length > 150 || errorMsg.includes('\n\n')) {
+                    showErrorModal(errorMsg, platform);
+                } else {
+                    showToast(errorMsg, 'error');
+                }
+                
                 document.getElementById(`${platform}-progress`).style.display = 'none';
                 resetButton(platform);
             }
@@ -860,6 +870,99 @@ function showToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+// ====== Error Modal for Detailed Messages ======
+function showErrorModal(message, platform = '') {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('error-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'error-modal';
+        modal.style.cssText = `
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Format message with proper line breaks
+    const formattedMessage = message.replace(/\n/g, '<br>');
+    
+    // Determine icon based on message content
+    let icon = '❌';
+    if (message.includes('🤖')) icon = '🤖';
+    else if (message.includes('🌍')) icon = '🌍';
+    else if (message.includes('🔞')) icon = '🔞';
+    else if (message.includes('©️')) icon = '©️';
+    else if (message.includes('📺')) icon = '📺';
+    else if (message.includes('🌐')) icon = '🌐';
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 20px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: slideUp 0.3s ease-out;">
+            <div style="padding: 25px 30px; border-bottom: 2px solid #ecf0f1; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); border-radius: 20px 20px 0 0;">
+                <h3 style="color: white; margin: 0; font-size: 22px; font-weight: 700;">
+                    ${icon} Lỗi Tải Xuống
+                </h3>
+                <button onclick="closeErrorModal()" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
+                    ✕
+                </button>
+            </div>
+            <div style="padding: 30px; font-size: 15px; line-height: 1.8; color: #2c3e50; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                ${formattedMessage}
+            </div>
+            <div style="padding: 20px 30px; border-top: 2px solid #ecf0f1; text-align: right; background: #f8f9fa; border-radius: 0 0 20px 20px;">
+                <button onclick="closeErrorModal()" style="padding: 12px 24px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; margin-right: 10px;">
+                    Đóng
+                </button>
+                <button onclick="copyErrorMessage()" style="padding: 12px 24px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                    📋 Copy Lỗi
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Store original message for copying
+    modal.dataset.originalMessage = message;
+    
+    modal.style.display = 'flex';
+}
+
+function closeErrorModal() {
+    const modal = document.getElementById('error-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function copyErrorMessage() {
+    const modal = document.getElementById('error-modal');
+    if (modal && modal.dataset.originalMessage) {
+        navigator.clipboard.writeText(modal.dataset.originalMessage)
+            .then(() => {
+                showToast('Đã copy thông báo lỗi!', 'success');
+            })
+            .catch(() => {
+                showToast('Không thể copy', 'error');
+            });
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('error-modal');
+    if (modal && e.target === modal) {
+        closeErrorModal();
+    }
+});
 
 // ====== URL Input Events - Auto Fetch Preview ======
 let youtubeDebounce = null;
