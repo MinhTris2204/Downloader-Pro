@@ -50,17 +50,19 @@ if (typeof io !== 'undefined') {
     
     socket.on('online_users_list', function(data) {
         console.log('Received online users list:', data.user_ids);
-        onlineUserIds = new Set(data.user_ids);
+        // Convert all to numbers for consistent comparison
+        onlineUserIds = new Set(data.user_ids.map(id => parseInt(id)));
         document.getElementById('usersOnline').textContent = onlineUserIds.size;
     });
     
     socket.on('user_status', function(data) {
         console.log('User status update:', data);
         if (data.user_id) {
+            const userId = parseInt(data.user_id);
             if (data.status === 'online') {
-                onlineUserIds.add(data.user_id);
+                onlineUserIds.add(userId);
             } else {
-                onlineUserIds.delete(data.user_id);
+                onlineUserIds.delete(userId);
             }
             // Update online count in stats
             document.getElementById('usersOnline').textContent = onlineUserIds.size;
@@ -119,7 +121,7 @@ async function loadUsers() {
                 </thead>
                 <tbody>
                     ${data.users.map(user => {
-                        const isOnline = onlineUserIds.has(user.id);
+                        const isOnline = onlineUserIds.has(parseInt(user.id));
                         return `
                         <tr>
                             <td>${user.id}</td>
