@@ -253,6 +253,7 @@ async function loadDownloadsHistory() {
                     <thead>
                         <tr>
                             <th>Thời gian</th>
+                            <th>Tài khoản</th>
                             <th>Platform</th>
                             <th>Format</th>
                             <th>Chất lượng</th>
@@ -269,6 +270,14 @@ async function loadDownloadsHistory() {
                         ${data.downloads.map(d => `
                             <tr>
                                 <td style="white-space: nowrap; font-size: 12px;">${formatDateTime(d.download_time)}</td>
+                                <td style="font-size: 12px;">
+                                    ${d.username ? `
+                                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                                            <span style="font-weight: 600; color: #2c3e50;">👤 ${d.username}</span>
+                                            <span style="font-size: 10px; color: #7f8c8d;">${d.email || ''}</span>
+                                        </div>
+                                    ` : '<span style="color: #95a5a6; font-style: italic;">Khách</span>'}
+                                </td>
                                 <td><span style="padding: 3px 6px; background: ${getPlatformColor(d.platform)}; color: white; border-radius: 3px; font-size: 10px; font-weight: bold;">${(d.platform || 'N/A').toUpperCase()}</span></td>
                                 <td><span style="padding: 2px 6px; background: #6c757d; color: white; border-radius: 3px; font-size: 10px;">${d.format || 'N/A'}</span></td>
                                 <td style="font-size: 12px;">${d.quality || 'N/A'}</td>

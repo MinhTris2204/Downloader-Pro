@@ -323,6 +323,7 @@ def init_db():
                 quality VARCHAR(20),
                 download_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 success BOOLEAN DEFAULT TRUE,
+                user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
                 ip_address VARCHAR(45),
                 country VARCHAR(100),
                 country_code VARCHAR(5),
@@ -499,6 +500,7 @@ def init_db():
         # Auto-migration: Add tracking columns if they don't exist
         print("[INFO] Checking for tracking columns...")
         tracking_columns = [
+            ("user_id", "INTEGER REFERENCES users(id) ON DELETE SET NULL"),
             ("ip_address", "VARCHAR(45)"),
             ("country", "VARCHAR(100)"),
             ("country_code", "VARCHAR(5)"),
@@ -566,8 +568,8 @@ def get_stats():
     
     return {"total_downloads": 1250}
 
-def increment_stats(platform='unknown', format_type='mp4', quality='best', success=True, tracking_info=None):
-    """Increment download counter in DB with tracking info"""
+def increment_stats(platform='unknown', format_type='mp4', quality='best', success=True, tracking_info=None, user_id=None):
+    """Increment download counter in DB with tracking info and user_id"""
     if db_pool:
         try:
             conn = db_pool.getconn()
@@ -577,14 +579,14 @@ def increment_stats(platform='unknown', format_type='mp4', quality='best', succe
             if tracking_info:
                 cursor.execute("""
                     INSERT INTO downloads (
-                        platform, format, quality, success,
+                        platform, format, quality, success, user_id,
                         ip_address, country, country_code, region, city, timezone,
                         latitude, longitude, device_type, os, browser,
                         is_mobile, is_tablet, is_pc, user_agent
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
-                    platform, format_type, quality, success,
+                    platform, format_type, quality, success, user_id,
                     tracking_info.get('ip_address'),
                     tracking_info.get('country'),
                     tracking_info.get('country_code'),
@@ -604,9 +606,9 @@ def increment_stats(platform='unknown', format_type='mp4', quality='best', succe
             else:
                 # Fallback without tracking
                 cursor.execute("""
-                    INSERT INTO downloads (platform, format, quality, success)
-                    VALUES (%s, %s, %s, %s)
-                """, (platform, format_type, quality, success))
+                    INSERT INTO downloads (platform, format, quality, success, user_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (platform, format_type, quality, success, user_id))
             
             # Update total count
             cursor.execute("""
@@ -2301,6 +2303,14 @@ def manifest():
 
 @app.route('/api/youtube/download', methods=['POST'])
 def youtube_download():
+    # Kiểm tra đăng nhập
+    if 'user_id' not in session:
+        return jsonify({
+            'success': False, 
+            'error': '🔒 Vui lòng đăng nhập để tải xuống',
+            'require_login': True
+        }), 401
+    
     data = request.get_json()
     url = data.get('url', '').strip()
     format_type = data.get('format', 'mp4')
@@ -2341,6 +2351,14 @@ def youtube_download():
 
 @app.route('/api/tiktok/download', methods=['POST'])
 def tiktok_download():
+    # Kiểm tra đăng nhập
+    if 'user_id' not in session:
+        return jsonify({
+            'success': False, 
+            'error': '🔒 Vui lòng đăng nhập để tải xuống',
+            'require_login': True
+        }), 401
+    
     data = request.get_json()
     url = data.get('url', '').strip()
     format_type = data.get('format', 'mp4')
@@ -2407,11 +2425,14 @@ def download_file(download_id):
     except Exception as e:
         print(f"[WARNING] Failed to get tracking info: {e}")
     
-    # Increment stats with metadata and tracking
+    # Get user_id from session if logged in
+    user_id = session.get('user_id')
+    
+    # Increment stats with metadata, tracking, and user_id
     platform = data.get('platform', 'unknown')
     format_type = data.get('format', data['ext'])
     quality = data.get('quality', 'best')
-    increment_stats(platform, format_type, quality, True, tracking_info)
+    increment_stats(platform, format_type, quality, True, tracking_info, user_id)
     
     # Download tracking removed (premium feature was removed)
     # record_user_download(db_pool, platform)
@@ -2521,11 +2542,13 @@ def api_recent_downloads():
         
         cursor.execute("""
             SELECT 
-                id, platform, format, quality, download_time,
-                ip_address, country, city, device_type, os, browser,
-                is_mobile, is_tablet, is_pc, success
-            FROM downloads
-            ORDER BY download_time DESC
+                d.id, d.platform, d.format, d.quality, d.download_time,
+                d.ip_address, d.country, d.city, d.device_type, d.os, d.browser,
+                d.is_mobile, d.is_tablet, d.is_pc, d.success, d.user_id,
+                u.username, u.email
+            FROM downloads d
+            LEFT JOIN users u ON d.user_id = u.id
+            ORDER BY d.download_time DESC
             LIMIT %s
         """, (limit,))
         
@@ -2546,7 +2569,10 @@ def api_recent_downloads():
                 'is_mobile': row[11],
                 'is_tablet': row[12],
                 'is_pc': row[13],
-                'success': row[14]
+                'success': row[14],
+                'user_id': row[15],
+                'username': row[16],
+                'email': row[17]
             })
         
         cursor.close()

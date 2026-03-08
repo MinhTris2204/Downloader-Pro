@@ -297,6 +297,17 @@ async function downloadYoutube() {
                 showDonationPromoOnDownload();
             }
         } else {
+            // Check if require login
+            if (data.require_login) {
+                showToast('🔒 Vui lòng đăng nhập để tải xuống', 'error');
+                resetButton('youtube');
+                // Show login modal
+                if (typeof showLoginRequiredModal === 'function') {
+                    showLoginRequiredModal();
+                }
+                return;
+            }
+            
             // Check if it's a rate limit error (429)
             if (response.status === 429 && data.error) {
                 // Extract wait time from error message
@@ -695,6 +706,17 @@ async function downloadTiktok() {
                 showDonationPromoOnDownload();
             }
         } else {
+            // Check if require login
+            if (data.require_login) {
+                showToast('🔒 Vui lòng đăng nhập để tải xuống', 'error');
+                resetButton('tiktok');
+                // Show login modal
+                if (typeof showLoginRequiredModal === 'function') {
+                    showLoginRequiredModal();
+                }
+                return;
+            }
+            
             showToast(data.error || 'Có lỗi xảy ra', 'error');
             resetButton('tiktok');
         }
