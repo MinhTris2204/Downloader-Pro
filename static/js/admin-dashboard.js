@@ -257,13 +257,7 @@ async function loadDownloadsHistory() {
                             <th>Platform</th>
                             <th>Format</th>
                             <th>Chất lượng</th>
-                            <th>Quốc gia</th>
-                            <th>Thành phố</th>
-                            <th>Thiết bị</th>
-                            <th>OS</th>
-                            <th>Trình duyệt</th>
-                            <th>IP</th>
-                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -279,13 +273,11 @@ async function loadDownloadsHistory() {
                                 <td><span style="padding: 3px 6px; background: ${getPlatformColor(d.platform)}; color: white; border-radius: 3px; font-size: 10px; font-weight: bold;">${(d.platform || 'N/A').toUpperCase()}</span></td>
                                 <td><span style="padding: 2px 6px; background: #6c757d; color: white; border-radius: 3px; font-size: 10px;">${d.format || 'N/A'}</span></td>
                                 <td style="font-size: 12px;">${d.quality || 'N/A'}</td>
-                                <td style="font-size: 12px;">${getCountryDisplay(d.country)}</td>
-                                <td style="font-size: 12px;">${d.city || 'Unknown'}</td>
-                                <td style="font-size: 12px;">${getDeviceIcon(d)} ${d.device_type || 'Unknown'}</td>
-                                <td style="font-size: 11px;">${d.os || 'Unknown'}</td>
-                                <td style="font-size: 11px;">${d.browser || 'Unknown'}</td>
-                                <td style="font-family: monospace; font-size: 11px; color: #6c757d;">${d.ip_address || 'N/A'}</td>
-                                <td style="text-align: center;">${d.success ? '<span style="color: #28a745; font-size: 16px;">✓</span>' : '<span style="color: #dc3545; font-size: 16px;">✗</span>'}</td>
+                                <td style="text-align: center;">
+                                    <button onclick='showDownloadDetail(${JSON.stringify(d)})' style="padding: 6px 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s;">
+                                        <i class="fas fa-eye"></i> Chi tiết
+                                    </button>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -503,6 +495,114 @@ function formatDate(dateStr) {
         console.error('Error formatting date:', error);
         return 'Error';
     }
+}
+
+// Show download detail modal
+function showDownloadDetail(download) {
+    const modal = document.getElementById('download-detail-modal');
+    const content = document.getElementById('download-detail-content');
+    
+    content.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 16px; border-bottom: 2px solid #3498db; padding-bottom: 8px;">
+                    <i class="fas fa-user"></i> Thông tin người dùng
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Username:</strong>
+                        <div style="color: #2c3e50; font-weight: 600;">${download.username || 'N/A'}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Email:</strong>
+                        <div style="color: #2c3e50;">${download.email || 'N/A'}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">User ID:</strong>
+                        <div style="color: #2c3e50; font-family: monospace;">#${download.user_id || 'N/A'}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 16px; border-bottom: 2px solid #e74c3c; padding-bottom: 8px;">
+                    <i class="fas fa-download"></i> Thông tin tải xuống
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Thời gian:</strong>
+                        <div style="color: #2c3e50;">${formatDateTime(download.download_time)}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Platform:</strong>
+                        <div><span style="padding: 4px 8px; background: ${getPlatformColor(download.platform)}; color: white; border-radius: 4px; font-size: 11px; font-weight: bold;">${(download.platform || 'N/A').toUpperCase()}</span></div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Format:</strong>
+                        <div><span style="padding: 3px 8px; background: #6c757d; color: white; border-radius: 4px; font-size: 11px;">${download.format || 'N/A'}</span></div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Chất lượng:</strong>
+                        <div style="color: #2c3e50; font-weight: 600;">${download.quality || 'N/A'}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Trạng thái:</strong>
+                        <div>${download.success ? '<span style="color: #28a745; font-weight: 600;">✓ Thành công</span>' : '<span style="color: #dc3545; font-weight: 600;">✗ Thất bại</span>'}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 16px; border-bottom: 2px solid #f39c12; padding-bottom: 8px;">
+                    <i class="fas fa-map-marker-alt"></i> Vị trí
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Quốc gia:</strong>
+                        <div style="color: #2c3e50;">${getCountryDisplay(download.country)}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Thành phố:</strong>
+                        <div style="color: #2c3e50;">${download.city || 'Unknown'}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">IP Address:</strong>
+                        <div style="color: #2c3e50; font-family: monospace; font-size: 13px;">${download.ip_address || 'N/A'}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 16px; border-bottom: 2px solid #9b59b6; padding-bottom: 8px;">
+                    <i class="fas fa-laptop"></i> Thiết bị
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Loại thiết bị:</strong>
+                        <div style="color: #2c3e50;">${getDeviceIcon(download)} ${download.device_type || 'Unknown'}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Hệ điều hành:</strong>
+                        <div style="color: #2c3e50;">${download.os || 'Unknown'}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Trình duyệt:</strong>
+                        <div style="color: #2c3e50;">${download.browser || 'Unknown'}</div>
+                    </div>
+                    <div>
+                        <strong style="color: #7f8c8d; font-size: 12px;">Mobile:</strong>
+                        <div style="color: #2c3e50;">${download.is_mobile ? '✓ Yes' : '✗ No'}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function closeDownloadDetailModal() {
+    document.getElementById('download-detail-modal').style.display = 'none';
 }
 
 // Initialize
