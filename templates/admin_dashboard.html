@@ -297,10 +297,6 @@
                 <i class="fas fa-download"></i>
                 <span>Lịch sử tải</span>
             </a>
-            <a class="menu-item" data-section="analytics">
-                <i class="fas fa-chart-line"></i>
-                <span>Phân tích</span>
-            </a>
             <a class="menu-item" data-section="settings">
                 <i class="fas fa-cog"></i>
                 <span>Cài đặt</span>
@@ -606,33 +602,6 @@
             <div id="downloadsTable" class="loading">Đang tải...</div>
         </div>
 
-        <!-- Analytics Section -->
-        <div class="content-section" id="analytics">
-            <div class="section-header">
-                <h2>Phân tích chi tiết</h2>
-                <button onclick="loadAnalytics()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                    <i class="fas fa-sync-alt"></i> Làm mới
-                </button>
-            </div>
-            
-            <h3 style="margin: 20px 0 15px; color: #2c3e50;">📊 Thống kê 30 ngày gần đây</h3>
-            <div id="dailyChart" class="chart-container"></div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
-                <div>
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">📱 Phân bổ Platform</h3>
-                    <div id="platformsTable" style="background: #f8f9fa; padding: 15px; border-radius: 12px; min-height: 200px;"></div>
-                </div>
-                
-                <div>
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">🎬 Phân bổ Format</h3>
-                    <div id="formatsTable" style="background: #f8f9fa; padding: 15px; border-radius: 12px; min-height: 200px;"></div>
-                </div>
-            </div>
-            
-            <div id="analyticsLoading" class="loading" style="display: none;">Đang tải...</div>
-        </div>
-
         <!-- Settings Section -->
         <div class="content-section" id="settings">
             <div class="section-header">
@@ -713,7 +682,7 @@
     <!-- Download Detail Modal -->
     <div id="download-detail-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
         <div style="background: white; border-radius: 20px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: slideUp 0.3s ease-out;">
-            <div style="padding: 25px 30px; border-bottom: 2px solid #ecf0f1; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px 20px 0 0;">
+            <div style="padding: 25px 30px; border-bottom: 2px solid #ecf0f1; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border-radius: 20px 20px 0 0;">
                 <h3 style="color: white; margin: 0; font-size: 22px; font-weight: 700;">
                     <i class="fas fa-info-circle"></i> Chi tiết lượt tải xuống
                 </h3>

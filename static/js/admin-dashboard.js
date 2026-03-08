@@ -16,10 +16,73 @@ document.querySelectorAll('.menu-item').forEach(item => {
         // Update page title
         const titles = {
             'overview': 'Tổng quan',
+            'users': 'Quản lý người dùng',
+            'premium-history': 'Lịch sử Premium',
             'tracking': 'Thống kê Tracking',
-            'donations': 'Quản lý Ủng hộ',
             'downloads': 'Lịch sử tải xuống',
-            'analytics': 'Phân tích chi tiết',
+            'settings': 'Cài đặt hệ thống'
+        };
+        document.getElementById('pageTitle').textContent = titles[section];
+        
+        // Update URL without reload
+        const newUrl = `/admin/dashboard?section=${section}`;
+        window.history.pushState({ section }, '', newUrl);
+        
+        // Load data for section
+        if (section === 'tracking') {
+            loadTrackingData();
+        } else if (section === 'users') {
+            loadUsers();
+        } else if (section === 'premium-history') {
+            loadPremiumHistory();
+        } else if (section === 'downloads') {
+            loadDownloadsHistory();
+        } else if (section === 'settings') {
+            loadSettings();
+        }
+    });
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', function(event) {
+    if (event.state && event.state.section) {
+        const section = event.state.section;
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
+        
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(section)?.classList.add('active');
+        
+        const titles = {
+            'overview': 'Tổng quan',
+            'users': 'Quản lý người dùng',
+            'premium-history': 'Lịch sử Premium',
+            'tracking': 'Thống kê Tracking',
+            'downloads': 'Lịch sử tải xuống',
+            'settings': 'Cài đặt hệ thống'
+        };
+        document.getElementById('pageTitle').textContent = titles[section];
+    }
+});
+
+// Load section from URL on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get('section') || 'overview';
+    
+    if (section !== 'overview') {
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
+        
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(section)?.classList.add('active');
+        
+        const titles = {
+            'overview': 'Tổng quan',
+            'users': 'Quản lý người dùng',
+            'premium-history': 'Lịch sử Premium',
+            'tracking': 'Thống kê Tracking',
+            'downloads': 'Lịch sử tải xuống',
             'settings': 'Cài đặt hệ thống'
         };
         document.getElementById('pageTitle').textContent = titles[section];
@@ -27,16 +90,16 @@ document.querySelectorAll('.menu-item').forEach(item => {
         // Load data for section
         if (section === 'tracking') {
             loadTrackingData();
-        } else if (section === 'donations') {
-            loadDonations();
+        } else if (section === 'users') {
+            loadUsers();
+        } else if (section === 'premium-history') {
+            loadPremiumHistory();
         } else if (section === 'downloads') {
             loadDownloadsHistory();
-        } else if (section === 'analytics') {
-            loadAnalytics();
         } else if (section === 'settings') {
             loadSettings();
         }
-    });
+    }
 });
 
 // Logout function
@@ -118,192 +181,6 @@ async function loadTrackingData() {
     }
 }
 
-// Load donations
-async function loadDonations() {
-    const statusFilter = document.getElementById('donationStatusFilter')?.value || 'all';
-    const limit = document.getElementById('donationLimitSelect')?.value || 20;
-    const container = document.getElementById('donationsTable');
-    
-    if (container) {
-        container.innerHTML = '<div class="loading">Đang tải...</div>';
-    }
-    
-    try {
-        const response = await fetch(`/api/admin/donations?status=${statusFilter}&limit=${limit}&page=1`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            if (container) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu</p>';
-            }
-            return;
-        }
-        
-        // Update stats
-        const stats = calculateDonationStats(data.donations);
-        document.getElementById('donationSuccessCount').textContent = stats.successCount.toLocaleString();
-        document.getElementById('donationTotalAmount').textContent = stats.totalAmount.toLocaleString() + 'đ';
-        document.getElementById('donationPendingCount').textContent = stats.pendingCount.toLocaleString();
-        document.getElementById('donationFailedCount').textContent = stats.failedCount.toLocaleString();
-        
-        // Display table
-        if (data.donations && data.donations.length > 0) {
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Số tiền</th>
-                            <th>Người ủng hộ</th>
-                            <th>Email</th>
-                            <th>Trạng thái</th>
-                            <th>Phương thức</th>
-                            <th>Mã GD</th>
-                            <th>Thời gian tạo</th>
-                            <th>Thời gian thanh toán</th>
-                            <th>IP</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.donations.map(d => `
-                            <tr>
-                                <td style="font-family: monospace; font-weight: bold;">${d.order_code}</td>
-                                <td style="color: #e74c3c; font-weight: bold;">${d.amount.toLocaleString()}đ</td>
-                                <td>${d.donor_name || 'Anonymous'}</td>
-                                <td style="font-size: 12px;">${d.donor_email || '-'}</td>
-                                <td>${getStatusBadge(d.payment_status)}</td>
-                                <td style="font-size: 12px;">${d.payment_method || '-'}</td>
-                                <td style="font-family: monospace; font-size: 11px;">${d.transaction_id || '-'}</td>
-                                <td style="white-space: nowrap; font-size: 12px;">${formatDateTime(d.created_at)}</td>
-                                <td style="white-space: nowrap; font-size: 12px;">${d.paid_at ? formatDateTime(d.paid_at) : '-'}</td>
-                                <td style="font-family: monospace; font-size: 11px;">${d.ip_address || '-'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-                <p style="margin-top: 15px; color: #7f8c8d; font-size: 13px;">
-                    <i class="fas fa-info-circle"></i> Hiển thị ${data.donations.length} / ${data.total} donations
-                </p>
-            `;
-        } else {
-            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</p>';
-        }
-        
-    } catch (error) {
-        console.error('Error loading donations:', error);
-        if (container) {
-            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu</p>';
-        }
-    }
-}
-
-// Calculate donation statistics
-function calculateDonationStats(donations) {
-    let successCount = 0;
-    let totalAmount = 0;
-    let pendingCount = 0;
-    let failedCount = 0;
-    
-    donations.forEach(d => {
-        if (d.payment_status === 'success') {
-            successCount++;
-            totalAmount += d.amount;
-        } else if (d.payment_status === 'pending') {
-            pendingCount++;
-        } else if (d.payment_status === 'failed' || d.payment_status === 'cancelled') {
-            failedCount++;
-        }
-    });
-    
-    return { successCount, totalAmount, pendingCount, failedCount };
-}
-
-// Get status badge HTML
-function getStatusBadge(status) {
-    const badges = {
-        'success': '<span style="padding: 4px 10px; background: #4caf50; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">✓ Thành công</span>',
-        'pending': '<span style="padding: 4px 10px; background: #ff9800; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">⏳ Đang chờ</span>',
-        'failed': '<span style="padding: 4px 10px; background: #f44336; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">✗ Thất bại</span>',
-        'cancelled': '<span style="padding: 4px 10px; background: #9e9e9e; color: white; border-radius: 4px; font-size: 11px; font-weight: 600;">⊘ Đã hủy</span>'
-    };
-    return badges[status] || status;
-}
-
-// Load downloads history
-async function loadDownloadsHistory() {
-    const limit = document.getElementById('limitSelect')?.value || 50;
-    const container = document.getElementById('downloadsTable');
-    container.innerHTML = '<div class="loading">Đang tải...</div>';
-    
-    try {
-        const response = await fetch(`/api/admin/downloads/recent?limit=${limit}`);
-        const data = await response.json();
-        
-        if (data.downloads && data.downloads.length > 0) {
-            container.innerHTML = `
-                <div style="margin-bottom: 15px; padding: 10px; background: #e8f5e8; border-radius: 6px; font-size: 14px;">
-                    <i class="fas fa-info-circle" style="color: #28a745;"></i> 
-                    Hiển thị ${data.downloads.length} lượt tải gần nhất | 
-                    Cập nhật lúc: ${formatDateTime(data.timestamp)} |
-                    <button onclick="loadDownloadsHistory()" style="margin-left: 10px; padding: 4px 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        <i class="fas fa-sync-alt"></i> Làm mới
-                    </button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Thời gian</th>
-                            <th>Tài khoản</th>
-                            <th>Platform</th>
-                            <th>Format</th>
-                            <th>Chất lượng</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.downloads.map(d => `
-                            <tr>
-                                <td style="white-space: nowrap; font-size: 12px;">${formatDateTime(d.download_time)}</td>
-                                <td style="font-size: 12px;">
-                                    <div style="display: flex; flex-direction: column; gap: 2px;">
-                                        <span style="font-weight: 600; color: #2c3e50;">👤 ${d.username}</span>
-                                        <span style="font-size: 10px; color: #7f8c8d;">${d.email || ''}</span>
-                                    </div>
-                                </td>
-                                <td><span style="padding: 3px 6px; background: ${getPlatformColor(d.platform)}; color: white; border-radius: 3px; font-size: 10px; font-weight: bold;">${(d.platform || 'N/A').toUpperCase()}</span></td>
-                                <td><span style="padding: 2px 6px; background: #6c757d; color: white; border-radius: 3px; font-size: 10px;">${d.format || 'N/A'}</span></td>
-                                <td style="font-size: 12px;">${d.quality || 'N/A'}</td>
-                                <td style="text-align: center;">
-                                    <button onclick='showDownloadDetail(${JSON.stringify(d)})' style="padding: 6px 12px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.3s;">
-                                        <i class="fas fa-eye"></i> Chi tiết
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        } else {
-            container.innerHTML = '<p style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu tải xuống</p>';
-        }
-        
-    } catch (error) {
-        console.error('Error loading downloads:', error);
-        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #e74c3c;">Lỗi tải dữ liệu: ' + error.message + '</p>';
-    }
-}
-
-// Helper function to get platform color
-function getPlatformColor(platform) {
-    const colors = {
-        'youtube': '#ff0000',
-        'tiktok': '#000000',
-        'instagram': '#e4405f',
-        'facebook': '#1877f2'
-    };
-    return colors[platform?.toLowerCase()] || '#6c757d';
-}
-
 // Helper function to display country with flag
 function getCountryDisplay(country) {
     if (!country || country === 'Unknown') return 'Unknown';
@@ -323,115 +200,6 @@ function getCountryDisplay(country) {
     };
     
     return countryFlags[country] || country;
-}
-
-// Load analytics
-async function loadAnalytics() {
-    const loadingElement = document.getElementById('analyticsLoading');
-    if (loadingElement) loadingElement.style.display = 'block';
-    
-    try {
-        const response = await fetch('/api/admin/analytics/daily');
-        const data = await response.json();
-        
-        if (!data || data.error) {
-            throw new Error(data.error || 'Failed to load analytics data');
-        }
-        
-        // Platform distribution with cards
-        const platformsTable = document.getElementById('platformsTable');
-        if (platformsTable && data.platforms && data.platforms.length > 0) {
-            const totalPlatform = data.platforms.reduce((sum, p) => sum + (p.count || 0), 0);
-            platformsTable.innerHTML = data.platforms.map(p => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: white; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); border-left: 4px solid #e74c3c;">
-                    <div style="font-weight: 600; color: #2c3e50; font-size: 15px;">${p.platform || 'Unknown'}</div>
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <div style="font-weight: 700; color: #e74c3c; font-size: 16px;">${(p.count || 0).toLocaleString()}</div>
-                        <div style="background: #e74c3c; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; min-width: 45px; text-align: center;">${totalPlatform > 0 ? (((p.count || 0) / totalPlatform) * 100).toFixed(1) : '0.0'}%</div>
-                    </div>
-                </div>
-            `).join('');
-        } else if (platformsTable) {
-            platformsTable.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</div>';
-        }
-        
-        // Format distribution with cards
-        const formatsTable = document.getElementById('formatsTable');
-        if (formatsTable && data.formats && data.formats.length > 0) {
-            const totalFormat = data.formats.reduce((sum, f) => sum + (f.count || 0), 0);
-            formatsTable.innerHTML = data.formats.map(f => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: white; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); border-left: 4px solid #27ae60;">
-                    <div style="font-weight: 600; color: #2c3e50; font-size: 15px;">${f.format || 'Unknown'}</div>
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <div style="font-weight: 700; color: #27ae60; font-size: 16px;">${(f.count || 0).toLocaleString()}</div>
-                        <div style="background: #27ae60; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; min-width: 45px; text-align: center;">${totalFormat > 0 ? (((f.count || 0) / totalFormat) * 100).toFixed(1) : '0.0'}%</div>
-                    </div>
-                </div>
-            `).join('');
-        } else if (formatsTable) {
-            formatsTable.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">Chưa có dữ liệu</div>';
-        }
-        
-        // Daily stats with simple vertical layout
-        const dailyChart = document.getElementById('dailyChart');
-        if (dailyChart) {
-            if (data.daily_stats && data.daily_stats.length > 0) {
-                dailyChart.innerHTML = `
-                    <div style="display: flex; flex-direction: column; gap: 15px; max-height: 600px; overflow-y: auto;">
-                        ${data.daily_stats.map(d => `
-                            <div style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #3498db;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="color: #2c3e50; margin: 0; font-size: 16px; font-weight: 600;">${formatDate(d.date)}</h4>
-                                    <div style="background: #3498db; color: white; padding: 8px 16px; border-radius: 25px; font-weight: 700; font-size: 18px;">
-                                        ${(d.total || 0).toLocaleString()}
-                                    </div>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; gap: 10px;">
-                                    <div style="flex: 1; text-align: center; padding: 12px; background: #ffebee; border-radius: 8px;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">YouTube</div>
-                                        <div style="font-weight: 700; color: #e74c3c; font-size: 16px;">${(d.youtube || 0).toLocaleString()}</div>
-                                    </div>
-                                    <div style="flex: 1; text-align: center; padding: 12px; background: #f5f5f5; border-radius: 8px;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">TikTok</div>
-                                        <div style="font-weight: 700; color: #000; font-size: 16px;">${(d.tiktok || 0).toLocaleString()}</div>
-                                    </div>
-                                    <div style="flex: 1; text-align: center; padding: 12px; background: #e3f2fd; border-radius: 8px;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">📱 Mobile</div>
-                                        <div style="font-weight: 700; color: #2196f3; font-size: 16px;">${(d.mobile || 0).toLocaleString()}</div>
-                                    </div>
-                                    <div style="flex: 1; text-align: center; padding: 12px; background: #fafafa; border-radius: 8px;">
-                                        <div style="font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; font-weight: 600;">💻 Desktop</div>
-                                        <div style="font-weight: 700; color: #757575; font-size: 16px;">${(d.desktop || 0).toLocaleString()}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                dailyChart.innerHTML = '<div style="text-align: center; padding: 60px; color: #7f8c8d; background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><i class="fas fa-chart-line" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i><br>Chưa có dữ liệu thống kê</div>';
-            }
-        }
-        
-        if (loadingElement) loadingElement.style.display = 'none';
-        
-    } catch (error) {
-        console.error('Error loading analytics:', error);
-        
-        // Show error in all containers
-        const errorMessage = `<div style="text-align: center; padding: 40px; color: #e74c3c; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i><br>Lỗi tải dữ liệu: ${error.message}</div>`;
-        
-        const platformsTable = document.getElementById('platformsTable');
-        if (platformsTable) platformsTable.innerHTML = errorMessage;
-        
-        const formatsTable = document.getElementById('formatsTable');
-        if (formatsTable) formatsTable.innerHTML = errorMessage;
-        
-        const dailyChart = document.getElementById('dailyChart');
-        if (dailyChart) dailyChart.innerHTML = errorMessage;
-        
-        if (loadingElement) loadingElement.style.display = 'none';
-    }
 }
 
 // Helper functions
