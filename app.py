@@ -3592,7 +3592,7 @@ def api_get_system_logs():
                 'user_agent': row[9],
                 'execution_time': row[10],
                 'additional_data': row[11],
-                'created_at': row[11].isoformat() if row[12] else None
+                'created_at': row[12].isoformat() if row[12] else None
             })
         
         # Get statistics
@@ -3748,6 +3748,69 @@ def debug_env():
     # Check Node.js
     try:
         result = subprocess.run(['node', '--version'], capture_output=True, text=True, timeout=5)
+
+@app.route('/api/debug/test-logs')
+def debug_test_logs():
+    """Create test logs for debugging (admin only)"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        # Create various test logs
+        log_system('DEBUG', 'This is a debug message for testing', 
+                   log_source='test', request_obj=request)
+        
+        log_system('INFO', 'Test info message - system is working correctly', 
+                   log_source='test', 
+                   execution_time=0.123,
+                   additional_data={'test': True, 'count': 1},
+                   request_obj=request)
+        
+        log_system('WARNING', 'Test warning message - something might be wrong', 
+                   log_source='test',
+                   additional_data={'warning_type': 'test', 'severity': 'low'},
+                   request_obj=request)
+        
+        log_system('ERROR', 'Test error message - simulated error', 
+                   log_source='test',
+                   additional_data={'error_code': 500, 'details': 'This is a test error'},
+                   request_obj=request)
+        
+        log_system('CRITICAL', 'Test critical message - simulated critical issue', 
+                   log_source='test',
+                   additional_data={'critical': True, 'requires_attention': True},
+                   request_obj=request)
+        
+        # Log with different sources
+        log_system('INFO', 'YouTube download test log', 
+                   log_source='youtube_download',
+                   url='https://youtube.com/watch?v=test',
+                   method='POST',
+                   status_code=200,
+                   execution_time=2.5,
+                   request_obj=request)
+        
+        log_system('INFO', 'TikTok download test log', 
+                   log_source='tiktok_download',
+                   url='https://tiktok.com/@user/video/123',
+                   method='POST',
+                   status_code=200,
+                   execution_time=1.8,
+                   request_obj=request)
+        
+        log_system('INFO', 'Authentication test log', 
+                   log_source='auth',
+                   additional_data={'action': 'login', 'success': True},
+                   request_obj=request)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Created 8 test logs successfully',
+            'logs_created': 8
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
         env_info['node_installed'] = result.returncode == 0
         env_info['node_version'] = result.stdout.strip() if env_info['node_installed'] else None
     except:
