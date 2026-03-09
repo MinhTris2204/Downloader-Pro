@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs Monitor - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .nav {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .nav a.active {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.active {
+            border: 2px solid #667eea;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls select, .controls button, .controls input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+
+        .controls button.danger {
+            background: #e74c3c;
+        }
+
+        .controls button.danger:hover {
+            background: #c0392b;
+        }
+
+        .controls input[type="search"] {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .logs-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .log-item {
+            border-bottom: 1px solid #ecf0f1;
+            padding: 15px 20px;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+
+        .log-item:hover {
+            background: #f8f9fa;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .log-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Error Log Badges */
+        .log-badge.extraction_failed { background: #ffe5e5; color: #c0392b; }
+        .log-badge.geo_blocked { background: #fff3cd; color: #856404; }
+        .log-badge.bot_detection { background: #f8d7da; color: #721c24; }
+        .log-badge.video_unavailable { background: #d1ecf1; color: #0c5460; }
+        .log-badge.age_restricted { background: #e7e7e7; color: #383d41; }
+        .log-badge.copyright { background: #f5c6cb; color: #721c24; }
+        .log-badge.network_error { background: #d6d8db; color: #1b1e21; }
+        .log-badge.live_video { background: #d4edda; color: #155724; }
+        .log-badge.unknown_error { background: #e2e3e5; color: #383d41; }
+
+        /* System Log Badges */
+        .log-badge.DEBUG { background: #e7e7e7; color: #383d41; }
+        .log-badge.INFO { background: #d1ecf1; color: #0c5460; }
+        .log-badge.WARNING { background: #fff3cd; color: #856404; }
+        .log-badge.ERROR { background: #f8d7da; color: #721c24; }
+        .log-badge.CRITICAL { background: #f5c6cb; color: #721c24; font-weight: 700; }
+
+        .log-time {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+
+        .log-content {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .log-source {
+            background: #ecf0f1;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #2c3e50;
+            white-space: nowrap;
+        }
+
+        .log-message {
+            flex: 1;
+            color: #2c3e50;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .log-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+
+        .log-detail {
+            display: flex;
+            gap: 5px;
+        }
+
+        .log-detail strong {
+            color: #2c3e50;
+        }
+
+        .log-stack, .log-data {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .log-stack.show, .log-data.show {
+            display: block;
+        }
+
+        .log-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .log-actions button {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-toggle {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-toggle:hover {
+            background: #2980b9;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Logs Monitor</h1>
+        <div class="subtitle">Theo dõi lỗi và hoạt động hệ thống</div>
+    </div>
+
+    <div class="nav">
+        <a href="/admin/dashboard">← Quay lại Dashboard</a>
+        <a href="/admin/logs" class="active">Logs</a>
+    </div>
+
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="error-logs">🔴 Error Logs</button>
+            <button class="tab" data-tab="system-logs">📋 System Logs</button>
+        </div>
+
+        <!-- Error Logs Tab -->
+        <div class="tab-content active" id="error-logs">
+            <div class="stats-grid" id="errorStatsGrid"></div>
+            
+            <div class="controls">
+                <select id="errorFilterType">
+                    <option value="all">Tất cả loại lỗi</option>
+                    <option value="extraction_failed">Extraction Failed</option>
+                    <option value="geo_blocked">Geo Blocked</option>
+                    <option value="bot_detection">Bot Detection</option>
+                    <option value="video_unavailable">Video Unavailable</option>
+                    <option value="age_restricted">Age Restricted</option>
+                    <option value="copyright">Copyright</option>
+                    <option value="network_error">Network Error</option>
+                    <option value="live_video">Live Video</option>
+                    <option value="unknown_error">Unknown Error</option>
+                </select>
+
+                <input type="search" id="errorSearchBox" placeholder="Tìm kiếm...">
+
+                <button onclick="refreshErrorLogs()">🔄 Làm mới</button>
+                <button class="danger" onclick="clearErrorLogs()">🗑️ Xóa logs</button>
+                <button class="danger" onclick="clearOldErrorLogs()">🗑️ Xóa >7 ngày</button>
+            </div>
+
+            <div class="logs-container">
+                <div id="errorLogsContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Đang tải logs...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagination" id="errorPagination" style="display: none;">
+                <button id="errorPrevBtn" onclick="prevErrorPage()">← Trước</button>
+                <span id="errorPageInfo">Trang 1</span>
+                <button id="errorNextBtn" onclick="nextErrorPage()">Sau →</button>
+            </div>
+        </div>
+
+        <!-- System Logs Tab -->
+        <div class="tab-content" id="system-logs">
+            <div class="stats-grid" id="systemStatsGrid"></div>
+            
+            <div class="controls">
+                <select id="systemFilterLevel">
+                    <option value="all">Tất cả levels</option>
+                    <option value="DEBUG">DEBUG</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARNING">WARNING</option>
+                    <option value="ERROR">ERROR</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                </select>
+
+                <select id="systemFilterSource">
+                    <option value="all">Tất cả sources</option>
+                </select>
+
+                <input type="search" id="systemSearchBox" placeholder="Tìm kiếm...">
+
+                <button onclick="refreshSystemLogs()">🔄 Làm mới</button>
+                <button class="danger" onclick="clearSystemLogs()">🗑️ Xóa logs</button>
+                <button class="danger" onclick="clearOldSystemLogs()">🗑️ Xóa >7 ngày</button>
+            </div>
+
+            <div class="logs-container">
+                <div id="systemLogsContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Đang tải logs...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagination" id="systemPagination" style="display: none;">
+                <button id="systemPrevBtn" onclick="prevSystemPage()">← Trước</button>
+                <span id="systemPageInfo">Trang 1</span>
+                <button id="systemNextBtn" onclick="nextSystemPage()">Sau →</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/admin-logs.js"></script>
+</body>
+</html>

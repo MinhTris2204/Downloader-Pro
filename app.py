@@ -2269,17 +2269,24 @@ def admin_dashboard():
 
 @app.route('/admin/error-logs')
 def admin_error_logs():
-    """Admin error logs page - requires login"""
+    """Admin error logs page - requires login - DEPRECATED: Use /admin/logs"""
     if 'admin_logged_in' not in session:
         return redirect('/admin/login')
-    return render_template('admin_error_logs.html')
+    return redirect('/admin/logs')
 
 @app.route('/admin/system-logs')
 def admin_system_logs():
-    """Admin system logs page - requires login"""
+    """Admin system logs page - requires login - DEPRECATED: Use /admin/logs"""
     if 'admin_logged_in' not in session:
         return redirect('/admin/login')
-    return render_template('admin_system_logs.html')
+    return redirect('/admin/logs')
+
+@app.route('/admin/logs')
+def admin_logs():
+    """Admin logs page (combined error and system logs) - requires login"""
+    if 'admin_logged_in' not in session:
+        return redirect('/admin/login')
+    return render_template('admin_logs.html')
 
 # ==================== ADMIN API: USERS MANAGEMENT ====================
 
