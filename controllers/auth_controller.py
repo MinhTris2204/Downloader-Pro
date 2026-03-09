@@ -186,8 +186,17 @@ def api_test_email():
 def get_current_user():
     """Get current logged in user from session"""
     from app import db_pool
+    
+    # Debug logging
+    print(f"[GET_CURRENT_USER] Session data: {dict(session)}")
+    print(f"[GET_CURRENT_USER] Has user_id: {'user_id' in session}")
+    
     user_id = session.get('user_id')
-    if not user_id or not db_pool:
+    if not user_id:
+        print(f"[GET_CURRENT_USER] No user_id in session")
+        return None
+    if not db_pool:
+        print(f"[GET_CURRENT_USER] No db_pool available")
         return None
     try:
         conn = db_pool.getconn()
@@ -200,6 +209,7 @@ def get_current_user():
         cursor.close()
         db_pool.putconn(conn)
         if row:
+            print(f"[GET_CURRENT_USER] Found user: {row[1]} (ID: {row[0]})")
             return {
                 'id': row[0],
                 'username': row[1],
@@ -208,6 +218,8 @@ def get_current_user():
                 'created_at': row[4],
                 'google_id': row[5]
             }
+        else:
+            print(f"[GET_CURRENT_USER] User ID {user_id} not found in database")
     except Exception as e:
         print(f"[AUTH ERROR] Get current user failed: {e}")
     return None
@@ -813,6 +825,20 @@ def api_logout():
     session.pop('reset_email', None)
     session.pop('reset_verified', None)
     return jsonify({'success': True, 'message': 'Đã đăng xuất', 'redirect': '/'})
+
+
+@auth_bp.route('/api/auth/session-check')
+def api_session_check():
+    """Check session status - for debugging"""
+    from flask import request as flask_request
+    return jsonify({
+        'session_data': dict(session),
+        'has_user_id': 'user_id' in session,
+        'user_id': session.get('user_id'),
+        'cookies': list(flask_request.cookies.keys()),
+        'session_cookie_name': 'session' in flask_request.cookies,
+        'is_logged_in': 'user_id' in session and session.get('user_id') is not None
+    })
 
 
 @auth_bp.route('/api/auth/forgot-password', methods=['POST'])

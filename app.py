@@ -34,9 +34,9 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 
 # Session configuration for Railway (HTTPS)
-# Only enforce secure cookies in production (Railway sets RAILWAY_ENVIRONMENT)
-is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production'
-app.config['SESSION_COOKIE_SECURE'] = is_production  # Only send cookie over HTTPS in production
+# Disable secure cookies temporarily to fix redirect loop issue
+# Railway's proxy might not be forwarding HTTPS headers correctly
+app.config['SESSION_COOKIE_SECURE'] = False  # Temporarily disabled - TODO: Re-enable after fixing proxy
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow same-site requests
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 30  # 30 days
