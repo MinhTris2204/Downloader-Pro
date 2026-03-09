@@ -192,8 +192,21 @@ INVIDIOUS_INSTANCES = [
 # ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
 # Method 1: Cookies via YOUTUBE_COOKIES environment variable (base64 encoded)
 # Method 2: OAuth via YOUTUBE_OAUTH_REFRESH_TOKEN environment variable
+# Method 3: Proxy via HTTP_PROXY or HTTPS_PROXY environment variable
 # To generate: base64 -w 0 cookies.txt > cookies_base64.txt
 # Then set YOUTUBE_COOKIES=<content of cookies_base64.txt> in Railway
+
+# Proxy configuration (to bypass IP blocks)
+HTTP_PROXY = os.environ.get('HTTP_PROXY', '')
+HTTPS_PROXY = os.environ.get('HTTPS_PROXY', '')
+SOCKS_PROXY = os.environ.get('SOCKS_PROXY', '')
+
+if HTTP_PROXY:
+    print(f"[INFO] HTTP Proxy configured: {HTTP_PROXY.split('@')[-1]}")
+if HTTPS_PROXY:
+    print(f"[INFO] HTTPS Proxy configured: {HTTPS_PROXY.split('@')[-1]}")
+if SOCKS_PROXY:
+    print(f"[INFO] SOCKS Proxy configured: {SOCKS_PROXY.split('@')[-1]}")
 
 COOKIES_FILE_PATH = os.path.join(tempfile.gettempdir(), 'yt_cookies.txt')
 YOUTUBE_COOKIES_ENV = os.environ.get('YOUTUBE_COOKIES', '')
@@ -1887,6 +1900,17 @@ def download_youtube_video(url, format_type, quality, download_id):
                     'ignoreerrors': False,
                     'extractor_args': {},  # Initialize empty dict for extractor args
                 }
+                
+                # Add proxy if configured
+                if HTTP_PROXY:
+                    common_opts['proxy'] = HTTP_PROXY
+                    print(f"[DEBUG] Using HTTP proxy: {HTTP_PROXY.split('@')[-1]}")
+                elif HTTPS_PROXY:
+                    common_opts['proxy'] = HTTPS_PROXY
+                    print(f"[DEBUG] Using HTTPS proxy: {HTTPS_PROXY.split('@')[-1]}")
+                elif SOCKS_PROXY:
+                    common_opts['proxy'] = SOCKS_PROXY
+                    print(f"[DEBUG] Using SOCKS proxy: {SOCKS_PROXY.split('@')[-1]}")
 
                 # Strategy-specific: Use cookies unless it's a 'no_cookies' strategy
                 if strategy.get('use_cookies', True) and COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
@@ -2098,7 +2122,7 @@ def download_youtube_video(url, format_type, quality, download_id):
             available_countries = available_match.group(1) if available_match else 'một số quốc gia khác'
             download_progress[download_id]['error'] = f'🌍 Video bị chặn theo khu vực.\n\n📍 Video chỉ khả dụng tại: {available_countries}\n\n💡 Giải pháp:\n🔹 Sử dụng VPN để đổi vị trí\n🔹 Thử video khác không bị chặn vùng\n\n⚙️ Nếu có VPN, thêm --proxy vào cấu hình yt-dlp'
         elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg or 'confirm you' in error_msg.lower():
-            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử TẤT CẢ phương pháp có thể:\n\n📱 yt-dlp Strategies (8 phương pháp):\n• Android Embedded (no cookies) ❌\n• Android Music (no cookies) ❌\n• TV Embedded (no cookies) ❌\n• iOS (no cookies) ❌\n• Android VR (no cookies) ❌\n• iOS (with cookies) ❌\n• Web (with cookies) ❌\n• Mobile Web (no cookies) ❌\n\n🌐 FREE APIs (7 phương pháp):\n• Cobalt API ❌\n• Invidious API ❌\n• Y2Mate API ❌\n• Loader.to API ❌\n• yt-api.org ❌\n• Apisyu API ❌\n• RapidAPI ❌\n\n💡 Giải pháp cho người dùng:\n🔹 Đợi 10-15 phút rồi thử lại\n🔹 Thử video ngắn hơn (<5 phút)\n🔹 Thử video từ kênh khác (kênh lớn thường dễ tải hơn)\n🔹 Thử lại vào giờ khác trong ngày\n🔹 Thử video khác - video này có thể bị giới hạn đặc biệt\n\n⚙️ Thông báo cho Admin:\n📊 Hệ thống đã thử 15 phương pháp:\n✓ 5 phương pháp yt-dlp KHÔNG CẦN cookies\n✓ 3 phương pháp yt-dlp với cookies (nếu có)\n✓ 7 FREE APIs (Cobalt, Invidious, Y2Mate, Loader.to, yt-api.org, Apisyu, RapidAPI)\n\n🔧 Để cải thiện:\n1. Cập nhật yt-dlp: pip install -U yt-dlp\n2. Thêm cookies mới (tùy chọn): YOUTUBE_COOKIES_SETUP.md\n3. Thêm RAPIDAPI_KEY vào env (tùy chọn)\n4. Restart server\n\n⏰ Lưu ý: Nếu video cụ thể này không tải được sau khi thử 15 phương pháp, có thể:\n• Video có giới hạn vùng địa lý nghiêm ngặt\n• Video yêu cầu xác thực đặc biệt\n• YouTube đang tăng cường bảo mật tạm thời cho video này'
+            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử TẤT CẢ phương pháp có thể:\n\n📱 yt-dlp Strategies (8 phương pháp):\n• Android Embedded (no cookies) ❌\n• Android Music (no cookies) ❌\n• TV Embedded (no cookies) ❌\n• iOS (no cookies) ❌\n• Android VR (no cookies) ❌\n• iOS (with cookies) ❌\n• Web (with cookies) ❌\n• Mobile Web (no cookies) ❌\n\n🌐 FREE APIs (7 phương pháp):\n• Cobalt API ❌\n• Invidious API ❌\n• Y2Mate API ❌\n• Loader.to API ❌\n• yt-api.org ❌\n• Apisyu API ❌\n• RapidAPI ❌\n\n� NGUYÊN NHÂN: IP của server bị YouTube chặn!\n\n�💡 Giải pháp cho người dùng:\n🔹 Đợi 30-60 phút rồi thử lại\n🔹 Thử video khác (video ngắn, kênh lớn)\n🔹 Thử lại vào giờ khác trong ngày\n🔹 Liên hệ admin nếu vấn đề kéo dài\n\n⚙️ Thông báo cho Admin:\n📊 Hệ thống đã thử 15 phương pháp:\n✓ 8 phương pháp yt-dlp (5 no-cookies + 3 with-cookies)\n✓ 7 FREE APIs\n\n🔧 GIẢI PHÁP BẮT BUỘC:\n1. ⭐ THÊM PROXY (xem PROXY_SETUP.md)\n   - Webshare.io: $2.99/GB residential\n   - ProxyMesh: $10/tháng rotating\n   - Hoặc free tier để test\n\n2. Hoặc chuyển sang VPS khác:\n   - DigitalOcean: $6/tháng\n   - Linode: $5/tháng\n   - Vultr: $5/tháng\n\n3. Hoặc cập nhật yt-dlp:\n   pip install -U yt-dlp\n\n⏰ Lưu ý: Nếu KHÔNG thêm proxy, tỷ lệ thành công sẽ rất thấp (<10%) vì IP Railway bị YouTube blacklist.'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
