@@ -1338,10 +1338,6 @@ def try_y2mate_api(video_id, format_type, quality, download_id, temp_dir, progre
     except Exception as e:
         print(f"[DEBUG] Y2Mate API failed: {str(e)[:100]}")
         return None, None, None
-            time_module.sleep(1)
-            continue
-    
-    return None, None, None
 
 
 def download_youtube_video(url, format_type, quality, download_id):
