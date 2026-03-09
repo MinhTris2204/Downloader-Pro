@@ -370,6 +370,68 @@ def init_db():
             )
         """)
         
+        # Create error_logs table for admin monitoring
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS error_logs (
+                id SERIAL PRIMARY KEY,
+                error_type VARCHAR(50) NOT NULL,
+                error_message TEXT NOT NULL,
+                stack_trace TEXT,
+                url TEXT,
+                platform VARCHAR(20),
+                format VARCHAR(10),
+                quality VARCHAR(20),
+                user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_error_logs_created 
+            ON error_logs(created_at DESC)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_error_logs_type 
+            ON error_logs(error_type, created_at DESC)
+        """)
+        
+        # Create system_logs table for all console logs
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS system_logs (
+                id SERIAL PRIMARY KEY,
+                log_level VARCHAR(20) NOT NULL,
+                log_message TEXT NOT NULL,
+                log_source VARCHAR(100),
+                url TEXT,
+                method VARCHAR(10),
+                status_code INTEGER,
+                user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                execution_time FLOAT,
+                additional_data JSONB,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_system_logs_created 
+            ON system_logs(created_at DESC)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_system_logs_level 
+            ON system_logs(log_level, created_at DESC)
+        """)
+        
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_system_logs_source 
+            ON system_logs(log_source, created_at DESC)
+        """)
+        
         print("[INFO] Essential tables created/verified")
         
         # Create users table for authentication
@@ -650,6 +712,128 @@ def increment_stats(platform='unknown', format_type='mp4', quality='best', succe
         stats['total_downloads'] = stats.get('total_downloads', 0) + 1
         with open(STATS_FILE, 'w') as f:
             json.dump(stats, f)
+    except Exception as e:
+        print(f"[ERROR] Stats error: {e}")
+
+def log_error(error_type, error_message, stack_trace=None, url=None, platform=None, 
+              format_type=None, quality=None, user_id=None, request_obj=None):
+    """Log error to database for admin monitoring"""
+    try:
+        # Get request info if available
+        ip_address = None
+        user_agent = None
+        
+        if request_obj:
+            ip_address = request_obj.headers.get('X-Forwarded-For', request_obj.remote_addr)
+            if ip_address and ',' in ip_address:
+                ip_address = ip_address.split(',')[0].strip()
+            user_agent = request_obj.headers.get('User-Agent', '')
+        
+        # Log to console
+        print(f"[ERROR LOG] {error_type}: {error_message[:200]}")
+        
+        # Save to database
+        if db_pool:
+            try:
+                conn = db_pool.getconn()
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    INSERT INTO error_logs (
+                        error_type, error_message, stack_trace, url, 
+                        platform, format, quality, user_id, ip_address, user_agent
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    error_type, error_message[:5000], stack_trace[:10000] if stack_trace else None,
+                    url, platform, format_type, quality, user_id, ip_address, user_agent
+                ))
+                
+                conn.commit()
+                cursor.close()
+                db_pool.putconn(conn)
+            except Exception as db_err:
+                print(f"[ERROR] Failed to log error to DB: {db_err}")
+    except Exception as e:
+        print(f"[ERROR] log_error failed: {e}")
+
+def log_system(log_level, log_message, log_source=None, url=None, method=None, 
+               status_code=None, user_id=None, execution_time=None, 
+               additional_data=None, request_obj=None):
+    """Log system events to database for admin monitoring
+    
+    Args:
+        log_level: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'
+        log_message: The log message
+        log_source: Source of the log (e.g., 'youtube_download', 'tiktok_download', 'api_request')
+        url: Request URL if applicable
+        method: HTTP method if applicable
+        status_code: HTTP status code if applicable
+        user_id: User ID if applicable
+        execution_time: Execution time in seconds
+        additional_data: Additional data as dict (will be stored as JSONB)
+        request_obj: Flask request object
+    """
+    try:
+        # Get request info if available
+        ip_address = None
+        user_agent = None
+        
+        if request_obj:
+            ip_address = request_obj.headers.get('X-Forwarded-For', request_obj.remote_addr)
+            if ip_address and ',' in ip_address:
+                ip_address = ip_address.split(',')[0].strip()
+            user_agent = request_obj.headers.get('User-Agent', '')
+            
+            # Auto-fill from request if not provided
+            if not url:
+                url = request_obj.url
+            if not method:
+                method = request_obj.method
+        
+        # Log to console with appropriate prefix
+        prefix_map = {
+            'DEBUG': '[DEBUG]',
+            'INFO': '[INFO]',
+            'WARNING': '[WARNING]',
+            'ERROR': '[ERROR]',
+            'CRITICAL': '[CRITICAL]'
+        }
+        prefix = prefix_map.get(log_level, '[LOG]')
+        print(f"{prefix} {log_source or ''}: {log_message[:200]}")
+        
+        # Save to database
+        if db_pool:
+            try:
+                conn = db_pool.getconn()
+                cursor = conn.cursor()
+                
+                # Convert additional_data to JSON string if it's a dict
+                json_data = None
+                if additional_data:
+                    import json as json_lib
+                    json_data = json_lib.dumps(additional_data)
+                
+                cursor.execute("""
+                    INSERT INTO system_logs (
+                        log_level, log_message, log_source, url, method, 
+                        status_code, user_id, ip_address, user_agent, 
+                        execution_time, additional_data
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                """, (
+                    log_level, log_message[:5000], log_source, url, method,
+                    status_code, user_id, ip_address, user_agent,
+                    execution_time, json_data
+                ))
+                
+                conn.commit()
+                cursor.close()
+                db_pool.putconn(conn)
+            except Exception as db_err:
+                print(f"[ERROR] Failed to log system event to DB: {db_err}")
+    except Exception as e:
+        print(f"[ERROR] log_system failed: {e}")
     except Exception as e:
         print(f"[ERROR] Stats error: {e}")
 
@@ -1645,7 +1829,7 @@ def try_rapidapi_youtube(video_id, format_type, quality, download_id, temp_dir, 
 
 
 def download_youtube_video(url, format_type, quality, download_id):
-    """Download YouTube video using yt-dlp with advanced bypass techniques"""
+    """Download YouTube video using yt-dlp - Optimized and stable version"""
     print(f"\n{'='*80}")
     print(f"[YOUTUBE DOWNLOAD START]")
     print(f"URL: {url}")
@@ -1653,12 +1837,10 @@ def download_youtube_video(url, format_type, quality, download_id):
     print(f"Quality: {quality}")
     print(f"Download ID: {download_id}")
     print(f"{'='*80}\n")
-    
+
     try:
         import yt_dlp
-        import random
-        import time as time_module
-        
+
         download_progress[download_id] = {
             'status': 'preparing',
             'progress': 0,
@@ -1666,25 +1848,17 @@ def download_youtube_video(url, format_type, quality, download_id):
             'eta': '',
             'filename': None
         }
-        
-        # Use temp directory
+
+        # Use temp directory for downloads
         temp_dir = tempfile.gettempdir()
         filename = f"{download_id}"
         output_path = os.path.join(temp_dir, filename)
-        
-        # User-Agent rotation to avoid detection
-        user_agents = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
-        ]
-        
+
         def progress_hook(d):
+            """Track download progress"""
             if d['status'] == 'downloading':
                 download_progress[download_id]['status'] = 'downloading'
-                
+
                 # Get percentage
                 if 'downloaded_bytes' in d and 'total_bytes' in d and d['total_bytes']:
                     percent = (d['downloaded_bytes'] / d['total_bytes']) * 100
@@ -1698,451 +1872,165 @@ def download_youtube_video(url, format_type, quality, download_id):
                         download_progress[download_id]['progress'] = round(percent, 1)
                     except:
                         pass
-                
+
                 # Get speed
                 if '_speed_str' in d:
                     download_progress[download_id]['speed'] = strip_ansi(d['_speed_str'])
-                
+
                 # Get ETA
                 if '_eta_str' in d:
                     download_progress[download_id]['eta'] = strip_ansi(d['_eta_str'])
-                    
+
             elif d['status'] == 'finished':
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
-        
-        # Random delay with exponential backoff (3-8 seconds base)
-        delay = random.uniform(3.0, 8.0)
-        print(f"[DEBUG] Waiting {delay:.1f}s before download to avoid rate limit...")
-        time_module.sleep(delay)
-        
-        # Advanced strategies optimized for Railway/Cloud deployment
-        # Order matters: try most reliable strategies first
-        # PRIORITY ORDER:
-        # 1. Try NO-COOKIES strategies first (more stable, no expiration)
-        # 2. Then try cookies-based strategies if available
-        # 3. Finally try advanced methods (bgutil, PO token)
-        
-        strategies = [
-            # ===== NO-COOKIES STRATEGIES (Try these first!) =====
-            
-            # Strategy 0: Android Embedded (BEST for no-cookies - Most stable!)
-            {
-                'name': 'android_embed',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_embedded'],
-                        }
-                    },
-                },
-                'delay': 0,
-                'use_cookies': False  # No cookies needed!
-            },
-            # Strategy 1: Android Music (Alternative Android client)
-            {
-                'name': 'android_music',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_music'],
-                        }
-                    },
-                },
-                'delay': 1,
-                'use_cookies': False
-            },
-            # Strategy 2: TV Embedded (Low bot detection)
-            {
-                'name': 'tv_embed',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['tv_embedded'],
-                        }
-                    },
-                },
-                'delay': 2,
-                'use_cookies': False
-            },
-            # Strategy 3: iOS (Works without cookies for many videos)
-            {
-                'name': 'ios_no_cookies',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['ios'],
-                        }
-                    },
-                },
-                'delay': 3,
-                'use_cookies': False
-            },
-            # Strategy 4: Android VR (New client type)
-            {
-                'name': 'android_vr',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['android_vr'],
-                        }
-                    },
-                },
-                'delay': 4,
-                'use_cookies': False
-            },
-            
-            # ===== COOKIES-BASED STRATEGIES (Only if cookies available) =====
-            
-            # Strategy 5: iOS with Cookies (Best with valid cookies)
-            {
-                'name': 'ios_cookies',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['ios'],
-                        }
-                    },
-                },
-                'delay': 5,
-                'use_cookies': True  # Requires cookies
-            },
-            # Strategy 6: Web with Cookies (Traditional method)
-            {
-                'name': 'web_cookies',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['web'],
-                        }
-                    },
-                },
-                'delay': 6,
-                'use_cookies': True
-            },
-            
-            # ===== ADVANCED METHODS =====
-            
-            # Strategy 7: Web Mobile with cleanup (No cookies)
-            {
-                'name': 'mweb_clean',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['mweb'],
-                            'player_skip': ['webpage', 'configs'],
-                        }
-                    },
-                },
-                'delay': 7,
-                'use_cookies': False
-            },
-            # Strategy 8: Media Connect (New method)
-            {
-                'name': 'mediaconnect',
-                'opts': {
-                    'quiet': True,
-                    'no_warnings': True,
-                    'extractor_args': {
-                        'youtube': {
-                            'player_client': ['mediaconnect'],
-                        }
-                    },
-                },
-                'delay': 8,
-                'use_cookies': False
-            },
-        ]
-        
-        last_error = None
-        
-        for idx, strategy in enumerate(strategies):
-            try:
-                # Add delay between strategy retries (exponential backoff)
-                if idx > 0:
-                    retry_delay = strategy.get('delay', idx * 2)
-                    print(f"[DEBUG] Waiting {retry_delay}s before retry...")
-                    time_module.sleep(retry_delay)
-                
-                # Base options for all strategies
-                selected_ua = random.choice(user_agents)
-                common_opts = {
-                    'noprogress': False,
-                    'progress_hooks': [progress_hook],
-                    'http_headers': {
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Accept-Language': 'en-US,en;q=0.5',
-                        'Accept-Encoding': 'gzip, deflate',
-                        'DNT': '1',
-                        'Connection': 'keep-alive',
-                        'Upgrade-Insecure-Requests': '1',
-                    },
-                    'socket_timeout': 30,
-                    'retries': 3,
-                    'fragment_retries': 5,
-                    'skip_unavailable_fragments': True,
-                    'ignoreerrors': False,
-                    'extractor_args': {},  # Initialize empty dict for extractor args
-                }
-                
-                # Add proxy if configured
-                if HTTP_PROXY:
-                    common_opts['proxy'] = HTTP_PROXY
-                    print(f"[DEBUG] Using HTTP proxy: {HTTP_PROXY.split('@')[-1]}")
-                elif HTTPS_PROXY:
-                    common_opts['proxy'] = HTTPS_PROXY
-                    print(f"[DEBUG] Using HTTPS proxy: {HTTPS_PROXY.split('@')[-1]}")
-                elif SOCKS_PROXY:
-                    common_opts['proxy'] = SOCKS_PROXY
-                    print(f"[DEBUG] Using SOCKS proxy: {SOCKS_PROXY.split('@')[-1]}")
 
-                # Strategy-specific: Use cookies unless it's a 'no_cookies' strategy
-                if strategy.get('use_cookies', True) and COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
-                    common_opts['cookiefile'] = COOKIES_FILE_PATH
-                    print(f"[DEBUG] Using cookies from: {COOKIES_FILE_PATH}")
-                else:
-                    print(f"[DEBUG] Strategy {strategy['name']} is skipping cookies")
+        # Configure yt-dlp options based on format
+        if format_type == 'mp3':
+            # Audio download - extract best audio and convert to MP3
+            audio_bitrate = quality if quality in ['320', '192', '128'] else '192'
 
-                if YOUTUBE_PO_TOKEN:
-                    if 'youtube' not in common_opts['extractor_args']:
-                         common_opts['extractor_args']['youtube'] = {}
-                    # Try both formats (some clients like web, some like raw token)
-                    common_opts['extractor_args']['youtube']['po_token'] = [f"web+{YOUTUBE_PO_TOKEN}", YOUTUBE_PO_TOKEN]
-                
-                if YOUTUBE_VISITOR_DATA:
-                    if 'youtube' not in common_opts['extractor_args']:
-                         common_opts['extractor_args']['youtube'] = {}
-                    common_opts['extractor_args']['youtube']['visitor_data'] = [YOUTUBE_VISITOR_DATA]
-                
-                # Add a dynamic visitor data to rotate "guest" identity (helps bypass some IP-based blocks)
-                if 'youtube' not in common_opts['extractor_args']:
-                    common_opts['extractor_args']['youtube'] = {}
-                common_opts['extractor_args']['youtube']['player_skip'] = ['webpage', 'configs']
-                
-                # Only force User-Agent for web-based strategies
-                if 'web' in strategy['name'] or 'auto' in strategy['name']:
-                    common_opts['http_headers']['User-Agent'] = selected_ua
-                
-                # Merge strategy-specific options (deep merge for extractor_args)
-                for key, value in strategy['opts'].items():
-                    if key == 'extractor_args' and key in common_opts:
-                        # Deep merge extractor_args
-                        for extractor, args in value.items():
-                            if extractor not in common_opts['extractor_args']:
-                                common_opts['extractor_args'][extractor] = {}
-                            common_opts['extractor_args'][extractor].update(args)
-                    else:
-                        common_opts[key] = value
-                
-                if format_type == 'mp3':
-                    # Default to 128k if not specified
-                    audio_bitrate = quality if quality in ['320', '192', '128'] else '128'
-                    
-                    ydl_opts = {
-                        **common_opts,
-                        'format': 'bestaudio/best',
-                        'outtmpl': output_path,
-                        'postprocessors': [{
-                            'key': 'FFmpegExtractAudio',
-                            'preferredcodec': 'mp3',
-                            'preferredquality': audio_bitrate,
-                        }],
-                    }
-                    final_filename = filename + '.mp3'
-                    mime_type = 'audio/mpeg'
-                else:
-                    # Video - use simple format selector
-                    if quality == 'best' or not quality.isdigit():
-                        format_str = 'bestvideo+bestaudio/best'
-                    else:
-                        format_str = f'bestvideo[height<={quality}]+bestaudio/best'
-                    
-                    ydl_opts = {
-                        **common_opts,
-                        'format': format_str,
-                        'outtmpl': output_path + '.%(ext)s',
-                        'merge_output_format': 'mp4',
-                    }
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'outtmpl': output_path,
+                'noplaylist': True,
+                'noprogress': False,
+                'progress_hooks': [progress_hook],
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': audio_bitrate,
+                }],
+                'quiet': False,
+                'no_warnings': False,
+            }
+            final_filename = filename + '.mp3'
+            mime_type = 'audio/mpeg'
+        else:
+            # Video download - get best quality MP4
+            if quality == 'best' or not quality.isdigit():
+                format_str = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+            else:
+                format_str = f'bestvideo[ext=mp4][height<={quality}]+bestaudio[ext=m4a]/best[ext=mp4]/best'
 
-                    final_filename = filename + '.mp4'
-                    mime_type = 'video/mp4'
-                
-                # Try to download with this strategy
-                print(f"\n[STRATEGY {idx+1}/{len(strategies)}] Trying: {strategy['name']}")
-                print(f"  - User-Agent: {selected_ua[:80]}...")
-                print(f"  - Use cookies: {strategy.get('use_cookies', True)}")
-                print(f"  - Extractor args: {strategy['opts'].get('extractor_args', {})}")
-                
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=True)
-                    title = info.get('title', 'video')
-                
-                print(f"[SUCCESS] ✅ Strategy '{strategy['name']}' worked!")
-                print(f"  - Title: {title}")
-                print(f"  - File: {final_filename}\n")
-                # Success! Break out of strategy loop
-                filepath = os.path.join(temp_dir, final_filename)
-                
-                # Store file data for streaming
-                download_data[download_id] = {
-                    'filepath': filepath,
-                    'title': title,
-                    'mime_type': mime_type,
-                    'ext': final_filename.split('.')[-1],
-                    'timestamp': time.time(),
-                    'platform': 'youtube',
-                    'format': format_type,
-                    'quality': quality
-                }
-                    
-                download_progress[download_id]['status'] = 'completed'
-                download_progress[download_id]['filename'] = final_filename
-                download_progress[download_id]['title'] = title
-                
-                return  # Success!
-                
-            except Exception as e:
-                last_error = e
-                error_str = str(e)
-                print(f"[FAILED] ❌ Strategy '{strategy['name']}' failed")
-                print(f"  - Error: {error_str[:200]}")
-                
-                # If it's a fatal error (video unavailable, private, etc.), don't retry
-                if any(fatal in error_str for fatal in ['Video unavailable', 'Private video', 'removed', 'deleted', 'copyright']):
-                    print(f"[FATAL ERROR] 🛑 Fatal error detected, stopping all retries")
-                    print(f"  - Reason: {error_str[:300]}\n")
-                    break
-                    
-                # Try next strategy
-                print(f"  - Will try next strategy...\n")
-                continue
-        
-        # All yt-dlp strategies failed - try FREE APIs as fallback
-        print(f"\n[FALLBACK] All yt-dlp strategies failed, trying FREE APIs...")
-        print(f"  - Last error: {str(last_error)[:200]}\n")
-        
-        # Extract video ID from URL
-        video_id_match = re.search(r'(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})', url)
-        if video_id_match:
-            video_id = video_id_match.group(1)
-            
-            # Define progress hook for APIs
-            def api_progress_hook(d):
-                if d['status'] == 'downloading':
-                    percent_str = d.get('_percent_str', '0%').replace('%', '')
-                    try:
-                        percent = float(percent_str)
-                    except:
-                        percent = 0
-                    download_progress[download_id]['status'] = 'downloading'
-                    download_progress[download_id]['progress'] = percent
-            
-            # Try multiple FREE APIs in order
-            api_methods = [
-                ('Cobalt API', try_cobalt_api),
-                ('Invidious API', try_invidious_download),
-                ('Y2Mate API', try_y2mate_api),
-                ('Loader.to API', try_loader_to_api),
-                ('yt-api.org', try_ytapi_org),
-                ('Apisyu API', try_apisyu_api),
-                ('RapidAPI', try_rapidapi_youtube),
-            ]
-            
-            for api_name, api_func in api_methods:
-                try:
-                    print(f"[FALLBACK] Trying {api_name}...")
-                    
-                    api_path, api_title, api_ext = api_func(
-                        video_id, format_type, quality, download_id, temp_dir, api_progress_hook
-                    )
-                    
-                    if api_path and os.path.exists(api_path):
-                        print(f"[SUCCESS] ✅ Download completed via {api_name}!")
-                        
-                        mime_type = 'audio/mpeg' if api_ext == 'mp3' else 'video/mp4'
-                        
-                        download_data[download_id] = {
-                            'filepath': api_path,
-                            'title': api_title or 'video',
-                            'mime_type': mime_type,
-                            'ext': api_ext,
-                            'timestamp': time.time(),
-                            'platform': 'youtube',
-                            'format': format_type,
-                            'quality': quality
-                        }
-                        
-                        download_progress[download_id]['status'] = 'completed'
-                        download_progress[download_id]['progress'] = 100
-                        download_progress[download_id]['title'] = api_title or 'video'
-                        
-                        # Record in database
-                        try:
-                            record_download('youtube', api_title or 'video', format_type, quality)
-                        except Exception as db_err:
-                            print(f"DB record error: {db_err}")
-                            
-                        return
-                    else:
-                        print(f"[FALLBACK] ❌ {api_name} failed or returned no file")
-                        
-                except Exception as api_err:
-                    print(f"[FALLBACK] ❌ {api_name} error: {str(api_err)[:100]}")
-                    continue
-        
-        # Everything failed
-        raise last_error if last_error else Exception("Không thể tải video")
-        
+            ydl_opts = {
+                'format': format_str,
+                'outtmpl': output_path + '.%(ext)s',
+                'noplaylist': True,
+                'merge_output_format': 'mp4',
+                'noprogress': False,
+                'progress_hooks': [progress_hook],
+                'quiet': False,
+                'no_warnings': False,
+            }
+            final_filename = filename + '.mp4'
+            mime_type = 'video/mp4'
+
+        # Add cookies if available (helps with age-restricted and some blocked videos)
+        if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
+            ydl_opts['cookiefile'] = COOKIES_FILE_PATH
+            print(f"[INFO] Using cookies from: {COOKIES_FILE_PATH}")
+
+        # Add proxy if configured
+        if HTTP_PROXY:
+            ydl_opts['proxy'] = HTTP_PROXY
+            print(f"[INFO] Using HTTP proxy")
+        elif HTTPS_PROXY:
+            ydl_opts['proxy'] = HTTPS_PROXY
+            print(f"[INFO] Using HTTPS proxy")
+        elif SOCKS_PROXY:
+            ydl_opts['proxy'] = SOCKS_PROXY
+            print(f"[INFO] Using SOCKS proxy")
+
+        # Download the video/audio
+        print(f"[INFO] Starting download with yt-dlp...")
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            title = info.get('title', 'video')
+
+        print(f"[SUCCESS] Download completed!")
+        print(f"  - Title: {title}")
+        print(f"  - File: {final_filename}\n")
+
+        filepath = os.path.join(temp_dir, final_filename)
+
+        # Store file data for streaming
+        download_data[download_id] = {
+            'filepath': filepath,
+            'title': title,
+            'mime_type': mime_type,
+            'ext': final_filename.split('.')[-1],
+            'timestamp': time.time(),
+            'platform': 'youtube',
+            'format': format_type,
+            'quality': quality
+        }
+
+        download_progress[download_id]['status'] = 'completed'
+        download_progress[download_id]['filename'] = final_filename
+        download_progress[download_id]['title'] = title
+
+        print(f"{'='*80}\n")
+        return
+
     except Exception as e:
+        import traceback
+        
         error_msg = str(e)
+        stack_trace = traceback.format_exc()
         download_progress[download_id]['status'] = 'error'
         
-        # Friendly error messages
-        if 'Failed to extract any player response' in error_msg:
-            download_progress[download_id]['error'] = '🔧 YouTube đã thay đổi API.\n\n💡 Giải pháp:\n1. Cập nhật yt-dlp: pip install -U yt-dlp\n2. Khởi động lại server\n3. Thử video khác hoặc đợi vài giờ'
-        elif 'not made this video available in your country' in error_msg or 'not available in your country' in error_msg:
-            # Extract available countries if mentioned
-            available_match = re.search(r'available in (.+?)\.', error_msg)
-            available_countries = available_match.group(1) if available_match else 'một số quốc gia khác'
-            download_progress[download_id]['error'] = f'🌍 Video bị chặn theo khu vực.\n\n📍 Video chỉ khả dụng tại: {available_countries}\n\n💡 Giải pháp:\n🔹 Sử dụng VPN để đổi vị trí\n🔹 Thử video khác không bị chặn vùng\n\n⚙️ Nếu có VPN, thêm --proxy vào cấu hình yt-dlp'
-        elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg or 'confirm you' in error_msg.lower():
-            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử TẤT CẢ phương pháp có thể:\n\n📱 yt-dlp Strategies (8 phương pháp):\n• Android Embedded (no cookies) ❌\n• Android Music (no cookies) ❌\n• TV Embedded (no cookies) ❌\n• iOS (no cookies) ❌\n• Android VR (no cookies) ❌\n• iOS (with cookies) ❌\n• Web (with cookies) ❌\n• Mobile Web (no cookies) ❌\n\n🌐 FREE APIs (7 phương pháp):\n• Cobalt API ❌\n• Invidious API ❌\n• Y2Mate API ❌\n• Loader.to API ❌\n• yt-api.org ❌\n• Apisyu API ❌\n• RapidAPI ❌\n\n� NGUYÊN NHÂN: IP của server bị YouTube chặn!\n\n�💡 Giải pháp cho người dùng:\n🔹 Đợi 30-60 phút rồi thử lại\n🔹 Thử video khác (video ngắn, kênh lớn)\n🔹 Thử lại vào giờ khác trong ngày\n🔹 Liên hệ admin nếu vấn đề kéo dài\n\n⚙️ Thông báo cho Admin:\n📊 Hệ thống đã thử 15 phương pháp:\n✓ 8 phương pháp yt-dlp (5 no-cookies + 3 with-cookies)\n✓ 7 FREE APIs\n\n🔧 GIẢI PHÁP BẮT BUỘC:\n1. ⭐ THÊM PROXY (xem PROXY_SETUP.md)\n   - Webshare.io: $2.99/GB residential\n   - ProxyMesh: $10/tháng rotating\n   - Hoặc free tier để test\n\n2. Hoặc chuyển sang VPS khác:\n   - DigitalOcean: $6/tháng\n   - Linode: $5/tháng\n   - Vultr: $5/tháng\n\n3. Hoặc cập nhật yt-dlp:\n   pip install -U yt-dlp\n\n⏰ Lưu ý: Nếu KHÔNG thêm proxy, tỷ lệ thành công sẽ rất thấp (<10%) vì IP Railway bị YouTube blacklist.'
-        elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
-            download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
+        # Determine error type for classification
+        if 'Failed to extract' in error_msg or 'Unable to extract' in error_msg:
+            error_type = 'extraction_failed'
+            user_message = 'Không thể tải video. Vui lòng thử lại sau'
+        elif 'not available' in error_msg.lower() and 'country' in error_msg.lower():
+            error_type = 'geo_blocked'
+            user_message = 'Video bị chặn theo khu vực'
+        elif 'Sign in' in error_msg or 'bot' in error_msg.lower() or '429' in error_msg:
+            error_type = 'bot_detection'
+            user_message = 'Hệ thống đang bận. Vui lòng thử lại sau'
+        elif 'unavailable' in error_msg.lower() or 'private' in error_msg.lower():
+            error_type = 'video_unavailable'
+            user_message = 'Video không khả dụng'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
-            download_progress[download_id]['error'] = '🔞 Video giới hạn độ tuổi.\n\n💡 Giải pháp: Thêm file cookies.txt từ tài khoản đã xác minh tuổi'
+            error_type = 'age_restricted'
+            user_message = 'Video giới hạn độ tuổi'
         elif 'copyright' in error_msg.lower():
-            download_progress[download_id]['error'] = '©️ Video bị chặn do bản quyền'
-        elif 'network' in error_msg.lower() or 'timeout' in error_msg.lower() or 'connect' in error_msg.lower():
-            download_progress[download_id]['error'] = '🌐 Lỗi kết nối mạng. Vui lòng thử lại sau vài giây'
+            error_type = 'copyright'
+            user_message = 'Video bị chặn do bản quyền'
+        elif 'network' in error_msg.lower() or 'timeout' in error_msg.lower():
+            error_type = 'network_error'
+            user_message = 'Lỗi kết nối. Vui lòng thử lại'
         elif 'live' in error_msg.lower() or 'premiere' in error_msg.lower():
-            download_progress[download_id]['error'] = '📺 Video đang phát trực tiếp hoặc chưa công chiếu. Hãy đợi video kết thúc'
+            error_type = 'live_video'
+            user_message = 'Video đang phát trực tiếp'
         else:
-            download_progress[download_id]['error'] = f'❌ Lỗi: {error_msg[:200]}'
+            error_type = 'unknown_error'
+            user_message = 'Không thể tải video. Vui lòng thử lại sau'
+        
+        # Show simple message to user
+        download_progress[download_id]['error'] = user_message
+        
+        # Log detailed error for admin
+        log_error(
+            error_type=error_type,
+            error_message=error_msg,
+            stack_trace=stack_trace,
+            url=url if 'url' in locals() else None,
+            platform='youtube',
+            format_type=format_type if 'format_type' in locals() else None,
+            quality=quality if 'quality' in locals() else None,
+            user_id=session.get('user_id') if 'session' in dir() else None,
+            request_obj=request if 'request' in dir() else None
+        )
         
         print(f"\n{'='*80}")
         print(f"[YOUTUBE DOWNLOAD FAILED]")
+        print(f"Error Type: {error_type}")
         print(f"Error: {e}")
-        print(f"Full traceback:")
-        import traceback
-        traceback.print_exc()
         print(f"{'='*80}\n")
+
 
 def download_tiktok_video(url, format_type, download_id, quality='best'):
     """Download TikTok video/photo using yt-dlp"""
@@ -2378,6 +2266,20 @@ def admin_dashboard():
     if 'admin_logged_in' not in session:
         return redirect('/admin/login')
     return render_template('admin_dashboard.html')
+
+@app.route('/admin/error-logs')
+def admin_error_logs():
+    """Admin error logs page - requires login"""
+    if 'admin_logged_in' not in session:
+        return redirect('/admin/login')
+    return render_template('admin_error_logs.html')
+
+@app.route('/admin/system-logs')
+def admin_system_logs():
+    """Admin system logs page - requires login"""
+    if 'admin_logged_in' not in session:
+        return redirect('/admin/login')
+    return render_template('admin_system_logs.html')
 
 # ==================== ADMIN API: USERS MANAGEMENT ====================
 
@@ -2868,8 +2770,12 @@ def manifest():
 
 @app.route('/api/youtube/download', methods=['POST'])
 def youtube_download():
+    start_time = time.time()
+    
     # Kiểm tra đăng nhập
     if 'user_id' not in session:
+        log_system('WARNING', 'Unauthorized YouTube download attempt', 
+                   log_source='youtube_download', request_obj=request)
         return jsonify({
             'success': False, 
             'error': '🔒 Vui lòng đăng nhập để tải xuống',
@@ -2885,6 +2791,8 @@ def youtube_download():
         return jsonify({'success': False, 'error': 'Vui lòng nhập URL YouTube'}), 400
     
     if not is_valid_youtube_url(url):
+        log_system('WARNING', f'Invalid YouTube URL: {url[:100]}', 
+                   log_source='youtube_download', request_obj=request)
         return jsonify({'success': False, 'error': 'URL YouTube không hợp lệ'}), 400
     
     # Check cooldown per IP
@@ -2895,6 +2803,8 @@ def youtube_download():
         time_since_last = current_time - last_youtube_download[client_ip]
         if time_since_last < YOUTUBE_COOLDOWN:
             wait_time = int(YOUTUBE_COOLDOWN - time_since_last)
+            log_system('INFO', f'Rate limit hit for IP {client_ip}', 
+                       log_source='youtube_download', request_obj=request)
             return jsonify({
                 'success': False, 
                 'error': f'⏳ Vui lòng đợi {wait_time} giây trước khi tải video tiếp theo.\n\nĐây là biện pháp bảo vệ để tránh bị YouTube chặn. Cảm ơn bạn đã thông cảm! 😊'
@@ -2904,6 +2814,15 @@ def youtube_download():
     last_youtube_download[client_ip] = current_time
     
     download_id = str(uuid.uuid4())
+    
+    # Log successful request
+    execution_time = time.time() - start_time
+    log_system('INFO', f'YouTube download started: {url[:100]}', 
+               log_source='youtube_download',
+               user_id=session.get('user_id'),
+               execution_time=execution_time,
+               additional_data={'format': format_type, 'quality': quality, 'download_id': download_id},
+               request_obj=request)
     
     # Use ThreadPool to prevent server crash
     executor.submit(download_youtube_video, url, format_type, quality, download_id)
@@ -3430,6 +3349,363 @@ def api_change_password():
     except Exception as e:
         print(f"[ERROR] Change password failed: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/error-logs', methods=['GET'])
+def api_get_error_logs():
+    """Get error logs for admin monitoring"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Get filters
+        error_type = request.args.get('type', 'all')
+        limit = int(request.args.get('limit', 100))
+        offset = int(request.args.get('offset', 0))
+        
+        # Build query
+        query = """
+            SELECT 
+                id, error_type, error_message, stack_trace, url, 
+                platform, format, quality, user_id, ip_address, 
+                user_agent, created_at
+            FROM error_logs
+        """
+        
+        params = []
+        if error_type != 'all':
+            query += " WHERE error_type = %s"
+            params.append(error_type)
+        
+        query += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        
+        # Get total count
+        count_query = "SELECT COUNT(*) FROM error_logs"
+        if error_type != 'all':
+            count_query += " WHERE error_type = %s"
+            cursor.execute(count_query, [error_type])
+        else:
+            cursor.execute(count_query)
+        
+        total = cursor.fetchone()[0]
+        
+        # Format results
+        logs = []
+        for row in rows:
+            logs.append({
+                'id': row[0],
+                'error_type': row[1],
+                'error_message': row[2],
+                'stack_trace': row[3],
+                'url': row[4],
+                'platform': row[5],
+                'format': row[6],
+                'quality': row[7],
+                'user_id': row[8],
+                'ip_address': row[9],
+                'user_agent': row[10],
+                'created_at': row[11].isoformat() if row[11] else None
+            })
+        
+        # Get error type statistics
+        cursor.execute("""
+            SELECT error_type, COUNT(*) as count
+            FROM error_logs
+            GROUP BY error_type
+            ORDER BY count DESC
+        """)
+        
+        stats = {}
+        for row in cursor.fetchall():
+            stats[row[0]] = row[1]
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({
+            'logs': logs,
+            'total': total,
+            'stats': stats,
+            'limit': limit,
+            'offset': offset
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Get error logs failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/error-logs/<int:log_id>', methods=['DELETE'])
+def api_delete_error_log(log_id):
+    """Delete a specific error log"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM error_logs WHERE id = %s", (log_id,))
+        conn.commit()
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"[ERROR] Delete error log failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/error-logs/clear', methods=['POST'])
+def api_clear_error_logs():
+    """Clear all error logs or by type"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        data = request.get_json() or {}
+        error_type = data.get('type', 'all')
+        days = int(data.get('days', 0))
+        
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        if days > 0:
+            # Clear logs older than X days
+            query = "DELETE FROM error_logs WHERE created_at < NOW() - INTERVAL '%s days'"
+            params = [days]
+            
+            if error_type != 'all':
+                query += " AND error_type = %s"
+                params.append(error_type)
+            
+            cursor.execute(query, params)
+        else:
+            # Clear all or by type
+            if error_type != 'all':
+                cursor.execute("DELETE FROM error_logs WHERE error_type = %s", (error_type,))
+            else:
+                cursor.execute("DELETE FROM error_logs")
+        
+        deleted = cursor.rowcount
+        conn.commit()
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({'success': True, 'deleted': deleted})
+        
+    except Exception as e:
+        print(f"[ERROR] Clear error logs failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# ==================== ADMIN API: SYSTEM LOGS ====================
+
+@app.route('/api/admin/system-logs', methods=['GET'])
+def api_get_system_logs():
+    """Get system logs for admin monitoring"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Get filters
+        log_level = request.args.get('level', 'all')
+        log_source = request.args.get('source', 'all')
+        limit = int(request.args.get('limit', 100))
+        offset = int(request.args.get('offset', 0))
+        
+        # Build query
+        query = """
+            SELECT 
+                id, log_level, log_message, log_source, url, method,
+                status_code, user_id, ip_address, user_agent, 
+                execution_time, additional_data, created_at
+            FROM system_logs
+            WHERE 1=1
+        """
+        
+        params = []
+        
+        if log_level != 'all':
+            query += " AND log_level = %s"
+            params.append(log_level)
+        
+        if log_source != 'all':
+            query += " AND log_source = %s"
+            params.append(log_source)
+        
+        query += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        
+        # Get total count
+        count_query = "SELECT COUNT(*) FROM system_logs WHERE 1=1"
+        count_params = []
+        
+        if log_level != 'all':
+            count_query += " AND log_level = %s"
+            count_params.append(log_level)
+        
+        if log_source != 'all':
+            count_query += " AND log_source = %s"
+            count_params.append(log_source)
+        
+        cursor.execute(count_query, count_params)
+        total = cursor.fetchone()[0]
+        
+        # Format results
+        logs = []
+        for row in rows:
+            logs.append({
+                'id': row[0],
+                'log_level': row[1],
+                'log_message': row[2],
+                'log_source': row[3],
+                'url': row[4],
+                'method': row[5],
+                'status_code': row[6],
+                'user_id': row[7],
+                'ip_address': row[8],
+                'user_agent': row[9],
+                'execution_time': row[10],
+                'additional_data': row[11],
+                'created_at': row[11].isoformat() if row[12] else None
+            })
+        
+        # Get statistics
+        cursor.execute("""
+            SELECT log_level, COUNT(*) as count
+            FROM system_logs
+            GROUP BY log_level
+            ORDER BY count DESC
+        """)
+        
+        level_stats = {}
+        for row in cursor.fetchall():
+            level_stats[row[0]] = row[1]
+        
+        cursor.execute("""
+            SELECT log_source, COUNT(*) as count
+            FROM system_logs
+            WHERE log_source IS NOT NULL
+            GROUP BY log_source
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        
+        source_stats = {}
+        for row in cursor.fetchall():
+            source_stats[row[0]] = row[1]
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({
+            'logs': logs,
+            'total': total,
+            'level_stats': level_stats,
+            'source_stats': source_stats,
+            'limit': limit,
+            'offset': offset
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Get system logs failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/system-logs/<int:log_id>', methods=['DELETE'])
+def api_delete_system_log(log_id):
+    """Delete a specific system log"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM system_logs WHERE id = %s", (log_id,))
+        conn.commit()
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        print(f"[ERROR] Delete system log failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/system-logs/clear', methods=['POST'])
+def api_clear_system_logs():
+    """Clear all system logs or by level/source"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        data = request.get_json() or {}
+        log_level = data.get('level', 'all')
+        log_source = data.get('source', 'all')
+        days = int(data.get('days', 0))
+        
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        query = "DELETE FROM system_logs WHERE 1=1"
+        params = []
+        
+        if days > 0:
+            query += " AND created_at < NOW() - INTERVAL '%s days'"
+            params.append(days)
+        
+        if log_level != 'all':
+            query += " AND log_level = %s"
+            params.append(log_level)
+        
+        if log_source != 'all':
+            query += " AND log_source = %s"
+            params.append(log_source)
+        
+        cursor.execute(query, params)
+        deleted = cursor.rowcount
+        conn.commit()
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        return jsonify({'success': True, 'deleted': deleted})
+        
+    except Exception as e:
+        print(f"[ERROR] Clear system logs failed: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/debug/env')
 def debug_env():

@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Logs - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .nav {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.active {
+            border: 2px solid #667eea;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls select, .controls button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+
+        .controls button.danger {
+            background: #e74c3c;
+        }
+
+        .controls button.danger:hover {
+            background: #c0392b;
+        }
+
+        .logs-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .log-item {
+            border-bottom: 1px solid #ecf0f1;
+            padding: 20px;
+            transition: background 0.2s;
+        }
+
+        .log-item:hover {
+            background: #f8f9fa;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .log-type {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .log-type.extraction_failed { background: #ffe5e5; color: #c0392b; }
+        .log-type.geo_blocked { background: #fff3cd; color: #856404; }
+        .log-type.bot_detection { background: #f8d7da; color: #721c24; }
+        .log-type.video_unavailable { background: #d1ecf1; color: #0c5460; }
+        .log-type.age_restricted { background: #e7e7e7; color: #383d41; }
+        .log-type.copyright { background: #f5c6cb; color: #721c24; }
+        .log-type.network_error { background: #d6d8db; color: #1b1e21; }
+        .log-type.live_video { background: #d4edda; color: #155724; }
+        .log-type.unknown_error { background: #e2e3e5; color: #383d41; }
+
+        .log-time {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .log-message {
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .log-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .log-detail {
+            display: flex;
+            gap: 5px;
+        }
+
+        .log-detail strong {
+            color: #2c3e50;
+        }
+
+        .log-stack {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .log-stack.show {
+            display: block;
+        }
+
+        .log-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .log-actions button {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-toggle {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-toggle:hover {
+            background: #2980b9;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Error Logs Monitor</h1>
+        <div class="subtitle">Theo dõi và phân tích lỗi hệ thống</div>
+    </div>
+
+    <div class="nav">
+        <a href="/admin/dashboard">← Quay lại Dashboard</a>
+        <a href="/admin/dashboard">Thống kê</a>
+        <a href="/admin/error-logs" style="color: #2c3e50; font-weight: 600;">Error Logs</a>
+        <a href="/admin/system-logs">System Logs</a>
+    </div>
+
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card active" data-type="all">
+                <div class="label">Tất cả lỗi</div>
+                <div class="value" id="totalErrors">0</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <select id="filterType">
+                <option value="all">Tất cả loại lỗi</option>
+                <option value="extraction_failed">Extraction Failed</option>
+                <option value="geo_blocked">Geo Blocked</option>
+                <option value="bot_detection">Bot Detection</option>
+                <option value="video_unavailable">Video Unavailable</option>
+                <option value="age_restricted">Age Restricted</option>
+                <option value="copyright">Copyright</option>
+                <option value="network_error">Network Error</option>
+                <option value="live_video">Live Video</option>
+                <option value="unknown_error">Unknown Error</option>
+            </select>
+
+            <button onclick="refreshLogs()">🔄 Làm mới</button>
+            <button class="danger" onclick="clearLogs()">🗑️ Xóa logs</button>
+            <button class="danger" onclick="clearOldLogs()">🗑️ Xóa logs cũ (>7 ngày)</button>
+        </div>
+
+        <!-- Logs List -->
+        <div class="logs-container">
+            <div id="logsContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Đang tải logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prevBtn" onclick="prevPage()">← Trước</button>
+            <span id="pageInfo">Trang 1</span>
+            <button id="nextBtn" onclick="nextPage()">Sau →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        let currentType = 'all';
+        const limit = 50;
+
+        // Load logs on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLogs();
+        });
+
+        // Filter change
+        document.getElementById('filterType').addEventListener('change', (e) => {
+            currentType = e.target.value;
+            currentPage = 0;
+            loadLogs();
+        });
+
+        // Load logs from API
+        async function loadLogs() {
+            try {
+                const response = await fetch(`/api/admin/error-logs?type=${currentType}&limit=${limit}&offset=${currentPage * limit}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Lỗi: ' + data.error);
+                    return;
+                }
+
+                // Update statistics
+                updateStats(data.stats, data.total);
+
+                // Render logs
+                renderLogs(data.logs);
+
+                // Update pagination
+                updatePagination(data.total);
+
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logsContent').innerHTML = `
+                    <div class="empty-state">
+                        <div>❌ Lỗi khi tải logs: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Update statistics
+        function updateStats(stats, total) {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            // Clear existing stats except "all"
+            const allCard = statsGrid.querySelector('[data-type="all"]');
+            statsGrid.innerHTML = '';
+            statsGrid.appendChild(allCard);
+            
+            // Update total
+            document.getElementById('totalErrors').textContent = total;
+
+            // Add type-specific stats
+            const typeLabels = {
+                'extraction_failed': 'Extraction Failed',
+                'geo_blocked': 'Geo Blocked',
+                'bot_detection': 'Bot Detection',
+                'video_unavailable': 'Video Unavailable',
+                'age_restricted': 'Age Restricted',
+                'copyright': 'Copyright',
+                'network_error': 'Network Error',
+                'live_video': 'Live Video',
+                'unknown_error': 'Unknown Error'
+            };
+
+            for (const [type, count] of Object.entries(stats)) {
+                if (type === 'all') continue;
+                
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.dataset.type = type;
+                if (currentType === type) card.classList.add('active');
+                
+                card.innerHTML = `
+                    <div class="label">${typeLabels[type] || type}</div>
+                    <div class="value">${count}</div>
+                `;
+                
+                card.onclick = () => {
+                    currentType = type;
+                    currentPage = 0;
+                    document.getElementById('filterType').value = type;
+                    loadLogs();
+                };
+                
+                statsGrid.appendChild(card);
+            }
+        }
+
+        // Render logs
+        function renderLogs(logs) {
+            const container = document.getElementById('logsContent');
+
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>Không có lỗi nào được ghi nhận</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = logs.map(log => `
+                <div class="log-item" data-id="${log.id}">
+                    <div class="log-header">
+                        <span class="log-type ${log.error_type}">${log.error_type}</span>
+                        <span class="log-time">${formatDate(log.created_at)}</span>
+                    </div>
+                    
+                    <div class="log-message">${escapeHtml(log.error_message)}</div>
+                    
+                    <div class="log-details">
+                        ${log.url ? `<div class="log-detail"><strong>URL:</strong> ${escapeHtml(log.url)}</div>` : ''}
+                        ${log.platform ? `<div class="log-detail"><strong>Platform:</strong> ${log.platform}</div>` : ''}
+                        ${log.format ? `<div class="log-detail"><strong>Format:</strong> ${log.format}</div>` : ''}
+                        ${log.quality ? `<div class="log-detail"><strong>Quality:</strong> ${log.quality}</div>` : ''}
+                        ${log.ip_address ? `<div class="log-detail"><strong>IP:</strong> ${log.ip_address}</div>` : ''}
+                        ${log.user_id ? `<div class="log-detail"><strong>User ID:</strong> ${log.user_id}</div>` : ''}
+                    </div>
+                    
+                    ${log.stack_trace ? `<div class="log-stack" id="stack-${log.id}">${escapeHtml(log.stack_trace)}</div>` : ''}
+                    
+                    <div class="log-actions">
+                        ${log.stack_trace ? `<button class="btn-toggle" onclick="toggleStack(${log.id})">📋 Stack Trace</button>` : ''}
+                        <button class="btn-delete" onclick="deleteLog(${log.id})">🗑️ Xóa</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle stack trace
+        function toggleStack(id) {
+            const stack = document.getElementById(`stack-${id}`);
+            stack.classList.toggle('show');
+        }
+
+        // Delete log
+        async function deleteLog(id) {
+            if (!confirm('Bạn có chắc muốn xóa log này?')) return;
+
+            try {
+                const response = await fetch(`/api/admin/error-logs/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    loadLogs();
+                } else {
+                    alert('Lỗi: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+
+        // Clear all logs
+        async function clearLogs() {
+            if (!confirm('Bạn có chắc muốn xóa TẤT CẢ logs?')) return;
+
+            try {
+                const response = await fetch('/api/admin/error-logs/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: currentType })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Đã xóa ${data.deleted} logs`);
+                    loadLogs();
+                } else {
+                    alert('Lỗi: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+
+        // Clear old logs (>7 days)
+        async function clearOldLogs() {
+            if (!confirm('Bạn có chắc muốn xóa logs cũ hơn 7 ngày?')) return;
+
+            try {
+                const response = await fetch('/api/admin/error-logs/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ days: 7 })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Đã xóa ${data.deleted} logs cũ`);
+                    loadLogs();
+                } else {
+                    alert('Lỗi: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+
+        // Refresh logs
+        function refreshLogs() {
+            loadLogs();
+        }
+
+        // Pagination
+        function updatePagination(total) {
+            const pagination = document.getElementById('pagination');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pageInfo = document.getElementById('pageInfo');
+
+            const totalPages = Math.ceil(total / limit);
+
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+
+            pagination.style.display = 'flex';
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage >= totalPages - 1;
+            pageInfo.textContent = `Trang ${currentPage + 1} / ${totalPages}`;
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadLogs();
+            }
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadLogs();
+        }
+
+        // Utility functions
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleString('vi-VN');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

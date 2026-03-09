@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .nav {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .nav a.active {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.active {
+            border: 2px solid #667eea;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls select, .controls button, .controls input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+        }
+
+        .controls button.danger {
+            background: #e74c3c;
+        }
+
+        .controls button.danger:hover {
+            background: #c0392b;
+        }
+
+        .controls input[type="search"] {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .logs-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .log-item {
+            border-bottom: 1px solid #ecf0f1;
+            padding: 15px 20px;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+
+        .log-item:hover {
+            background: #f8f9fa;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .log-level {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .log-level.DEBUG { background: #e7e7e7; color: #383d41; }
+        .log-level.INFO { background: #d1ecf1; color: #0c5460; }
+        .log-level.WARNING { background: #fff3cd; color: #856404; }
+        .log-level.ERROR { background: #f8d7da; color: #721c24; }
+        .log-level.CRITICAL { background: #f5c6cb; color: #721c24; font-weight: 700; }
+
+        .log-time {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+
+        .log-content {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        .log-source {
+            background: #ecf0f1;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #2c3e50;
+            white-space: nowrap;
+        }
+
+        .log-message {
+            flex: 1;
+            color: #2c3e50;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .log-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+
+        .log-detail {
+            display: flex;
+            gap: 5px;
+        }
+
+        .log-detail strong {
+            color: #2c3e50;
+        }
+
+        .log-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .log-actions button {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .additional-data {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .additional-data.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 System Logs Monitor</h1>
+        <div class="subtitle">Theo dõi tất cả hoạt động hệ thống</div>
+    </div>
+
+    <div class="nav">
+        <a href="/admin/dashboard">← Dashboard</a>
+        <a href="/admin/error-logs">Error Logs</a>
+        <a href="/admin/system-logs" class="active">System Logs</a>
+    </div>
+
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card active" data-level="all">
+                <div class="label">Tất cả</div>
+                <div class="value" id="totalLogs">0</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <select id="filterLevel">
+                <option value="all">Tất cả levels</option>
+                <option value="DEBUG">DEBUG</option>
+                <option value="INFO">INFO</option>
+                <option value="WARNING">WARNING</option>
+                <option value="ERROR">ERROR</option>
+                <option value="CRITICAL">CRITICAL</option>
+            </select>
+
+            <select id="filterSource">
+                <option value="all">Tất cả sources</option>
+            </select>
+
+            <input type="search" id="searchBox" placeholder="Tìm kiếm trong logs...">
+
+            <button onclick="refreshLogs()">🔄 Làm mới</button>
+            <button class="danger" onclick="clearLogs()">🗑️ Xóa logs</button>
+            <button class="danger" onclick="clearOldLogs()">🗑️ Xóa logs >7 ngày</button>
+        </div>
+
+        <!-- Logs List -->
+        <div class="logs-container">
+            <div id="logsContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Đang tải logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prevBtn" onclick="prevPage()">← Trước</button>
+            <span id="pageInfo">Trang 1</span>
+            <button id="nextBtn" onclick="nextPage()">Sau →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 0;
+        let currentLevel = 'all';
+        let currentSource = 'all';
+        let searchTerm = '';
+        const limit = 100;
+        let allLogs = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLogs();
+        });
+
+        document.getElementById('filterLevel').addEventListener('change', (e) => {
+            currentLevel = e.target.value;
+            currentPage = 0;
+            loadLogs();
+        });
+
+        document.getElementById('filterSource').addEventListener('change', (e) => {
+            currentSource = e.target.value;
+            currentPage = 0;
+            loadLogs();
+        });
+
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            filterAndRenderLogs();
+        });
+
+        async function loadLogs() {
+            try {
+                const response = await fetch(`/api/admin/system-logs?level=${currentLevel}&source=${currentSource}&limit=${limit}&offset=${currentPage * limit}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Lỗi: ' + data.error);
+                    return;
+                }
+
+                allLogs = data.logs;
+                updateStats(data.level_stats, data.source_stats, data.total);
+                filterAndRenderLogs();
+                updatePagination(data.total);
+
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logsContent').innerHTML = `
+                    <div class="empty-state">
+                        <div>❌ Lỗi khi tải logs: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats(levelStats, sourceStats, total) {
+            const statsGrid = document.getElementById('statsGrid');
+            const allCard = statsGrid.querySelector('[data-level="all"]');
+            statsGrid.innerHTML = '';
+            statsGrid.appendChild(allCard);
+            
+            document.getElementById('totalLogs').textContent = total;
+
+            // Add level stats
+            const levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'];
+            for (const level of levels) {
+                const count = levelStats[level] || 0;
+                if (count === 0) continue;
+                
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.dataset.level = level;
+                if (currentLevel === level) card.classList.add('active');
+                
+                card.innerHTML = `
+                    <div class="label">${level}</div>
+                    <div class="value">${count}</div>
+                `;
+                
+                card.onclick = () => {
+                    currentLevel = level;
+                    currentPage = 0;
+                    document.getElementById('filterLevel').value = level;
+                    loadLogs();
+                };
+                
+                statsGrid.appendChild(card);
+            }
+
+            // Update source filter
+            const sourceFilter = document.getElementById('filterSource');
+            const currentValue = sourceFilter.value;
+            sourceFilter.innerHTML = '<option value="all">Tất cả sources</option>';
+            
+            for (const [source, count] of Object.entries(sourceStats)) {
+                const option = document.createElement('option');
+                option.value = source;
+                option.textContent = `${source} (${count})`;
+                sourceFilter.appendChild(option);
+            }
+            
+            sourceFilter.value = currentValue;
+        }
+
+        function filterAndRenderLogs() {
+            let filtered = allLogs;
+
+            if (searchTerm) {
+                filtered = allLogs.filter(log => 
+                    log.log_message.toLowerCase().includes(searchTerm) ||
+                    (log.log_source && log.log_source.toLowerCase().includes(searchTerm)) ||
+                    (log.url && log.url.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            renderLogs(filtered);
+        }
+
+        function renderLogs(logs) {
+            const container = document.getElementById('logsContent');
+
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div>📭 Không có logs nào</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = logs.map(log => `
+                <div class="log-item" data-id="${log.id}">
+                    <div class="log-header">
+                        <span class="log-level ${log.log_level}">${log.log_level}</span>
+                        <span class="log-time">${formatDate(log.created_at)}</span>
+                    </div>
+                    
+                    <div class="log-content">
+                        ${log.log_source ? `<span class="log-source">${escapeHtml(log.log_source)}</span>` : ''}
+                        <div class="log-message">${escapeHtml(log.log_message)}</div>
+                    </div>
+                    
+                    <div class="log-details">
+                        ${log.url ? `<div class="log-detail"><strong>URL:</strong> ${escapeHtml(log.url)}</div>` : ''}
+                        ${log.method ? `<div class="log-detail"><strong>Method:</strong> ${log.method}</div>` : ''}
+                        ${log.status_code ? `<div class="log-detail"><strong>Status:</strong> ${log.status_code}</div>` : ''}
+                        ${log.execution_time ? `<div class="log-detail"><strong>Time:</strong> ${log.execution_time.toFixed(3)}s</div>` : ''}
+                        ${log.ip_address ? `<div class="log-detail"><strong>IP:</strong> ${log.ip_address}</div>` : ''}
+                        ${log.user_id ? `<div class="log-detail"><strong>User:</strong> ${log.user_id}</div>` : ''}
+                    </div>
+                    
+                    ${log.additional_data ? `
+                        <div class="additional-data" id="data-${log.id}">${escapeHtml(JSON.stringify(log.additional_data, null, 2))}</div>
+                        <div class="log-actions">
+                            <button class="btn-toggle" onclick="toggleData(${log.id})">📋 Data</button>
+                            <button class="btn-delete" onclick="deleteLog(${log.id})">🗑️</button>
+                        </div>
+                    ` : `
+                        <div class="log-actions">
+                            <button class="btn-delete" onclick="deleteLog(${log.id})">🗑️</button>
+                        </div>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        function toggleData(id) {
+            const data = document.getElementById(`data-${id}`);
+            data.classList.toggle('show');
+        }
+
+        async function deleteLog(id) {
+            if (!confirm('Xóa log này?')) return;
+
+            try {
+                const response = await fetch(`/api/admin/system-logs/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    loadLogs();
+                } else {
+                    alert('Lỗi: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+
+        async function clearLogs() {
+            if (!confirm('Xóa TẤT CẢ logs?')) return;
+
+            try {
+                const response = await fetch('/api/admin/system-logs/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ level: currentLevel, source: currentSource })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Đã xóa ${data.deleted} logs`);
+                    loadLogs();
+                } else {
+                    alert('Lỗi: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+
+        async function clearOldLogs() {
+            if (!confirm('Xóa logs cũ hơn 7 ngày?')) return;
+
+            try {
+                const response = await fetch('/api/admin/system-logs/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ days: 7 })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Đã xóa ${data.deleted} logs cũ`);
+                    loadLogs();
+                } else {
+                    alert('Lỗi: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Lỗi: ' + error.message);
+            }
+        }
+
+        function refreshLogs() {
+            loadLogs();
+        }
+
+        function updatePagination(total) {
+            const pagination = document.getElementById('pagination');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pageInfo = document.getElementById('pageInfo');
+
+            const totalPages = Math.ceil(total / limit);
+
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+
+            pagination.style.display = 'flex';
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage >= totalPages - 1;
+            pageInfo.textContent = `Trang ${currentPage + 1} / ${totalPages}`;
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadLogs();
+            }
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadLogs();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleString('vi-VN');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
