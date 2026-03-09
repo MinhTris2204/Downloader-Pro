@@ -95,6 +95,7 @@ async function handleLogin() {
         const resp = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',  // Ensure cookies are sent
             body: JSON.stringify({ login_id: loginId, password: password })
         });
         

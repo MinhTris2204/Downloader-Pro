@@ -658,6 +658,11 @@ def api_login():
         session['user_id'] = user_id
         session['username'] = username
         
+        # Debug logging
+        print(f"[LOGIN DEBUG] Session set for user {username} (ID: {user_id})")
+        print(f"[LOGIN DEBUG] Session data after login: {dict(session)}")
+        print(f"[LOGIN DEBUG] Session permanent: {session.permanent}")
+        
         return jsonify({
             'success': True,
             'message': f'Chào mừng, {username}!',

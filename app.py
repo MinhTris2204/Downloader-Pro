@@ -34,13 +34,15 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 
 # Session configuration for Railway (HTTPS)
-app.config['SESSION_COOKIE_SECURE'] = True  # Only send cookie over HTTPS
+# Only enforce secure cookies in production (Railway sets RAILWAY_ENVIRONMENT)
+is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('FLASK_ENV') == 'production'
+app.config['SESSION_COOKIE_SECURE'] = is_production  # Only send cookie over HTTPS in production
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow same-site requests
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 30  # 30 days
 
-# Fix for Proxy (Railway SSL)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+# Fix for Proxy (Railway SSL) - must be set BEFORE any routes
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1, x_for=1, x_port=1)
 
 # Initialize Socket.IO with eventlet for production
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
@@ -2779,6 +2781,13 @@ def manifest():
 def youtube_download():
     start_time = time.time()
     
+    # Debug session info
+    print(f"[SESSION DEBUG] Session data: {dict(session)}")
+    print(f"[SESSION DEBUG] Has user_id: {'user_id' in session}")
+    print(f"[SESSION DEBUG] Cookie secure: {app.config.get('SESSION_COOKIE_SECURE')}")
+    print(f"[SESSION DEBUG] Request scheme: {request.scheme}")
+    print(f"[SESSION DEBUG] Request headers X-Forwarded-Proto: {request.headers.get('X-Forwarded-Proto')}")
+    
     # Kiểm tra đăng nhập
     if 'user_id' not in session:
         log_system('WARNING', 'Unauthorized YouTube download attempt', 
@@ -3761,6 +3770,26 @@ def debug_env():
         pass
     
     return jsonify(env_info)
+
+@app.route('/api/debug/session-test')
+def debug_session_test():
+    """Test session functionality"""
+    # Try to set a test value
+    if 'test_counter' not in session:
+        session['test_counter'] = 0
+    session['test_counter'] += 1
+    
+    return jsonify({
+        'success': True,
+        'session_data': dict(session),
+        'test_counter': session.get('test_counter'),
+        'has_user_id': 'user_id' in session,
+        'cookie_secure': app.config.get('SESSION_COOKIE_SECURE'),
+        'request_scheme': request.scheme,
+        'is_secure': request.is_secure,
+        'x_forwarded_proto': request.headers.get('X-Forwarded-Proto'),
+        'cookies_received': list(request.cookies.keys())
+    })
 
 @app.route('/api/debug/test-logs')
 def debug_test_logs():
