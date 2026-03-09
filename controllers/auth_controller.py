@@ -998,7 +998,7 @@ def api_check_download():
             'success': False,
             'can_download': False,
             'reason': 'limit_reached',
-            'message': 'Bạn đã hết 2 lượt tải miễn phí trong tuần này. Nâng cấp Premium để tải không giới hạn!',
+            'message': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này. Vui lòng mua Premium để tải không giới hạn!',
             'downloads_used': premium_info['downloads_this_week'],
             'max_free': 2,
             'is_premium': False,

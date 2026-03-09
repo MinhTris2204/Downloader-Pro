@@ -463,6 +463,31 @@ setInterval(() => {
     }
 }, 30000);
 
+// Clear download history older than 3 days
+async function clearDownloadHistory() {
+    if (!confirm('⚠️ Bạn có chắc muốn xóa lịch sử tải xuống cũ hơn 3 ngày?\n\nThao tác này không thể hoàn tác!')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/admin/clear-download-history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`✅ Đã xóa thành công ${data.deleted_count} bản ghi lịch sử tải xuống cũ hơn 3 ngày!`);
+            loadDownloadsHistory(); // Reload the table
+        } else {
+            alert('❌ Lỗi: ' + (data.error || 'Không thể xóa lịch sử'));
+        }
+    } catch (error) {
+        console.error('Error clearing download history:', error);
+        alert('❌ Lỗi kết nối server: ' + error.message);
+    }
+}
 
 // Load settings page
 async function loadSettings() {

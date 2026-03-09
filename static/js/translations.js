@@ -181,8 +181,8 @@ const translations = {
         require_login_btn: '🔑 Đăng nhập ngay',
         require_register_btn: '📝 Đăng ký miễn phí',
         limit_reached_title: 'Hết lượt tải miễn phí!',
-        limit_reached_message: 'Bạn đã sử dụng hết 2 lượt tải miễn phí trong tuần này. Nâng cấp Premium để tải không giới hạn!',
-        upgrade_premium_btn: '👑 Nâng cấp Premium - Tải không giới hạn',
+        limit_reached_message: '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này. Vui lòng mua Premium để tải không giới hạn!',
+        upgrade_premium_btn: '👑 Mua Premium - Tải không giới hạn',
         register_premium_btn: '📝 Đăng ký & Nâng cấp Premium',
         close_btn: 'Đóng',
         
@@ -507,8 +507,8 @@ const translations = {
         require_login_btn: '🔑 Login Now',
         require_register_btn: '📝 Sign Up Free',
         limit_reached_title: 'Free Downloads Limit Reached!',
-        limit_reached_message: 'You have used all 2 free downloads this week. Upgrade to Premium for unlimited downloads!',
-        upgrade_premium_btn: '👑 Upgrade Premium - Unlimited Downloads',
+        limit_reached_message: '🚫 You have used all 2 free downloads this week. Please purchase Premium for unlimited downloads!',
+        upgrade_premium_btn: '👑 Purchase Premium - Unlimited Downloads',
         register_premium_btn: '📝 Sign Up & Upgrade Premium',
         close_btn: 'Close',
         
@@ -833,8 +833,8 @@ const translations = {
         require_login_btn: '🔑 Войти сейчас',
         require_register_btn: '📝 Бесплатная регистрация',
         limit_reached_title: 'Лимит бесплатных загрузок исчерпан!',
-        limit_reached_message: 'Вы использовали все 2 бесплатные загрузки на этой неделе. Обновитесь до Premium для неограниченных загрузок!',
-        upgrade_premium_btn: '👑 Обновить Premium - Неограниченные загрузки',
+        limit_reached_message: '🚫 Вы использовали все 2 бесплатные загрузки на этой неделе. Пожалуйста, купите Premium для неограниченных загрузок!',
+        upgrade_premium_btn: '👑 Купить Premium - Неограниченные загрузки',
         register_premium_btn: '📝 Зарегистрироваться и обновить Premium',
         close_btn: 'Закрыть',
         

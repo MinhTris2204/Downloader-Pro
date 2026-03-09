@@ -905,8 +905,46 @@ def cleanup_old_files():
             print(f"Cleanup task error: {e}")
         time.sleep(300) # Check every 5 mins
 
-# Start cleanup thread
+def cleanup_download_history():
+    """Background task to delete download history older than 3 days"""
+    while True:
+        try:
+            time.sleep(3600)  # Wait 1 hour before first cleanup
+            
+            if not db_pool:
+                print("[WARNING] Database not available for cleanup")
+                continue
+            
+            from datetime import datetime, timedelta
+            three_days_ago = datetime.now() - timedelta(days=3)
+            
+            conn = db_pool.getconn()
+            cursor = conn.cursor()
+            
+            # Delete old download history
+            cursor.execute("""
+                DELETE FROM user_downloads 
+                WHERE download_time < %s
+            """, (three_days_ago,))
+            
+            deleted_count = cursor.rowcount
+            conn.commit()
+            
+            if deleted_count > 0:
+                print(f"[CLEANUP] Deleted {deleted_count} download history records older than 3 days")
+            
+            cursor.close()
+            db_pool.putconn(conn)
+            
+        except Exception as e:
+            print(f"[ERROR] Download history cleanup failed: {e}")
+        
+        time.sleep(86400)  # Run every 24 hours
+
+# Start cleanup threads
 threading.Thread(target=cleanup_old_files, daemon=True).start()
+threading.Thread(target=cleanup_download_history, daemon=True).start()
+print("[INFO] Cleanup threads started - Files: 30min, Download history: 3 days")
 
 def is_valid_youtube_url(url):
     """Validate YouTube URL"""
@@ -3364,6 +3402,58 @@ def api_clear_old_data():
         
     except Exception as e:
         print(f"[ERROR] Clear old data failed: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/clear-download-history', methods=['POST'])
+def api_clear_download_history():
+    """Clear download history older than 3 days"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if not db_pool:
+        return jsonify({'error': 'Database not available'}), 503
+    
+    try:
+        from datetime import datetime, timedelta
+        three_days_ago = datetime.now() - timedelta(days=3)
+        
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Count before delete
+        cursor.execute("""
+            SELECT COUNT(*) FROM user_downloads 
+            WHERE download_time < %s
+        """, (three_days_ago,))
+        count_before = cursor.fetchone()[0]
+        
+        # Delete old records
+        cursor.execute("""
+            DELETE FROM user_downloads 
+            WHERE download_time < %s
+        """, (three_days_ago,))
+        
+        deleted_count = cursor.rowcount
+        conn.commit()
+        
+        # Get remaining count
+        cursor.execute("SELECT COUNT(*) FROM user_downloads")
+        remaining = cursor.fetchone()[0]
+        
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        print(f"[ADMIN] Manually cleared {deleted_count} download history records older than 3 days")
+        
+        return jsonify({
+            'success': True, 
+            'deleted_count': deleted_count,
+            'remaining_count': remaining,
+            'cutoff_date': three_days_ago.isoformat()
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Clear download history failed: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/admin/clear-cache', methods=['POST'])

@@ -589,9 +589,14 @@
         <div class="content-section" id="downloads">
             <div class="section-header">
                 <h2>Lịch sử tải xuống</h2>
-                <button onclick="loadDownloadsHistory()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
-                    <i class="fas fa-sync-alt"></i> Làm mới
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="loadDownloadsHistory()" style="padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-sync-alt"></i> Làm mới
+                    </button>
+                    <button onclick="clearDownloadHistory()" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-trash-alt"></i> Xóa lịch sử cũ (>3 ngày)
+                    </button>
+                </div>
             </div>
             
             <div style="margin-bottom: 20px;">
