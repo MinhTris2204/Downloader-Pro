@@ -717,6 +717,29 @@ def increment_stats(platform='unknown', format_type='mp4', quality='best', succe
     except Exception as e:
         print(f"[ERROR] Stats error: {e}")
 
+def record_user_download(user_id, platform='unknown'):
+    """Record user download for free user limit tracking"""
+    if not db_pool or not user_id:
+        return
+    
+    try:
+        conn = db_pool.getconn()
+        cursor = conn.cursor()
+        
+        # Insert into user_downloads table
+        cursor.execute("""
+            INSERT INTO user_downloads (user_id, platform, download_time)
+            VALUES (%s, %s, CURRENT_TIMESTAMP)
+        """, (str(user_id), platform))
+        
+        conn.commit()
+        cursor.close()
+        db_pool.putconn(conn)
+        
+        print(f"[DOWNLOAD TRACKING] Recorded download for user {user_id} on {platform}")
+    except Exception as e:
+        print(f"[ERROR] Failed to record user download: {e}")
+
 def log_error(error_type, error_message, stack_trace=None, url=None, platform=None, 
               format_type=None, quality=None, user_id=None, request_obj=None):
     """Log error to database for admin monitoring"""
@@ -2798,6 +2821,27 @@ def youtube_download():
             'require_login': True
         }), 401
     
+    # Check free user download limit
+    user_id = session.get('user_id')
+    from controllers.auth_controller import get_user_premium_info
+    
+    premium_info = get_user_premium_info(user_id)
+    if premium_info:
+        is_premium = premium_info.get('is_premium', False)
+        downloads_this_week = premium_info.get('downloads_this_week', 0)
+        
+        # Free users: max 2 downloads per week
+        if not is_premium and downloads_this_week >= 2:
+            log_system('WARNING', f'Free user download limit reached: {downloads_this_week}/2', 
+                       log_source='youtube_download', user_id=user_id, request_obj=request)
+            return jsonify({
+                'success': False,
+                'error': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này.\n\n💎 Nâng cấp Premium để tải không giới hạn!',
+                'limit_reached': True,
+                'downloads_used': downloads_this_week,
+                'max_free': 2
+            }), 403
+    
     data = request.get_json()
     url = data.get('url', '').strip()
     format_type = data.get('format', 'mp4')
@@ -2858,6 +2902,25 @@ def tiktok_download():
             'error': '🔒 Vui lòng đăng nhập để tải xuống',
             'require_login': True
         }), 401
+    
+    # Check free user download limit
+    user_id = session.get('user_id')
+    from controllers.auth_controller import get_user_premium_info
+    
+    premium_info = get_user_premium_info(user_id)
+    if premium_info:
+        is_premium = premium_info.get('is_premium', False)
+        downloads_this_week = premium_info.get('downloads_this_week', 0)
+        
+        # Free users: max 2 downloads per week
+        if not is_premium and downloads_this_week >= 2:
+            return jsonify({
+                'success': False,
+                'error': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này.\n\n💎 Nâng cấp Premium để tải không giới hạn!',
+                'limit_reached': True,
+                'downloads_used': downloads_this_week,
+                'max_free': 2
+            }), 403
     
     data = request.get_json()
     url = data.get('url', '').strip()
@@ -2934,8 +2997,9 @@ def download_file(download_id):
     quality = data.get('quality', 'best')
     increment_stats(platform, format_type, quality, True, tracking_info, user_id)
     
-    # Download tracking removed (premium feature was removed)
-    # record_user_download(db_pool, platform)
+    # Record download for free user limit tracking
+    if user_id:
+        record_user_download(user_id, platform)
     
     return send_file(
         filepath,
