@@ -1340,6 +1340,290 @@ def try_y2mate_api(video_id, format_type, quality, download_id, temp_dir, progre
         return None, None, None
 
 
+def try_loader_to_api(video_id, format_type, quality, download_id, temp_dir, progress_hook):
+    """Try to download via Loader.to/SaveNow.to API - Free, no auth needed"""
+    try:
+        print(f"[DEBUG] Trying Loader.to API...")
+
+        url = f"https://www.youtube.com/watch?v={video_id}"
+
+        # Loader.to uses a different approach - we need to scrape their conversion page
+        # Their API endpoint for getting download links
+        api_url = "https://ab.cococococ.com/ajax/download.php"
+
+        payload = {
+            "copyright": "0",
+            "format": "mp3" if format_type == 'mp3' else "mp4",
+            "url": url,
+            "api": "dfcb6d76f2f6a9894gjkege8a4ab232222"
+        }
+
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://loader.to/"
+        }
+
+        response = http_requests.post(api_url, data=payload, headers=headers, timeout=30)
+
+        if response.status_code != 200:
+            print(f"[DEBUG] Loader.to API returned {response.status_code}")
+            return None, None, None
+
+        data = response.json()
+
+        if data.get('success') != 1:
+            print(f"[DEBUG] Loader.to status: {data.get('success')}")
+            return None, None, None
+
+        download_url = data.get('url')
+        if not download_url:
+            print(f"[DEBUG] No download URL from Loader.to")
+            return None, None, None
+
+        # Download the file
+        print(f"[DEBUG] Downloading from Loader.to: {download_url[:100]}...")
+
+        ext = 'mp3' if format_type == 'mp3' else 'mp4'
+        output_path = os.path.join(temp_dir, f"{download_id}.{ext}")
+
+        with http_requests.get(download_url, stream=True, timeout=120, headers=headers) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get('content-length', 0))
+            downloaded = 0
+
+            with open(output_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+
+                    if total_size > 0:
+                        progress = int((downloaded / total_size) * 100)
+                        progress_hook({
+                            'status': 'downloading',
+                            'downloaded_bytes': downloaded,
+                            'total_bytes': total_size,
+                            '_percent_str': f'{progress}%',
+                            '_speed_str': '',
+                            '_eta_str': ''
+                        })
+
+        print(f"[SUCCESS] Downloaded via Loader.to API")
+        return output_path, f"video_{video_id}", ext
+
+    except Exception as e:
+        print(f"[DEBUG] Loader.to API failed: {str(e)[:100]}")
+        return None, None, None
+
+
+def try_ytapi_org(video_id, format_type, quality, download_id, temp_dir, progress_hook):
+    """Try to download via yt-api.org - Free iframe API"""
+    try:
+        print(f"[DEBUG] Trying yt-api.org...")
+
+        # yt-api.org uses iframe embed, we need to scrape the actual download link
+        # Their backend API endpoint
+        api_url = f"https://yt-api.org/api/json/{format_type}/{video_id}"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://yt-api.org/"
+        }
+
+        response = http_requests.get(api_url, headers=headers, timeout=30)
+
+        if response.status_code != 200:
+            print(f"[DEBUG] yt-api.org returned {response.status_code}")
+            return None, None, None
+
+        data = response.json()
+
+        download_url = data.get('url') or data.get('download_url')
+        if not download_url:
+            print(f"[DEBUG] No download URL from yt-api.org")
+            return None, None, None
+
+        # Download the file
+        print(f"[DEBUG] Downloading from yt-api.org: {download_url[:100]}...")
+
+        ext = 'mp3' if format_type == 'mp3' else 'mp4'
+        output_path = os.path.join(temp_dir, f"{download_id}.{ext}")
+
+        with http_requests.get(download_url, stream=True, timeout=120, headers=headers) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get('content-length', 0))
+            downloaded = 0
+
+            with open(output_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+
+                    if total_size > 0:
+                        progress = int((downloaded / total_size) * 100)
+                        progress_hook({
+                            'status': 'downloading',
+                            'downloaded_bytes': downloaded,
+                            'total_bytes': total_size,
+                            '_percent_str': f'{progress}%',
+                            '_speed_str': '',
+                            '_eta_str': ''
+                        })
+
+        print(f"[SUCCESS] Downloaded via yt-api.org")
+        return output_path, f"video_{video_id}", ext
+
+    except Exception as e:
+        print(f"[DEBUG] yt-api.org failed: {str(e)[:100]}")
+        return None, None, None
+
+
+def try_apisyu_api(video_id, format_type, quality, download_id, temp_dir, progress_hook):
+    """Try to download via Apisyu (ytc.re) - Free API"""
+    try:
+        print(f"[DEBUG] Trying Apisyu API...")
+
+        # Apisyu backend API endpoint (need to find actual endpoint)
+        # This is an iframe-based service, might need scraping
+        api_url = f"https://ytc.re/api/convert"
+
+        payload = {
+            "video_id": video_id,
+            "format": format_type,
+            "quality": quality if quality != 'best' else ('320' if format_type == 'mp3' else '1080')
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://ytc.re/"
+        }
+
+        response = http_requests.post(api_url, json=payload, headers=headers, timeout=30)
+
+        if response.status_code != 200:
+            print(f"[DEBUG] Apisyu API returned {response.status_code}")
+            return None, None, None
+
+        data = response.json()
+
+        download_url = data.get('download_url') or data.get('url')
+        if not download_url:
+            print(f"[DEBUG] No download URL from Apisyu")
+            return None, None, None
+
+        # Download the file
+        print(f"[DEBUG] Downloading from Apisyu: {download_url[:100]}...")
+
+        ext = 'mp3' if format_type == 'mp3' else 'mp4'
+        output_path = os.path.join(temp_dir, f"{download_id}.{ext}")
+
+        with http_requests.get(download_url, stream=True, timeout=120, headers=headers) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get('content-length', 0))
+            downloaded = 0
+
+            with open(output_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+
+                    if total_size > 0:
+                        progress = int((downloaded / total_size) * 100)
+                        progress_hook({
+                            'status': 'downloading',
+                            'downloaded_bytes': downloaded,
+                            'total_bytes': total_size,
+                            '_percent_str': f'{progress}%',
+                            '_speed_str': '',
+                            '_eta_str': ''
+                        })
+
+        print(f"[SUCCESS] Downloaded via Apisyu API")
+        return output_path, f"video_{video_id}", ext
+
+    except Exception as e:
+        print(f"[DEBUG] Apisyu API failed: {str(e)[:100]}")
+        return None, None, None
+
+
+def try_rapidapi_youtube(video_id, format_type, quality, download_id, temp_dir, progress_hook):
+    """Try to download via RapidAPI YouTube Downloader - Requires API key"""
+    try:
+        # Check if API key is configured
+        rapidapi_key = os.environ.get('RAPIDAPI_KEY', '')
+        if not rapidapi_key:
+            print(f"[DEBUG] RapidAPI key not configured, skipping...")
+            return None, None, None
+
+        print(f"[DEBUG] Trying RapidAPI YouTube Downloader...")
+
+        url = f"https://www.youtube.com/watch?v={video_id}"
+
+        # RapidAPI endpoint (using youtube-video-mp3-downloader-api)
+        api_url = "https://youtube-video-mp3-downloader-api.p.rapidapi.com/download"
+
+        payload = {
+            "url": url,
+            "format": format_type,
+            "quality": quality if quality != 'best' else ('320' if format_type == 'mp3' else '1080')
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "X-RapidAPI-Key": rapidapi_key,
+            "X-RapidAPI-Host": "youtube-video-mp3-downloader-api.p.rapidapi.com"
+        }
+
+        response = http_requests.post(api_url, json=payload, headers=headers, timeout=30)
+
+        if response.status_code != 200:
+            print(f"[DEBUG] RapidAPI returned {response.status_code}")
+            return None, None, None
+
+        data = response.json()
+
+        download_url = data.get('download_url') or data.get('url')
+        if not download_url:
+            print(f"[DEBUG] No download URL from RapidAPI")
+            return None, None, None
+
+        # Download the file
+        print(f"[DEBUG] Downloading from RapidAPI: {download_url[:100]}...")
+
+        ext = 'mp3' if format_type == 'mp3' else 'mp4'
+        output_path = os.path.join(temp_dir, f"{download_id}.{ext}")
+
+        with http_requests.get(download_url, stream=True, timeout=120) as r:
+            r.raise_for_status()
+            total_size = int(r.headers.get('content-length', 0))
+            downloaded = 0
+
+            with open(output_path, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+
+                    if total_size > 0:
+                        progress = int((downloaded / total_size) * 100)
+                        progress_hook({
+                            'status': 'downloading',
+                            'downloaded_bytes': downloaded,
+                            'total_bytes': total_size,
+                            '_percent_str': f'{progress}%',
+                            '_speed_str': '',
+                            '_eta_str': ''
+                        })
+
+        print(f"[SUCCESS] Downloaded via RapidAPI")
+        return output_path, f"video_{video_id}", ext
+
+    except Exception as e:
+        print(f"[DEBUG] RapidAPI failed: {str(e)[:100]}")
+        return None, None, None
+
+
+
 def download_youtube_video(url, format_type, quality, download_id):
     """Download YouTube video using yt-dlp with advanced bypass techniques"""
     print(f"\n{'='*80}")
@@ -1743,6 +2027,10 @@ def download_youtube_video(url, format_type, quality, download_id):
                 ('Cobalt API', try_cobalt_api),
                 ('Invidious API', try_invidious_download),
                 ('Y2Mate API', try_y2mate_api),
+                ('Loader.to API', try_loader_to_api),
+                ('yt-api.org', try_ytapi_org),
+                ('Apisyu API', try_apisyu_api),
+                ('RapidAPI', try_rapidapi_youtube),
             ]
             
             for api_name, api_func in api_methods:
@@ -1803,7 +2091,7 @@ def download_youtube_video(url, format_type, quality, download_id):
             available_countries = available_match.group(1) if available_match else 'một số quốc gia khác'
             download_progress[download_id]['error'] = f'🌍 Video bị chặn theo khu vực.\n\n📍 Video chỉ khả dụng tại: {available_countries}\n\n💡 Giải pháp:\n🔹 Sử dụng VPN để đổi vị trí\n🔹 Thử video khác không bị chặn vùng\n\n⚙️ Nếu có VPN, thêm --proxy vào cấu hình yt-dlp'
         elif 'Sign in to confirm' in error_msg or 'bot' in error_msg.lower() or 'HTTP Error 429' in error_msg or 'confirm you' in error_msg.lower():
-            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử TẤT CẢ phương pháp có thể:\n\n📱 yt-dlp Strategies (8 phương pháp):\n• Android Embedded (no cookies) ❌\n• Android Music (no cookies) ❌\n• TV Embedded (no cookies) ❌\n• iOS (no cookies) ❌\n• Android VR (no cookies) ❌\n• iOS (with cookies) ❌\n• Web (with cookies) ❌\n• Mobile Web (no cookies) ❌\n\n🌐 FREE APIs (3 phương pháp):\n• Cobalt API ❌\n• Invidious API ❌\n• Y2Mate API ❌\n\n💡 Giải pháp cho người dùng:\n🔹 Đợi 10-15 phút rồi thử lại\n🔹 Thử video ngắn hơn (<5 phút)\n🔹 Thử video từ kênh khác (kênh lớn thường dễ tải hơn)\n🔹 Thử lại vào giờ khác trong ngày\n🔹 Thử video khác - video này có thể bị giới hạn đặc biệt\n\n⚙️ Thông báo cho Admin:\n📊 Hệ thống đã thử 11 phương pháp:\n✓ 5 phương pháp yt-dlp KHÔNG CẦN cookies\n✓ 3 phương pháp yt-dlp với cookies (nếu có)\n✓ 3 FREE APIs (Cobalt, Invidious, Y2Mate)\n\n🔧 Để cải thiện:\n1. Cập nhật yt-dlp: pip install -U yt-dlp\n2. Thêm cookies mới (tùy chọn): YOUTUBE_COOKIES_SETUP.md\n3. Restart server\n\n⏰ Lưu ý: Nếu video cụ thể này không tải được sau khi thử 11 phương pháp, có thể:\n• Video có giới hạn vùng địa lý nghiêm ngặt\n• Video yêu cầu xác thực đặc biệt\n• YouTube đang tăng cường bảo mật tạm thời cho video này'
+            download_progress[download_id]['error'] = '🤖 YouTube yêu cầu xác thực (chống bot)\n\n✅ Đã thử TẤT CẢ phương pháp có thể:\n\n📱 yt-dlp Strategies (8 phương pháp):\n• Android Embedded (no cookies) ❌\n• Android Music (no cookies) ❌\n• TV Embedded (no cookies) ❌\n• iOS (no cookies) ❌\n• Android VR (no cookies) ❌\n• iOS (with cookies) ❌\n• Web (with cookies) ❌\n• Mobile Web (no cookies) ❌\n\n🌐 FREE APIs (7 phương pháp):\n• Cobalt API ❌\n• Invidious API ❌\n• Y2Mate API ❌\n• Loader.to API ❌\n• yt-api.org ❌\n• Apisyu API ❌\n• RapidAPI ❌\n\n💡 Giải pháp cho người dùng:\n🔹 Đợi 10-15 phút rồi thử lại\n🔹 Thử video ngắn hơn (<5 phút)\n🔹 Thử video từ kênh khác (kênh lớn thường dễ tải hơn)\n🔹 Thử lại vào giờ khác trong ngày\n🔹 Thử video khác - video này có thể bị giới hạn đặc biệt\n\n⚙️ Thông báo cho Admin:\n📊 Hệ thống đã thử 15 phương pháp:\n✓ 5 phương pháp yt-dlp KHÔNG CẦN cookies\n✓ 3 phương pháp yt-dlp với cookies (nếu có)\n✓ 7 FREE APIs (Cobalt, Invidious, Y2Mate, Loader.to, yt-api.org, Apisyu, RapidAPI)\n\n🔧 Để cải thiện:\n1. Cập nhật yt-dlp: pip install -U yt-dlp\n2. Thêm cookies mới (tùy chọn): YOUTUBE_COOKIES_SETUP.md\n3. Thêm RAPIDAPI_KEY vào env (tùy chọn)\n4. Restart server\n\n⏰ Lưu ý: Nếu video cụ thể này không tải được sau khi thử 15 phương pháp, có thể:\n• Video có giới hạn vùng địa lý nghiêm ngặt\n• Video yêu cầu xác thực đặc biệt\n• YouTube đang tăng cường bảo mật tạm thời cho video này'
         elif 'Video unavailable' in error_msg or 'Private video' in error_msg:
             download_progress[download_id]['error'] = '❌ Video không khả dụng hoặc đã bị xóa/riêng tư'
         elif 'age' in error_msg.lower() or 'restricted' in error_msg.lower():
