@@ -495,6 +495,7 @@ def api_verify_otp():
             # Auto login after verification
             session.pop('pending_user_id', None)
             session.pop('pending_email', None)
+            session.permanent = True  # Make session persistent
             session['user_id'] = user_id
             session['username'] = username
             
@@ -653,6 +654,7 @@ def api_login():
             }), 200
         
         # Login success
+        session.permanent = True  # Make session persistent
         session['user_id'] = user_id
         session['username'] = username
         
@@ -723,6 +725,7 @@ def api_google_login():
         
         if user:
             # Existing Google user - login
+            session.permanent = True  # Make session persistent
             session['user_id'] = user[0]
             session['username'] = user[1]
             cursor.close()
@@ -742,6 +745,7 @@ def api_google_login():
             cursor.execute("UPDATE users SET google_id = %s, is_verified = TRUE WHERE id = %s", 
                          (google_id, existing[0]))
             conn.commit()
+            session.permanent = True  # Make session persistent
             session['user_id'] = existing[0]
             session['username'] = existing[1]
             cursor.close()
@@ -777,6 +781,7 @@ def api_google_login():
         cursor.close()
         db_pool.putconn(conn)
         
+        session.permanent = True  # Make session persistent
         session['user_id'] = user_id
         session['username'] = username
         

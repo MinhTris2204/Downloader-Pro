@@ -32,6 +32,13 @@ from utils.tracking import get_full_tracking_info
 app = Flask(__name__)
 # Secret key for session (change this in production!)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
+
+# Session configuration for Railway (HTTPS)
+app.config['SESSION_COOKIE_SECURE'] = True  # Only send cookie over HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow same-site requests
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 30  # 30 days
+
 # Fix for Proxy (Railway SSL)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
