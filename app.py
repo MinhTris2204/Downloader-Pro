@@ -3879,6 +3879,11 @@ def debug_page():
     """Debug page to check server environment"""
     return render_template('debug.html')
 
+@app.route('/test-session')
+def test_session_page():
+    """Test page for session debugging"""
+    return render_template('test_session.html')
+
 @app.route('/test-stats')
 def test_stats():
     """Test page for realtime statistics"""

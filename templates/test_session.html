@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Session - Downloader Pro</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #3b82f6;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #3b82f6;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .success {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Session & Authentication</h1>
+        
+        <div class="test-section">
+            <h3>1. Kiểm tra Session</h3>
+            <button onclick="checkSession()">Check Session Status</button>
+            <pre id="sessionResult">Nhấn nút để kiểm tra...</pre>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Test Set Session</h3>
+            <button onclick="testSetSession()">Set Test Value</button>
+            <pre id="setSessionResult">Nhấn nút để test...</pre>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Test Login</h3>
+            <input type="text" id="testUsername" placeholder="Username hoặc Email" style="padding: 8px; width: 200px; margin-right: 10px;">
+            <input type="password" id="testPassword" placeholder="Password" style="padding: 8px; width: 200px; margin-right: 10px;">
+            <button onclick="testLogin()">Test Login</button>
+            <pre id="loginResult">Nhập thông tin và nhấn nút...</pre>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Kiểm tra Current User</h3>
+            <button onclick="checkCurrentUser()">Check Current User</button>
+            <pre id="userResult">Nhấn nút để kiểm tra...</pre>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Test Cookies</h3>
+            <button onclick="checkCookies()">Check Browser Cookies</button>
+            <pre id="cookiesResult">Nhấn nút để kiểm tra...</pre>
+        </div>
+
+        <p style="margin-top: 30px; text-align: center;">
+            <a href="/" style="color: #3b82f6;">← Về trang chủ</a> | 
+            <a href="/login" style="color: #3b82f6;">Đăng nhập</a> | 
+            <a href="/account" style="color: #3b82f6;">Tài khoản</a>
+        </p>
+    </div>
+
+    <script>
+        async function checkSession() {
+            const result = document.getElementById('sessionResult');
+            result.textContent = 'Đang kiểm tra...';
+            
+            try {
+                const resp = await fetch('/api/auth/session-check', {
+                    credentials: 'same-origin'
+                });
+                const data = await resp.json();
+                result.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.is_logged_in) {
+                    result.innerHTML = '<span class="success">✓ Session hoạt động!</span>\n' + JSON.stringify(data, null, 2);
+                } else {
+                    result.innerHTML = '<span class="error">✗ Chưa đăng nhập</span>\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                result.innerHTML = '<span class="error">Lỗi: ' + err.message + '</span>';
+            }
+        }
+
+        async function testSetSession() {
+            const result = document.getElementById('setSessionResult');
+            result.textContent = 'Đang test...';
+            
+            try {
+                const resp = await fetch('/api/debug/session-test', {
+                    credentials: 'same-origin'
+                });
+                const data = await resp.json();
+                result.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.success) {
+                    result.innerHTML = '<span class="success">✓ Session có thể set/get!</span>\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                result.innerHTML = '<span class="error">Lỗi: ' + err.message + '</span>';
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('loginResult');
+            const username = document.getElementById('testUsername').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!username || !password) {
+                result.innerHTML = '<span class="error">Vui lòng nhập username và password</span>';
+                return;
+            }
+            
+            result.textContent = 'Đang đăng nhập...';
+            
+            try {
+                const resp = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ 
+                        login_id: username, 
+                        password: password 
+                    })
+                });
+                const data = await resp.json();
+                result.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.success) {
+                    result.innerHTML = '<span class="success">✓ Đăng nhập thành công!</span>\n' + JSON.stringify(data, null, 2);
+                    setTimeout(() => {
+                        checkSession();
+                        checkCurrentUser();
+                    }, 500);
+                } else {
+                    result.innerHTML = '<span class="error">✗ Đăng nhập thất bại</span>\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                result.innerHTML = '<span class="error">Lỗi: ' + err.message + '</span>';
+            }
+        }
+
+        async function checkCurrentUser() {
+            const result = document.getElementById('userResult');
+            result.textContent = 'Đang kiểm tra...';
+            
+            try {
+                const resp = await fetch('/api/auth/me', {
+                    credentials: 'same-origin'
+                });
+                const data = await resp.json();
+                result.textContent = JSON.stringify(data, null, 2);
+                
+                if (data.logged_in) {
+                    result.innerHTML = '<span class="success">✓ User đã đăng nhập!</span>\n' + JSON.stringify(data, null, 2);
+                } else {
+                    result.innerHTML = '<span class="error">✗ Chưa đăng nhập</span>\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (err) {
+                result.innerHTML = '<span class="error">Lỗi: ' + err.message + '</span>';
+            }
+        }
+
+        function checkCookies() {
+            const result = document.getElementById('cookiesResult');
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            
+            if (cookies.length === 0 || (cookies.length === 1 && cookies[0] === '')) {
+                result.innerHTML = '<span class="error">✗ Không có cookies nào!</span>';
+            } else {
+                result.innerHTML = '<span class="success">✓ Có ' + cookies.length + ' cookies:</span>\n' + 
+                    cookies.map(c => '  - ' + c.split('=')[0]).join('\n');
+            }
+        }
+
+        // Auto check on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+            checkCookies();
+        });
+    </script>
+</body>
+</html>
