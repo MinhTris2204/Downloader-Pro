@@ -3755,6 +3755,12 @@ def debug_env():
     # Check Node.js
     try:
         result = subprocess.run(['node', '--version'], capture_output=True, text=True, timeout=5)
+        env_info['node_installed'] = True
+        env_info['node_version'] = result.stdout.strip()
+    except:
+        pass
+    
+    return jsonify(env_info)
 
 @app.route('/api/debug/test-logs')
 def debug_test_logs():
