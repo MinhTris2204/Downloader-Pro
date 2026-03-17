@@ -2003,10 +2003,8 @@ def download_youtube_video(url, format_type, quality, download_id):
             final_filename = filename + '.mp4'
             mime_type = 'video/mp4'
 
-        # Add cookies if available (helps with age-restricted and some blocked videos)
-        if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
-            ydl_opts['cookiefile'] = COOKIES_FILE_PATH
-            print(f"[INFO] Using cookies from: {COOKIES_FILE_PATH}")
+        # Download the video/audio
+        print(f"[INFO] Starting download with yt-dlp...")
 
         # Add proxy if configured
         if HTTP_PROXY:
@@ -2020,11 +2018,12 @@ def download_youtube_video(url, format_type, quality, download_id):
             print(f"[INFO] Using SOCKS proxy")
 
         # Configure extractor_args to bypass bot detection
-        # Use tv_embedded + mweb clients which don't require PO token
+        # web_safari: HLS formats không cần PO Token (theo yt-dlp wiki 2025)
+        # android_vr: không cần PO Token
+        # web_embedded: không cần PO Token (chỉ embeddable videos)
         extractor_args = {
             'youtube': {
-                'player_client': ['tv_embedded', 'mweb', 'ios'],
-                'skip': ['hls', 'dash'] if format_type == 'mp3' else [],
+                'player_client': ['web_safari', 'android_vr', 'web_embedded'],
             }
         }
 
@@ -2038,16 +2037,19 @@ def download_youtube_video(url, format_type, quality, download_id):
             print(f"[INFO] Using PO Token (no visitor_data)")
 
         ydl_opts['extractor_args'] = extractor_args
-
-        # Extra options to reduce bot detection
         ydl_opts['sleep_interval'] = 1
         ydl_opts['max_sleep_interval'] = 3
         ydl_opts['http_headers'] = {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
         }
 
-        # Download the video/audio
-        print(f"[INFO] Starting download with yt-dlp...")
+        # Cookies: chỉ dùng nếu có file hợp lệ
+        if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
+            ydl_opts['cookiefile'] = COOKIES_FILE_PATH
+            print(f"[INFO] Using cookies from: {COOKIES_FILE_PATH}")
+        else:
+            print(f"[INFO] No cookies - cookieless mode")
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             title = info.get('title', 'video')
@@ -4173,8 +4175,7 @@ def youtube_info():
         
         info_extractor_args = {
             'youtube': {
-                'player_client': ['tv_embedded', 'mweb', 'ios'],
-                'skip': ['hls', 'dash']
+                'player_client': ['web_safari', 'android_vr', 'web_embedded'],
             }
         }
         if YOUTUBE_PO_TOKEN and YOUTUBE_VISITOR_DATA:
