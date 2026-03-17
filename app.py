@@ -304,6 +304,20 @@ if DATABASE_URL:
     safe_url = DATABASE_URL.split('@')[0].split(':')[0:2]
     print(f"[DEBUG] DATABASE_URL detected: {safe_url[0]}://user:***@...")
 
+from contextlib import contextmanager
+
+@contextmanager
+def get_db_conn():
+    """Context manager để tự động trả connection về pool, tránh leak."""
+    conn = db_pool.getconn()
+    try:
+        yield conn
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        db_pool.putconn(conn)
+
 def init_db():
     """Initialize database connection and create tables"""
     global db_pool
@@ -327,8 +341,8 @@ def init_db():
             db_url = db_url.replace('postgres://', 'postgresql://', 1)
         
         # Create connection pool
-        db_pool = psycopg2.pool.SimpleConnectionPool(
-            1, 10,
+        db_pool = psycopg2.pool.ThreadedConnectionPool(
+            2, 20,
             db_url
         )
         

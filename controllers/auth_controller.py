@@ -198,6 +198,7 @@ def get_current_user():
     if not db_pool:
         print(f"[GET_CURRENT_USER] No db_pool available")
         return None
+    conn = None
     try:
         conn = db_pool.getconn()
         cursor = conn.cursor()
@@ -207,7 +208,6 @@ def get_current_user():
         """, (user_id,))
         row = cursor.fetchone()
         cursor.close()
-        db_pool.putconn(conn)
         if row:
             print(f"[GET_CURRENT_USER] Found user: {row[1]} (ID: {row[0]})")
             return {
@@ -222,6 +222,9 @@ def get_current_user():
             print(f"[GET_CURRENT_USER] User ID {user_id} not found in database")
     except Exception as e:
         print(f"[AUTH ERROR] Get current user failed: {e}")
+    finally:
+        if conn:
+            db_pool.putconn(conn)
     return None
 
 def get_user_premium_info(user_id):
@@ -229,6 +232,7 @@ def get_user_premium_info(user_id):
     from app import db_pool
     if not db_pool:
         return None
+    conn = None
     try:
         conn = db_pool.getconn()
         cursor = conn.cursor()
@@ -268,7 +272,6 @@ def get_user_premium_info(user_id):
         free_downloads_left = max(0, 2 - downloads_this_week)
         
         cursor.close()
-        db_pool.putconn(conn)
         
         return {
             'is_premium': is_premium,
@@ -291,6 +294,9 @@ def get_user_premium_info(user_id):
             'free_downloads_left': 2,
             'max_free_downloads': 2
         }
+    finally:
+        if conn:
+            db_pool.putconn(conn)
 
 
 # ===== AUTH PAGES =====
@@ -390,48 +396,46 @@ def api_register():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        # Check existing username
-        cursor.execute("SELECT id, is_verified FROM users WHERE username = %s", (username,))
-        existing_username = cursor.fetchone()
-        
-        if existing_username and existing_username[1]:
+        try:
+            # Check existing username
+            cursor.execute("SELECT id, is_verified FROM users WHERE username = %s", (username,))
+            existing_username = cursor.fetchone()
+            
+            if existing_username and existing_username[1]:
+                return jsonify({'success': False, 'error': 'Tên đăng nhập đã tồn tại'}), 200
+                
+            # Check existing email
+            cursor.execute("SELECT id, is_verified FROM users WHERE email = %s", (email,))
+            existing_email = cursor.fetchone()
+            
+            if existing_email and existing_email[1]:
+                return jsonify({'success': False, 'error': 'Email đã được sử dụng và xác thực'}), 200
+                
+            # If unverified account exists with this username or email, delete it so user can register again
+            if (existing_username and not existing_username[1]) or (existing_email and not existing_email[1]):
+                cursor.execute("DELETE FROM users WHERE (username = %s OR email = %s) AND is_verified = FALSE", (username, email))
+            
+            # Create user (unverified)
+            password_hash = hash_password(password)
+            cursor.execute("""
+                INSERT INTO users (username, email, password_hash, is_verified, created_at)
+                VALUES (%s, %s, %s, FALSE, CURRENT_TIMESTAMP)
+                RETURNING id
+            """, (username, email, password_hash))
+            
+            user_id = cursor.fetchone()[0]
+            
+            # Generate and save OTP
+            otp = generate_otp()
+            cursor.execute("""
+                INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
+                VALUES (%s, %s, %s, 'verify', NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
+            """, (user_id, email, otp))
+            
+            conn.commit()
+        finally:
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Tên đăng nhập đã tồn tại'}), 200
-            
-        # Check existing email
-        cursor.execute("SELECT id, is_verified FROM users WHERE email = %s", (email,))
-        existing_email = cursor.fetchone()
-        
-        if existing_email and existing_email[1]:
-            cursor.close()
-            db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Email đã được sử dụng và xác thực'}), 200
-            
-        # If unverified account exists with this username or email, delete it so user can register again
-        if (existing_username and not existing_username[1]) or (existing_email and not existing_email[1]):
-            cursor.execute("DELETE FROM users WHERE (username = %s OR email = %s) AND is_verified = FALSE", (username, email))
-        
-        # Create user (unverified)
-        password_hash = hash_password(password)
-        cursor.execute("""
-            INSERT INTO users (username, email, password_hash, is_verified, created_at)
-            VALUES (%s, %s, %s, FALSE, CURRENT_TIMESTAMP)
-            RETURNING id
-        """, (username, email, password_hash))
-        
-        user_id = cursor.fetchone()[0]
-        
-        # Generate and save OTP
-        otp = generate_otp()
-        cursor.execute("""
-            INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
-            VALUES (%s, %s, %s, 'verify', NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
-        """, (user_id, email, otp))
-        
-        conn.commit()
-        cursor.close()
-        db_pool.putconn(conn)
         
         # Send OTP email
         send_otp_email(email, otp, 'verify')
@@ -479,60 +483,56 @@ def api_verify_otp():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        # Verify OTP
-        cursor.execute("""
-            SELECT id FROM otp_codes 
-            WHERE user_id = %s AND email = %s AND otp_code = %s 
-            AND purpose = %s AND is_used = FALSE AND expires_at > NOW()
-            ORDER BY created_at DESC LIMIT 1
-        """, (user_id, email, otp, purpose))
-        
-        otp_row = cursor.fetchone()
-        if not otp_row:
+        try:
+            # Verify OTP
+            cursor.execute("""
+                SELECT id FROM otp_codes 
+                WHERE user_id = %s AND email = %s AND otp_code = %s 
+                AND purpose = %s AND is_used = FALSE AND expires_at > NOW()
+                ORDER BY created_at DESC LIMIT 1
+            """, (user_id, email, otp, purpose))
+            
+            otp_row = cursor.fetchone()
+            if not otp_row:
+                return jsonify({'success': False, 'error': 'Mã OTP không đúng hoặc đã hết hạn'}), 200
+            
+            # Mark OTP as used
+            cursor.execute("UPDATE otp_codes SET is_used = TRUE WHERE id = %s", (otp_row[0],))
+            
+            if purpose == 'verify':
+                # Mark user as verified
+                cursor.execute("UPDATE users SET is_verified = TRUE WHERE id = %s", (user_id,))
+                
+                # Get username for session
+                cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+                username = cursor.fetchone()[0]
+                
+                # Auto login after verification
+                session.pop('pending_user_id', None)
+                session.pop('pending_email', None)
+                session.permanent = True  # Make session persistent
+                session['user_id'] = user_id
+                session['username'] = username
+                
+                conn.commit()
+                return jsonify({
+                    'success': True,
+                    'message': 'Xác thực thành công! Chào mừng bạn đến Downloader Pro.',
+                    'redirect': '/'
+                })
+            else:
+                # Password reset - allow changing password
+                session['reset_verified'] = True
+                
+                conn.commit()
+                return jsonify({
+                    'success': True,
+                    'message': 'Xác thực OTP thành công. Bạn có thể đặt mật khẩu mới.',
+                    'can_reset': True
+                })
+        finally:
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Mã OTP không đúng hoặc đã hết hạn'}), 200
-        
-        # Mark OTP as used
-        cursor.execute("UPDATE otp_codes SET is_used = TRUE WHERE id = %s", (otp_row[0],))
-        
-        if purpose == 'verify':
-            # Mark user as verified
-            cursor.execute("UPDATE users SET is_verified = TRUE WHERE id = %s", (user_id,))
-            
-            # Get username for session
-            cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
-            username = cursor.fetchone()[0]
-            
-            # Auto login after verification
-            session.pop('pending_user_id', None)
-            session.pop('pending_email', None)
-            session.permanent = True  # Make session persistent
-            session['user_id'] = user_id
-            session['username'] = username
-            
-            conn.commit()
-            cursor.close()
-            db_pool.putconn(conn)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Xác thực thành công! Chào mừng bạn đến Downloader Pro.',
-                'redirect': '/'
-            })
-        else:
-            # Password reset - allow changing password
-            session['reset_verified'] = True
-            
-            conn.commit()
-            cursor.close()
-            db_pool.putconn(conn)
-            
-            return jsonify({
-                'success': True,
-                'message': 'Xác thực OTP thành công. Bạn có thể đặt mật khẩu mới.',
-                'can_reset': True
-            })
         
     except Exception as e:
         print(f"[AUTH ERROR] Verify OTP failed: {e}")
@@ -563,31 +563,31 @@ def api_resend_otp():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        cursor.execute("""
-            SELECT created_at FROM otp_codes 
-            WHERE user_id = %s AND purpose = %s 
-            ORDER BY created_at DESC LIMIT 1
-        """, (user_id, purpose))
-        
-        last_otp = cursor.fetchone()
-        if last_otp:
-            time_diff = (datetime.now() - last_otp[0]).total_seconds()
-            if time_diff < 60:
-                cursor.close()
-                db_pool.putconn(conn)
-                wait = int(60 - time_diff)
-                return jsonify({'success': False, 'error': f'Vui lòng đợi {wait} giây trước khi gửi lại'}), 429
-        
-        # Generate new OTP
-        otp = generate_otp()
-        cursor.execute("""
-            INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
-            VALUES (%s, %s, %s, %s, NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
-        """, (user_id, email, otp, purpose))
-        
-        conn.commit()
-        cursor.close()
-        db_pool.putconn(conn)
+        try:
+            cursor.execute("""
+                SELECT created_at FROM otp_codes 
+                WHERE user_id = %s AND purpose = %s 
+                ORDER BY created_at DESC LIMIT 1
+            """, (user_id, purpose))
+            
+            last_otp = cursor.fetchone()
+            if last_otp:
+                time_diff = (datetime.now() - last_otp[0]).total_seconds()
+                if time_diff < 60:
+                    wait = int(60 - time_diff)
+                    return jsonify({'success': False, 'error': f'Vui lòng đợi {wait} giây trước khi gửi lại'}), 429
+            
+            # Generate new OTP
+            otp = generate_otp()
+            cursor.execute("""
+                INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
+                VALUES (%s, %s, %s, %s, NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
+            """, (user_id, email, otp, purpose))
+            
+            conn.commit()
+        finally:
+            cursor.close()
+            db_pool.putconn(conn)
         
         send_otp_email(email, otp, purpose)
         
@@ -617,16 +617,18 @@ def api_login():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        # Login by username or email
-        cursor.execute("""
-            SELECT id, username, email, password_hash, is_verified 
-            FROM users 
-            WHERE username = %s OR email = %s
-        """, (login_id, login_id))
-        
-        user = cursor.fetchone()
-        cursor.close()
-        db_pool.putconn(conn)
+        try:
+            # Login by username or email
+            cursor.execute("""
+                SELECT id, username, email, password_hash, is_verified 
+                FROM users 
+                WHERE username = %s OR email = %s
+            """, (login_id, login_id))
+            
+            user = cursor.fetchone()
+        finally:
+            cursor.close()
+            db_pool.putconn(conn)
         
         if not user:
             return jsonify({'success': False, 'error': 'Tài khoản không tồn tại'}), 200
@@ -648,13 +650,15 @@ def api_login():
             otp = generate_otp()
             conn = db_pool.getconn()
             cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
-                VALUES (%s, %s, %s, 'verify', NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
-            """, (user_id, email, otp))
-            conn.commit()
-            cursor.close()
-            db_pool.putconn(conn)
+            try:
+                cursor.execute("""
+                    INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
+                    VALUES (%s, %s, %s, 'verify', NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
+                """, (user_id, email, otp))
+                conn.commit()
+            finally:
+                cursor.close()
+                db_pool.putconn(conn)
             
             send_otp_email(email, otp, 'verify')
             
@@ -736,77 +740,75 @@ def api_google_login():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        # Check if user exists with this Google ID
-        cursor.execute("SELECT id, username FROM users WHERE google_id = %s", (google_id,))
-        user = cursor.fetchone()
-        
-        if user:
-            # Existing Google user - login
-            session.permanent = True  # Make session persistent
-            session['user_id'] = user[0]
-            session['username'] = user[1]
-            cursor.close()
-            db_pool.putconn(conn)
-            return jsonify({
-                'success': True,
-                'message': f'Chào mừng, {user[1]}!',
-                'redirect': '/'
-            })
-        
-        # Check if email already exists (linking account)
-        cursor.execute("SELECT id, username FROM users WHERE email = %s", (email,))
-        existing = cursor.fetchone()
-        
-        if existing:
-            # Link Google to existing account
-            cursor.execute("UPDATE users SET google_id = %s, is_verified = TRUE WHERE id = %s", 
-                         (google_id, existing[0]))
+        try:
+            # Check if user exists with this Google ID
+            cursor.execute("SELECT id, username FROM users WHERE google_id = %s", (google_id,))
+            user = cursor.fetchone()
+            
+            if user:
+                # Existing Google user - login
+                session.permanent = True
+                session['user_id'] = user[0]
+                session['username'] = user[1]
+                return jsonify({
+                    'success': True,
+                    'message': f'Chào mừng, {user[1]}!',
+                    'redirect': '/'
+                })
+            
+            # Check if email already exists (linking account)
+            cursor.execute("SELECT id, username FROM users WHERE email = %s", (email,))
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Link Google to existing account
+                cursor.execute("UPDATE users SET google_id = %s, is_verified = TRUE WHERE id = %s", 
+                             (google_id, existing[0]))
+                conn.commit()
+                session.permanent = True
+                session['user_id'] = existing[0]
+                session['username'] = existing[1]
+                return jsonify({
+                    'success': True,
+                    'message': f'Đã liên kết Google. Chào mừng, {existing[1]}!',
+                    'redirect': '/'
+                })
+            
+            # New user - create account
+            username = email.split('@')[0].lower()
+            username = re.sub(r'[^a-z0-9_]', '', username)[:20]
+            
+            # Ensure unique username
+            base_username = username
+            counter = 1
+            while True:
+                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                if not cursor.fetchone():
+                    break
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            cursor.execute("""
+                INSERT INTO users (username, email, google_id, is_verified, created_at)
+                VALUES (%s, %s, %s, TRUE, CURRENT_TIMESTAMP)
+                RETURNING id
+            """, (username, email, google_id))
+            
+            user_id = cursor.fetchone()[0]
             conn.commit()
-            session.permanent = True  # Make session persistent
-            session['user_id'] = existing[0]
-            session['username'] = existing[1]
-            cursor.close()
-            db_pool.putconn(conn)
+            
+            session.permanent = True
+            session['user_id'] = user_id
+            session['username'] = username
+            
             return jsonify({
                 'success': True,
-                'message': f'Đã liên kết Google. Chào mừng, {existing[1]}!',
+                'message': f'Đăng ký thành công! Chào mừng, {username}!',
                 'redirect': '/'
             })
-        
-        # New user - create account
-        username = email.split('@')[0].lower()
-        username = re.sub(r'[^a-z0-9_]', '', username)[:20]
-        
-        # Ensure unique username
-        base_username = username
-        counter = 1
-        while True:
-            cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
-            if not cursor.fetchone():
-                break
-            username = f"{base_username}{counter}"
-            counter += 1
-        
-        cursor.execute("""
-            INSERT INTO users (username, email, google_id, is_verified, created_at)
-            VALUES (%s, %s, %s, TRUE, CURRENT_TIMESTAMP)
-            RETURNING id
-        """, (username, email, google_id))
-        
-        user_id = cursor.fetchone()[0]
-        conn.commit()
-        cursor.close()
-        db_pool.putconn(conn)
-        
-        session.permanent = True  # Make session persistent
-        session['user_id'] = user_id
-        session['username'] = username
-        
-        return jsonify({
-            'success': True,
-            'message': f'Đăng ký thành công! Chào mừng, {username}!',
-            'redirect': '/'
-        })
+        finally:
+            cursor.close()
+            db_pool.putconn(conn)
         
     except Exception as e:
         print(f"[AUTH ERROR] Google login failed: {e}")
@@ -855,26 +857,26 @@ def api_forgot_password():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        cursor.execute("SELECT id, username FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
-        
-        if not user:
+        try:
+            cursor.execute("SELECT id, username FROM users WHERE email = %s", (email,))
+            user = cursor.fetchone()
+            
+            if not user:
+                return jsonify({'success': False, 'error': 'Email không tồn tại trong hệ thống'}), 200
+            
+            user_id = user[0]
+            
+            # Generate OTP
+            otp = generate_otp()
+            cursor.execute("""
+                INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
+                VALUES (%s, %s, %s, 'reset', NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
+            """, (user_id, email, otp))
+            
+            conn.commit()
+        finally:
             cursor.close()
             db_pool.putconn(conn)
-            return jsonify({'success': False, 'error': 'Email không tồn tại trong hệ thống'}), 200
-        
-        user_id = user[0]
-        
-        # Generate OTP
-        otp = generate_otp()
-        cursor.execute("""
-            INSERT INTO otp_codes (user_id, email, otp_code, purpose, expires_at, created_at)
-            VALUES (%s, %s, %s, 'reset', NOW() + INTERVAL '5 minutes', CURRENT_TIMESTAMP)
-        """, (user_id, email, otp))
-        
-        conn.commit()
-        cursor.close()
-        db_pool.putconn(conn)
         
         send_otp_email(email, otp, 'reset')
         
@@ -919,10 +921,12 @@ def api_reset_password():
         
         conn = db_pool.getconn()
         cursor = conn.cursor()
-        cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (password_hash, user_id))
-        conn.commit()
-        cursor.close()
-        db_pool.putconn(conn)
+        try:
+            cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (password_hash, user_id))
+            conn.commit()
+        finally:
+            cursor.close()
+            db_pool.putconn(conn)
         
         # Clear session
         session.pop('reset_user_id', None)
@@ -1033,6 +1037,7 @@ def api_record_download():
         user_id = hashlib.md5(ip_address.encode()).hexdigest()
     
     if db_pool:
+        conn = None
         try:
             conn = db_pool.getconn()
             cursor = conn.cursor()
@@ -1042,9 +1047,11 @@ def api_record_download():
             """, (user_id, platform))
             conn.commit()
             cursor.close()
-            db_pool.putconn(conn)
         except Exception as e:
             print(f"[AUTH ERROR] Record download failed: {e}")
+        finally:
+            if conn:
+                db_pool.putconn(conn)
     
     return jsonify({'success': True})
 
@@ -1090,24 +1097,26 @@ def api_purchase_premium():
         conn = db_pool.getconn()
         cursor = conn.cursor()
         
-        # Create pending premium subscription
-        from datetime import datetime, timedelta
-        starts_at = datetime.now()
-        expires_at = datetime.now() + timedelta(days=30)
-        
-        cursor.execute("""
-            INSERT INTO premium_subscriptions 
-            (user_id, order_code, amount, starts_at, expires_at, is_active,
-             payment_status, donor_email, ip_address, user_agent, created_at)
-            VALUES (%s, %s, %s, %s, %s, FALSE, %s, %s, %s, %s, CURRENT_TIMESTAMP)
-        """, (
-            user['id'], str(order_code), amount, starts_at, expires_at,
-            'pending', user['email'], ip_address, user_agent
-        ))
-        
-        conn.commit()
-        cursor.close()
-        db_pool.putconn(conn)
+        try:
+            # Create pending premium subscription
+            from datetime import datetime, timedelta
+            starts_at = datetime.now()
+            expires_at = datetime.now() + timedelta(days=30)
+            
+            cursor.execute("""
+                INSERT INTO premium_subscriptions 
+                (user_id, order_code, amount, starts_at, expires_at, is_active,
+                 payment_status, donor_email, ip_address, user_agent, created_at)
+                VALUES (%s, %s, %s, %s, %s, FALSE, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+            """, (
+                user['id'], str(order_code), amount, starts_at, expires_at,
+                'pending', user['email'], ip_address, user_agent
+            ))
+            
+            conn.commit()
+        finally:
+            cursor.close()
+            db_pool.putconn(conn)
         
         # Build return URL with premium flag
         base_url = os.environ.get('BASE_URL', request.host_url.rstrip('/'))
@@ -1167,6 +1176,7 @@ def premium_return():
     order_code = request.args.get('orderCode', '')
     
     if db_pool and order_code:
+        conn = None
         try:
             conn = db_pool.getconn()
             cursor = conn.cursor()
@@ -1182,12 +1192,14 @@ def premium_return():
             
             conn.commit()
             cursor.close()
-            db_pool.putconn(conn)
             print(f">>> Premium subscription {order_code} activated")
         except Exception as e:
             print(f">>> Error processing premium return: {e}")
             import traceback
             traceback.print_exc()
+        finally:
+            if conn:
+                db_pool.putconn(conn)
     
     return redirect('/account?premium=success')
 
@@ -1200,6 +1212,7 @@ def premium_cancel():
     order_code = request.args.get('orderCode', '')
     
     if db_pool and order_code:
+        conn = None
         try:
             conn = db_pool.getconn()
             cursor = conn.cursor()
@@ -1212,8 +1225,10 @@ def premium_cancel():
             
             conn.commit()
             cursor.close()
-            db_pool.putconn(conn)
         except Exception as e:
             print(f">>> Error processing premium cancel: {e}")
+        finally:
+            if conn:
+                db_pool.putconn(conn)
     
     return redirect('/account?premium=cancel')
