@@ -2019,6 +2019,33 @@ def download_youtube_video(url, format_type, quality, download_id):
             ydl_opts['proxy'] = SOCKS_PROXY
             print(f"[INFO] Using SOCKS proxy")
 
+        # Configure extractor_args to bypass bot detection
+        # Use tv_embedded + mweb clients which don't require PO token
+        extractor_args = {
+            'youtube': {
+                'player_client': ['tv_embedded', 'mweb', 'ios'],
+                'skip': ['hls', 'dash'] if format_type == 'mp3' else [],
+            }
+        }
+
+        # Add PO token if available (from env var YOUTUBE_PO_TOKEN)
+        if YOUTUBE_PO_TOKEN and YOUTUBE_VISITOR_DATA:
+            extractor_args['youtube']['po_token'] = [f'web+{YOUTUBE_PO_TOKEN}']
+            extractor_args['youtube']['visitor_data'] = [YOUTUBE_VISITOR_DATA]
+            print(f"[INFO] Using PO Token for YouTube")
+        elif YOUTUBE_PO_TOKEN:
+            extractor_args['youtube']['po_token'] = [f'web+{YOUTUBE_PO_TOKEN}']
+            print(f"[INFO] Using PO Token (no visitor_data)")
+
+        ydl_opts['extractor_args'] = extractor_args
+
+        # Extra options to reduce bot detection
+        ydl_opts['sleep_interval'] = 1
+        ydl_opts['max_sleep_interval'] = 3
+        ydl_opts['http_headers'] = {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+        }
+
         # Download the video/audio
         print(f"[INFO] Starting download with yt-dlp...")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -4144,27 +4171,31 @@ def youtube_info():
         if not url or not is_valid_youtube_url(url):
             return jsonify({'success': False, 'error': 'URL không hợp lệ'}), 400
         
+        info_extractor_args = {
+            'youtube': {
+                'player_client': ['tv_embedded', 'mweb', 'ios'],
+                'skip': ['hls', 'dash']
+            }
+        }
+        if YOUTUBE_PO_TOKEN and YOUTUBE_VISITOR_DATA:
+            info_extractor_args['youtube']['po_token'] = [f'web+{YOUTUBE_PO_TOKEN}']
+            info_extractor_args['youtube']['visitor_data'] = [YOUTUBE_VISITOR_DATA]
+        elif YOUTUBE_PO_TOKEN:
+            info_extractor_args['youtube']['po_token'] = [f'web+{YOUTUBE_PO_TOKEN}']
+
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
             'extract_flat': True,
             'socket_timeout': 15,
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android', 'ios', 'web'],
-                    'skip': ['hls', 'dash']
-                }
-            },
+            'extractor_args': info_extractor_args,
             'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
             }
         }
+
+        if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
+            ydl_opts['cookiefile'] = COOKIES_FILE_PATH
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
