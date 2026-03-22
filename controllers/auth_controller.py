@@ -255,21 +255,21 @@ def get_user_premium_info(user_id):
             delta = premium_expires - datetime.now()
             premium_days_left = max(0, delta.days)
         
-        # Count downloads this week (for free users)
+        # Count downloads this month (for free users)
         # Try to get from user_downloads table, if not exists, return 0
-        downloads_this_week = 0
+        downloads_this_month = 0
         try:
             cursor.execute("""
                 SELECT COUNT(*) FROM user_downloads 
                 WHERE user_id = %s 
-                AND download_time >= DATE_TRUNC('week', CURRENT_DATE)
+                AND download_time >= DATE_TRUNC('month', CURRENT_DATE)
             """, (str(user_id),))
-            downloads_this_week = cursor.fetchone()[0]
+            downloads_this_month = cursor.fetchone()[0]
         except Exception as e:
             print(f"[AUTH WARNING] user_downloads table not found or error: {e}")
-            downloads_this_week = 0
+            downloads_this_month = 0
         
-        free_downloads_left = max(0, 2 - downloads_this_week)
+        free_downloads_left = max(0, 2 - downloads_this_month)
         
         cursor.close()
         
@@ -277,7 +277,8 @@ def get_user_premium_info(user_id):
             'is_premium': is_premium,
             'premium_expires': premium_expires.isoformat() if premium_expires else None,
             'premium_days_left': premium_days_left,
-            'downloads_this_week': downloads_this_week,
+            'downloads_this_month': downloads_this_month,
+            'downloads_this_week': downloads_this_month,  # backward compat
             'free_downloads_left': free_downloads_left if not is_premium else -1,  # -1 = unlimited
             'max_free_downloads': 2
         }
@@ -996,13 +997,13 @@ def api_check_download():
             'logged_in': True
         })
     
-    # Check if user has exceeded free download limit (2 per week)
+    # Check if user has exceeded free download limit (2 per month)
     if premium_info and premium_info['downloads_this_week'] >= 2:
         return jsonify({
             'success': False,
             'can_download': False,
             'reason': 'limit_reached',
-            'message': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này. Vui lòng mua Premium để tải không giới hạn!',
+            'message': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tháng này. Vui lòng mua Premium để tải không giới hạn!',
             'downloads_used': premium_info['downloads_this_week'],
             'max_free': 2,
             'is_premium': False,

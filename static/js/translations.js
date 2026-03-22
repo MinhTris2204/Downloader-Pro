@@ -163,7 +163,7 @@ const translations = {
         
         // Download limit messages
         limit_title: '⚠️ Đã hết lượt tải miễn phí',
-        limit_message: 'Bạn đã sử dụng hết 2 lượt tải miễn phí trong tuần này.',
+        limit_message: 'Bạn đã sử dụng hết 2 lượt tải miễn phí trong tháng này.',
         limit_explanation: 'Để duy trì và phát triển website, chúng tôi cần chi phí cho server, băng thông và bảo trì. Mong bạn thông cảm!',
         limit_premium_title: '✨ Nâng cấp Premium',
         limit_premium_benefits: '• Tải xuống không giới hạn trong 30 ngày\n• Không quảng cáo\n• Ưu tiên hỗ trợ',
@@ -177,11 +177,11 @@ const translations = {
         
         // Require login modal
         require_login_title: 'Yêu cầu đăng nhập',
-        require_login_message: 'Vui lòng đăng nhập để tải xuống. Đăng ký miễn phí để nhận 2 lượt tải mỗi tuần!',
+        require_login_message: 'Vui lòng đăng nhập để tải xuống. Đăng ký miễn phí để nhận 2 lượt tải mỗi tháng!',
         require_login_btn: '🔑 Đăng nhập ngay',
         require_register_btn: '📝 Đăng ký miễn phí',
         limit_reached_title: 'Hết lượt tải miễn phí!',
-        limit_reached_message: '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này. Vui lòng mua Premium để tải không giới hạn!',
+        limit_reached_message: '🚫 Bạn đã hết 2 lượt tải miễn phí trong tháng này. Vui lòng mua Premium để tải không giới hạn!',
         upgrade_premium_btn: '👑 Mua Premium - Tải không giới hạn',
         register_premium_btn: '📝 Đăng ký & Nâng cấp Premium',
         close_btn: 'Đóng',
@@ -315,7 +315,7 @@ const translations = {
         premium_expires: 'Hết hạn',
         premium_days_left: 'Còn',
         premium_days: 'ngày',
-        premium_free_downloads_week: 'Lượt tải miễn phí tuần này',
+        premium_free_downloads_week: 'Lượt tải miễn phí tháng này',
         premium_start_date: 'Bắt đầu',
         premium_amount: 'Số tiền',
         premium_status: 'Trạng thái',
@@ -489,7 +489,7 @@ const translations = {
         
         // Download limit messages
         limit_title: '⚠️ Free Downloads Limit Reached',
-        limit_message: 'You have used all 2 free downloads this week.',
+        limit_message: 'You have used all 2 free downloads this month.',
         limit_explanation: 'To maintain and develop the website, we need costs for servers, bandwidth and maintenance. Thank you for understanding!',
         limit_premium_title: '✨ Upgrade to Premium',
         limit_premium_benefits: '• Unlimited downloads for 30 days\n• No ads\n• Priority support',
@@ -503,11 +503,11 @@ const translations = {
         
         // Require login modal
         require_login_title: 'Login Required',
-        require_login_message: 'Please login to download. Sign up for free to get 2 downloads per week!',
+        require_login_message: 'Please login to download. Sign up for free to get 2 downloads per month!',
         require_login_btn: '🔑 Login Now',
         require_register_btn: '📝 Sign Up Free',
         limit_reached_title: 'Free Downloads Limit Reached!',
-        limit_reached_message: '🚫 You have used all 2 free downloads this week. Please purchase Premium for unlimited downloads!',
+        limit_reached_message: '🚫 You have used all 2 free downloads this month. Please purchase Premium for unlimited downloads!',
         upgrade_premium_btn: '👑 Purchase Premium - Unlimited Downloads',
         register_premium_btn: '📝 Sign Up & Upgrade Premium',
         close_btn: 'Close',
@@ -641,7 +641,7 @@ const translations = {
         premium_expires: 'Expires',
         premium_days_left: 'Remaining',
         premium_days: 'days',
-        premium_free_downloads_week: 'Free downloads this week',
+        premium_free_downloads_week: 'Free downloads this month',
         premium_start_date: 'Start Date',
         premium_amount: 'Amount',
         premium_status: 'Status',

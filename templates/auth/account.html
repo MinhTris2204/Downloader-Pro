@@ -524,7 +524,7 @@
 
                     <div class="progress-container">
                         <div class="progress-label">
-                            <span><span data-i18n="account_used">Đã sử dụng</span>: {{ premium_info.downloads_this_week or 0 }}/2 <span data-i18n="account_times">lượt</span></span>
+                            <span><span data-i18n="account_used">Đã sử dụng</span>: {{ premium_info.downloads_this_month or 0 }}/2 <span data-i18n="account_times">lượt</span> <span style="color:#64748b;font-weight:400;">trong tháng này</span></span>
                             <span style="font-weight: 700; color: #3b82f6;">
                                 {% if premium_info and premium_info.free_downloads_left|int > 0 %}
                                     <span data-i18n="account_remaining">Còn</span> {{ premium_info.free_downloads_left }} <span data-i18n="account_times">lượt</span>
@@ -534,7 +534,7 @@
                             </span>
                         </div>
                         <div class="progress-bar-wrapper">
-                            <div class="progress-bar-fill" style="width: {{ ((premium_info.downloads_this_week or 0) / 2 * 100)|int }}%"></div>
+                            <div class="progress-bar-fill" style="width: {{ ((premium_info.downloads_this_month or 0) / 2 * 100)|int }}%"></div>
                         </div>
                     </div>
 

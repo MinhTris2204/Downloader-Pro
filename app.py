@@ -2911,13 +2911,13 @@ def youtube_download():
         is_premium = premium_info.get('is_premium', False)
         downloads_this_week = premium_info.get('downloads_this_week', 0)
         
-        # Free users: max 2 downloads per week
+        # Free users: max 2 downloads per month
         if not is_premium and downloads_this_week >= 2:
             log_system('WARNING', f'Free user download limit reached: {downloads_this_week}/2', 
                        log_source='youtube_download', user_id=user_id, request_obj=request)
             return jsonify({
                 'success': False,
-                'error': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này.\n\n💎 Nâng cấp Premium để tải không giới hạn!',
+                'error': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tháng này.\n\n💎 Nâng cấp Premium để tải không giới hạn!',
                 'limit_reached': True,
                 'downloads_used': downloads_this_week,
                 'max_free': 2
@@ -2993,11 +2993,11 @@ def tiktok_download():
         is_premium = premium_info.get('is_premium', False)
         downloads_this_week = premium_info.get('downloads_this_week', 0)
         
-        # Free users: max 2 downloads per week
+        # Free users: max 2 downloads per month
         if not is_premium and downloads_this_week >= 2:
             return jsonify({
                 'success': False,
-                'error': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tuần này.\n\n💎 Nâng cấp Premium để tải không giới hạn!',
+                'error': '🚫 Bạn đã hết 2 lượt tải miễn phí trong tháng này.\n\n💎 Nâng cấp Premium để tải không giới hạn!',
                 'limit_reached': True,
                 'downloads_used': downloads_this_week,
                 'max_free': 2
@@ -4139,15 +4139,15 @@ def premium_page():
                         'amount': amount
                     }
                 
-                # Get usage info (downloads this week for free users)
+                # Get usage info (downloads this month for free users)
                 if not user_info['is_premium']:
                     cursor.execute("""
                         SELECT COUNT(*) FROM user_downloads 
                         WHERE user_id = %s 
-                        AND download_time >= DATE_TRUNC('week', CURRENT_DATE)
+                        AND download_time >= DATE_TRUNC('month', CURRENT_DATE)
                     """, (user_id,))
-                    downloads_this_week = cursor.fetchone()[0]
-                    usage_info['free_downloads_left'] = max(0, 2 - downloads_this_week)
+                    downloads_this_month = cursor.fetchone()[0]
+                    usage_info['free_downloads_left'] = max(0, 2 - downloads_this_month)
             
             cursor.close()
             db_pool.putconn(conn)
