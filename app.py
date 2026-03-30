@@ -2130,12 +2130,11 @@ def download_youtube_video(url, format_type, quality, download_id):
             print(f"[INFO] Using SOCKS proxy")
 
         # Configure extractor_args to bypass bot detection
-        # android: không cần PO Token, ổn định nhất 2025
-        # android_vr: fallback tốt
-        # web_embedded: cho embeddable videos
+        # tv_embedded + android: không cần n-challenge solving, không cần JS runtime
         extractor_args = {
             'youtube': {
-                'player_client': ['android', 'android_vr', 'web_embedded'],
+                'player_client': ['tv_embedded', 'android', 'web_embedded'],
+                'skip': ['translated_subs'],
             }
         }
 
@@ -2151,13 +2150,31 @@ def download_youtube_video(url, format_type, quality, download_id):
         ydl_opts['extractor_args'] = extractor_args
         ydl_opts['sleep_interval'] = 1
         ydl_opts['max_sleep_interval'] = 5
+        # Android TV User-Agent - bypasses n-challenge requirement
         ydl_opts['http_headers'] = {
-            'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
+            'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/6.0 TV Safari/538.1',
         }
+
+        # Check if bgutil provider is running (port 4416)
+        bgutil_running = False
+        try:
+            import socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1)
+            result = s.connect_ex(('127.0.0.1', 4416))
+            s.close()
+            bgutil_running = (result == 0)
+        except:
+            pass
+
+        if bgutil_running:
+            ydl_opts['extractor_args']['youtube']['pot_provider'] = ['bgutil']
+            print(f"[INFO] bgutil POT provider active on port 4416")
+        else:
+            print(f"[INFO] bgutil not running - using tv_embedded client (no JS needed)")
 
         # Cookies: kiểm tra hợp lệ trước khi dùng
         if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
-            # Kiểm tra file cookies có nội dung hợp lệ không (> 100 bytes)
             cookies_size = os.path.getsize(COOKIES_FILE_PATH)
             if cookies_size > 100:
                 ydl_opts['cookiefile'] = COOKIES_FILE_PATH
@@ -2165,7 +2182,7 @@ def download_youtube_video(url, format_type, quality, download_id):
             else:
                 print(f"[WARNING] Cookies file too small ({cookies_size} bytes), skipping")
         else:
-            print(f"[INFO] No cookies - cookieless mode (bot detection may occur)")
+            print(f"[INFO] No cookies - cookieless mode")
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)

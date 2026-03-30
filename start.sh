@@ -22,21 +22,26 @@ echo "========================================="
 echo "Starting bgutil POT provider..."
 echo "========================================="
 
-# Try to start bgutil in background (optional, won't fail if not available)
-if /opt/venv/bin/python -m bgutil_ytdlp_pot_provider --host 0.0.0.0 --port 4416 > /tmp/bgutil.log 2>&1 & then
-    BGUTIL_PID=$!
-    echo "bgutil started with PID: $BGUTIL_PID"
-    sleep 2
-    
-    # Check if running
-    if ps -p $BGUTIL_PID > /dev/null 2>&1; then
-        echo "✅ bgutil is running"
-    else
-        echo "⚠️ bgutil failed to start (will use fallback)"
-        cat /tmp/bgutil.log 2>/dev/null || true
-    fi
+echo ""
+echo "========================================="
+echo "Starting bgutil POT provider..."
+echo "========================================="
+
+# Check Node.js availability (required by bgutil)
+echo "Node.js: $(node --version 2>/dev/null || echo 'not found')"
+
+# Start bgutil on localhost only
+/opt/venv/bin/python -m bgutil_ytdlp_pot_provider --host 127.0.0.1 --port 4416 > /tmp/bgutil.log 2>&1 &
+BGUTIL_PID=$!
+echo "bgutil started with PID: $BGUTIL_PID"
+sleep 3
+
+# Check if running
+if ps -p $BGUTIL_PID > /dev/null 2>&1; then
+    echo "✅ bgutil is running on port 4416"
 else
-    echo "⚠️ bgutil not available (will use fallback)"
+    echo "⚠️ bgutil failed to start (will use tv_embedded fallback)"
+    cat /tmp/bgutil.log 2>/dev/null | head -30 || true
 fi
 
 echo ""
