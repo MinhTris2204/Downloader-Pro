@@ -1905,6 +1905,118 @@ def try_rapidapi_youtube(video_id, format_type, quality, download_id, temp_dir, 
 
 
 
+def _try_invidious_fallback(url, format_type, quality, download_id, temp_dir, filename):
+    """Fallback: dùng Invidious public API khi yt-dlp bị bot detection"""
+    import re as _re
+    
+    # Extract video ID
+    vid_match = _re.search(r'(?:v=|youtu\.be/|/v/|/embed/)([a-zA-Z0-9_-]{11})', url)
+    if not vid_match:
+        return False
+    
+    video_id = vid_match.group(1)
+    print(f"[INVIDIOUS] Trying fallback for video: {video_id}")
+    
+    for instance in INVIDIOUS_INSTANCES:
+        try:
+            api_url = f"{instance}/api/v1/videos/{video_id}"
+            resp = http_requests.get(api_url, timeout=10)
+            if resp.status_code != 200:
+                continue
+            
+            data = resp.json()
+            title = data.get('title', 'video')
+            
+            # Find best stream URL
+            adaptive_formats = data.get('adaptiveFormats', [])
+            format_streams = data.get('formatStreams', [])
+            
+            download_url = None
+            
+            if format_type == 'mp3':
+                # Find best audio
+                audio_formats = [f for f in adaptive_formats if f.get('type', '').startswith('audio/')]
+                if audio_formats:
+                    audio_formats.sort(key=lambda x: x.get('bitrate', 0), reverse=True)
+                    download_url = audio_formats[0].get('url')
+            else:
+                # Find best video quality
+                target_height = int(quality) if quality and quality.isdigit() else 720
+                video_formats = [f for f in format_streams if 'video/mp4' in f.get('type', '')]
+                if not video_formats:
+                    video_formats = format_streams
+                
+                # Sort by quality, pick closest to target
+                def get_height(f):
+                    res = f.get('resolution', '0p')
+                    try:
+                        return int(res.replace('p', ''))
+                    except:
+                        return 0
+                
+                video_formats.sort(key=get_height, reverse=True)
+                for fmt in video_formats:
+                    h = get_height(fmt)
+                    if h <= target_height:
+                        download_url = fmt.get('url')
+                        break
+                if not download_url and video_formats:
+                    download_url = video_formats[-1].get('url')
+            
+            if not download_url:
+                continue
+            
+            # Download the file
+            print(f"[INVIDIOUS] Downloading from {instance}...")
+            download_progress[download_id]['status'] = 'downloading'
+            download_progress[download_id]['progress'] = 10
+            
+            ext = 'mp3' if format_type == 'mp3' else 'mp4'
+            final_filename = filename + f'.{ext}'
+            filepath = os.path.join(temp_dir, final_filename)
+            mime_type = 'audio/mpeg' if format_type == 'mp3' else 'video/mp4'
+            
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            r = http_requests.get(download_url, headers=headers, stream=True, timeout=60)
+            r.raise_for_status()
+            
+            total = int(r.headers.get('content-length', 0))
+            downloaded = 0
+            
+            with open(filepath, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=65536):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total > 0:
+                            pct = round((downloaded / total) * 100, 1)
+                            download_progress[download_id]['progress'] = pct
+            
+            download_data[download_id] = {
+                'filepath': filepath,
+                'title': title,
+                'mime_type': mime_type,
+                'ext': ext,
+                'timestamp': time.time(),
+                'platform': 'youtube',
+                'format': format_type,
+                'quality': quality
+            }
+            download_progress[download_id]['status'] = 'completed'
+            download_progress[download_id]['filename'] = final_filename
+            download_progress[download_id]['title'] = title
+            
+            print(f"[INVIDIOUS] Success via {instance}: {title}")
+            return True
+            
+        except Exception as e:
+            print(f"[INVIDIOUS] Failed {instance}: {e}")
+            continue
+    
+    print(f"[INVIDIOUS] All instances failed")
+    return False
+
+
 def download_youtube_video(url, format_type, quality, download_id):
     """Download YouTube video using yt-dlp - Optimized and stable version"""
     print(f"\n{'='*80}")
@@ -2018,11 +2130,12 @@ def download_youtube_video(url, format_type, quality, download_id):
             print(f"[INFO] Using SOCKS proxy")
 
         # Configure extractor_args to bypass bot detection
-        # Ưu tiên: android_vr > web_safari > web_embedded (không cần PO Token)
-        # Fallback: mobileapp nếu các client trên bị chặn
+        # android: không cần PO Token, ổn định nhất 2025
+        # android_vr: fallback tốt
+        # web_embedded: cho embeddable videos
         extractor_args = {
             'youtube': {
-                'player_client': ['android_vr', 'web_safari', 'web_embedded', 'mobileapp'],
+                'player_client': ['android', 'android_vr', 'web_embedded'],
             }
         }
 
@@ -2042,15 +2155,15 @@ def download_youtube_video(url, format_type, quality, download_id):
             'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
         }
 
-        # Cookies: ưu tiên file cookies nếu có
+        # Cookies: kiểm tra hợp lệ trước khi dùng
         if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
-            ydl_opts['cookiefile'] = COOKIES_FILE_PATH
-            print(f"[INFO] Using cookies from: {COOKIES_FILE_PATH}")
-        elif OAUTH_TOKEN_FILE and os.path.exists(OAUTH_TOKEN_FILE):
-            # OAuth token as fallback
-            ydl_opts['username'] = 'oauth2'
-            ydl_opts['password'] = ''
-            print(f"[INFO] Using OAuth token")
+            # Kiểm tra file cookies có nội dung hợp lệ không (> 100 bytes)
+            cookies_size = os.path.getsize(COOKIES_FILE_PATH)
+            if cookies_size > 100:
+                ydl_opts['cookiefile'] = COOKIES_FILE_PATH
+                print(f"[INFO] Using cookies from: {COOKIES_FILE_PATH} ({cookies_size} bytes)")
+            else:
+                print(f"[WARNING] Cookies file too small ({cookies_size} bytes), skipping")
         else:
             print(f"[INFO] No cookies - cookieless mode (bot detection may occur)")
 
@@ -2097,9 +2210,13 @@ def download_youtube_video(url, format_type, quality, download_id):
         elif 'not available' in error_msg.lower() and 'country' in error_msg.lower():
             error_type = 'geo_blocked'
             user_message = 'Video bị chặn theo khu vực'
-        elif 'Sign in' in error_msg or 'bot' in error_msg.lower() or '429' in error_msg:
+        elif 'Sign in' in error_msg or 'bot' in error_msg.lower() or '429' in error_msg or 'cookies' in error_msg.lower():
             error_type = 'bot_detection'
-            user_message = 'Hệ thống đang bận. Vui lòng thử lại sau'
+            # Try Invidious fallback for bot detection
+            print(f"[INFO] Bot detection - trying Invidious fallback...")
+            if _try_invidious_fallback(url, format_type, quality, download_id, temp_dir, filename):
+                return  # Fallback succeeded
+            user_message = '⚠️ YouTube đang chặn tải xuống. Vui lòng thử lại sau vài phút hoặc liên hệ admin để cập nhật cookies.'
         elif 'unavailable' in error_msg.lower() or 'private' in error_msg.lower():
             error_type = 'video_unavailable'
             user_message = 'Video không khả dụng'
