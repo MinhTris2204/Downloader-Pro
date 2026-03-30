@@ -521,7 +521,7 @@ function showDownloadLimitModal(data) {
                 <p>${data.message || t.limit_reached_message}</p>
                 <div class="limit-actions">
                     ${isLoggedIn ? 
-                        `<a href="/account" class="premium-action-btn">${t.upgrade_premium_btn}</a>` :
+                        `<a href="/premium" class="premium-action-btn">${t.upgrade_premium_btn}</a>` :
                         `<a href="/register" class="premium-action-btn">${t.register_premium_btn}</a>
                          <a href="/login" class="premium-action-btn">${t.require_login_btn}</a>`
                     }
@@ -622,8 +622,8 @@ function showDownloadCounter(premium) {
     bar.id = 'downloadCounterBar';
     bar.style.cssText = 'position:fixed;bottom:20px;right:20px;background:rgba(30,30,50,0.92);color:#fff;padding:10px 16px;border-radius:12px;font-size:0.85em;z-index:9000;box-shadow:0 4px 15px rgba(0,0,0,0.3);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);';
     bar.innerHTML = left > 0
-        ? `📥 Còn <strong style="color:#6ee7b7">${left}/${max}</strong> lượt tải miễn phí tháng này · <a href="/account" style="color:#a78bfa;text-decoration:none;">Nâng cấp Premium</a>`
-        : `🚫 Hết lượt tải miễn phí · <a href="/account" style="color:#f87171;text-decoration:none;">Nâng cấp Premium</a>`;
+        ? `📥 Còn <strong style="color:#6ee7b7">${left}/${max}</strong> lượt tải miễn phí tháng này · <a href="/premium" style="color:#a78bfa;text-decoration:none;">Nâng cấp Premium</a>`
+        : `🚫 Hết lượt tải miễn phí · <a href="/premium" style="color:#f87171;text-decoration:none;">Nâng cấp Premium</a>`;
     document.body.appendChild(bar);
     
     // Auto hide after 8 seconds
