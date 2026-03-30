@@ -575,6 +575,9 @@ function updateHeaderForUser(user, premium) {
     if (isPremium) {
         hideDonationPromo();
         hideAds();
+    } else {
+        // Show free download counter for free users
+        showDownloadCounter(premium);
     }
 }
 
@@ -606,6 +609,27 @@ function updateMobileMenuForUser(user, premium) {
     sidebar.appendChild(section);
 }
 
+function showDownloadCounter(premium) {
+    if (!premium) return;
+    const left = premium.free_downloads_left !== undefined ? premium.free_downloads_left : 2;
+    const max = premium.max_free_downloads || 2;
+    
+    // Remove existing counter
+    const existing = document.getElementById('downloadCounterBar');
+    if (existing) existing.remove();
+    
+    const bar = document.createElement('div');
+    bar.id = 'downloadCounterBar';
+    bar.style.cssText = 'position:fixed;bottom:20px;right:20px;background:rgba(30,30,50,0.92);color:#fff;padding:10px 16px;border-radius:12px;font-size:0.85em;z-index:9000;box-shadow:0 4px 15px rgba(0,0,0,0.3);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);';
+    bar.innerHTML = left > 0
+        ? `📥 Còn <strong style="color:#6ee7b7">${left}/${max}</strong> lượt tải miễn phí tháng này · <a href="/account" style="color:#a78bfa;text-decoration:none;">Nâng cấp Premium</a>`
+        : `🚫 Hết lượt tải miễn phí · <a href="/account" style="color:#f87171;text-decoration:none;">Nâng cấp Premium</a>`;
+    document.body.appendChild(bar);
+    
+    // Auto hide after 8 seconds
+    setTimeout(() => { if (bar.parentNode) bar.remove(); }, 8000);
+}
+
 function hideDonationPromo() {
     // Hide donation/support prompts for premium users
     const donationBanner = document.querySelector('.donation-promo-banner');
@@ -613,13 +637,18 @@ function hideDonationPromo() {
     
     const supportBanner = document.querySelector('.support-banner');
     if (supportBanner) supportBanner.style.display = 'none';
+    
+    // Mark premium so donation-promo.js won't show modal
+    window._isPremiumUser = true;
 }
 
 function hideAds() {
-    // Hide Google Ads for premium users
+    // Hide Google Ads and click ads for premium users
     document.querySelectorAll('.adsbygoogle, ins.adsbygoogle').forEach(ad => {
         ad.style.display = 'none';
     });
+    // Disable click-based ad script by marking premium
+    window._isPremiumUser = true;
 }
 
 // ===== Password Strength =====
@@ -662,10 +691,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.setAttribute('data-theme', 'dark');
     }
     
-    // Load user status on homepage
-    if (window.location.pathname === '/' || window.location.pathname === '') {
-        loadUserStatus();
-    }
+    // Load user status on all pages (for premium ad hiding and download counter)
+    loadUserStatus();
     
     // Enter key support for forms
     document.querySelectorAll('.auth-form input').forEach(input => {

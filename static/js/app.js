@@ -292,8 +292,8 @@ async function downloadYoutube() {
         if (data.success) {
             showProgress('youtube', data.download_id);
             
-            // Show donation promo after starting download
-            if (typeof showDonationPromoOnDownload === 'function') {
+            // Show donation promo only for free users (server tells us)
+            if (data.show_promo && typeof showDonationPromoOnDownload === 'function') {
                 showDonationPromoOnDownload();
             }
         } else {
@@ -701,8 +701,8 @@ async function downloadTiktok() {
         if (data.success) {
             showProgress('tiktok', data.download_id);
             
-            // Show donation promo after starting download
-            if (typeof showDonationPromoOnDownload === 'function') {
+            // Show donation promo only for free users (server tells us)
+            if (data.show_promo && typeof showDonationPromoOnDownload === 'function') {
                 showDonationPromoOnDownload();
             }
         } else {

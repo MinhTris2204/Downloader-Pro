@@ -86,6 +86,9 @@
             
             function clickTbEventInit() {
                 document.addEventListener('click', function (e) {
+                    // Skip if premium user (set by auth.js)
+                    if (window._isPremiumUser) return;
+                    
                     clickCount++;
                     
                     // Chỉ mở quảng cáo sau N lần click và đã hết cooldown

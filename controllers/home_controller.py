@@ -11,31 +11,10 @@ class HomeController:
         """Trang chủ"""
         premium_info = None
         
-        # Kiểm tra nếu user đã đăng nhập
         if session.get('user_id'):
             try:
-                from app import db_pool
-                
-                if db_pool:
-                    conn = db_pool.getconn()
-                    cursor = conn.cursor()
-                    
-                    # Lấy thông tin premium
-                    cursor.execute("""
-                        SELECT is_premium, premium_expires 
-                        FROM users 
-                        WHERE id = %s
-                    """, (session['user_id'],))
-                    
-                    result = cursor.fetchone()
-                    if result:
-                        premium_info = {
-                            'is_premium': result[0],
-                            'premium_expires': result[1]
-                        }
-                    
-                    cursor.close()
-                    db_pool.putconn(conn)
+                from controllers.auth_controller import get_user_premium_info
+                premium_info = get_user_premium_info(session['user_id'])
             except Exception as e:
                 print(f"Error getting premium info: {e}")
         

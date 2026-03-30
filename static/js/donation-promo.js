@@ -386,7 +386,9 @@ function closeDonationPromo() {
 }
 
 // Show promo immediately when download starts (not random)
+// Only show for non-premium users
 function showDonationPromoOnDownload() {
+    if (window._isPremiumUser) return; // Skip for premium users
     showDonationPromo();
 }
 

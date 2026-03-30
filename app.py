@@ -2018,12 +2018,11 @@ def download_youtube_video(url, format_type, quality, download_id):
             print(f"[INFO] Using SOCKS proxy")
 
         # Configure extractor_args to bypass bot detection
-        # web_safari: HLS formats không cần PO Token (theo yt-dlp wiki 2025)
-        # android_vr: không cần PO Token
-        # web_embedded: không cần PO Token (chỉ embeddable videos)
+        # Ưu tiên: android_vr > web_safari > web_embedded (không cần PO Token)
+        # Fallback: mobileapp nếu các client trên bị chặn
         extractor_args = {
             'youtube': {
-                'player_client': ['web_safari', 'android_vr', 'web_embedded'],
+                'player_client': ['android_vr', 'web_safari', 'web_embedded', 'mobileapp'],
             }
         }
 
@@ -2038,17 +2037,22 @@ def download_youtube_video(url, format_type, quality, download_id):
 
         ydl_opts['extractor_args'] = extractor_args
         ydl_opts['sleep_interval'] = 1
-        ydl_opts['max_sleep_interval'] = 3
+        ydl_opts['max_sleep_interval'] = 5
         ydl_opts['http_headers'] = {
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36',
+            'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
         }
 
-        # Cookies: chỉ dùng nếu có file hợp lệ
+        # Cookies: ưu tiên file cookies nếu có
         if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
             ydl_opts['cookiefile'] = COOKIES_FILE_PATH
             print(f"[INFO] Using cookies from: {COOKIES_FILE_PATH}")
+        elif OAUTH_TOKEN_FILE and os.path.exists(OAUTH_TOKEN_FILE):
+            # OAuth token as fallback
+            ydl_opts['username'] = 'oauth2'
+            ydl_opts['password'] = ''
+            print(f"[INFO] Using OAuth token")
         else:
-            print(f"[INFO] No cookies - cookieless mode")
+            print(f"[INFO] No cookies - cookieless mode (bot detection may occur)")
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
@@ -2971,7 +2975,7 @@ def youtube_download():
     return jsonify({
         'success': True, 
         'download_id': download_id,
-        'show_promo': True  # Always show promo opportunity
+        'show_promo': not is_premium  # Only show promo for free users
     })
 
 @app.route('/api/tiktok/download', methods=['POST'])
@@ -3028,7 +3032,7 @@ def tiktok_download():
     return jsonify({
         'success': True, 
         'download_id': download_id,
-        'show_promo': True  # Always show promo opportunity
+        'show_promo': not is_premium  # Only show promo for free users
     })
 
 @app.route('/api/progress/<download_id>')
