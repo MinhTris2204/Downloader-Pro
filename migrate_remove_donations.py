@@ -41,34 +41,39 @@ try:
     
     conn.commit()
     
-    # Step 2: Migrate data from donations to premium_subscriptions
+    # Step 2: Migrate data from donations to premium_subscriptions (only if table exists)
     print("[INFO] Migrating payment data from donations to premium_subscriptions...")
     
-    cursor.execute("""
-        UPDATE premium_subscriptions ps
-        SET 
-            payment_status = d.payment_status,
-            payment_method = d.payment_method,
-            transaction_id = d.transaction_id,
-            donor_email = d.donor_email,
-            ip_address = d.ip_address,
-            user_agent = d.user_agent,
-            paid_at = d.paid_at
-        FROM donations d
-        WHERE ps.order_code = d.order_code
-        AND d.payment_status = 'success'
-    """)
+    cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'donations')")
+    donations_exists = cursor.fetchone()[0]
     
-    updated_count = cursor.rowcount
-    print(f"  ✓ Updated {updated_count} premium subscriptions with payment data")
-    
-    conn.commit()
-    
-    # Step 3: Drop donations table
-    print("[INFO] Dropping donations table...")
-    cursor.execute("DROP TABLE IF EXISTS donations CASCADE")
-    conn.commit()
-    print("  ✓ Donations table dropped")
+    if donations_exists:
+        cursor.execute("""
+            UPDATE premium_subscriptions ps
+            SET 
+                payment_status = d.payment_status,
+                payment_method = d.payment_method,
+                transaction_id = d.transaction_id,
+                donor_email = d.donor_email,
+                ip_address = d.ip_address,
+                user_agent = d.user_agent,
+                paid_at = d.paid_at
+            FROM donations d
+            WHERE ps.order_code = d.order_code
+            AND d.payment_status = 'success'
+        """)
+        updated_count = cursor.rowcount
+        print(f"  ✓ Updated {updated_count} premium subscriptions with payment data")
+        conn.commit()
+        
+        # Step 3: Drop donations table
+        print("[INFO] Dropping donations table...")
+        cursor.execute("DROP TABLE IF EXISTS donations CASCADE")
+        conn.commit()
+        print("  ✓ Donations table dropped")
+    else:
+        updated_count = 0
+        print("  ℹ donations table not found - already migrated or never existed, skipping")
     
     cursor.close()
     conn.close()
