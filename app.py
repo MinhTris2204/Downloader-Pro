@@ -2084,6 +2084,14 @@ def download_youtube_video(url, format_type, quality, download_id):
                 COOKIES_INVALID = True
                 print(f"[WARNING] Cookies expired - auto-disabled for future requests")
 
+        class YtdlLogger:
+            def warning(self, msg):
+                warning_hook(msg)
+            def error(self, msg):
+                pass
+            def debug(self, msg):
+                pass
+
         # Configure yt-dlp options based on format
         if format_type == 'mp3':
             # Audio download - extract best audio and convert to MP3
@@ -2102,7 +2110,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 }],
                 'quiet': False,
                 'no_warnings': False,
-                'logger': type('L', (), {'warning': warning_hook, 'error': lambda s,m: None, 'debug': lambda s,m: None})(),
+                'logger': YtdlLogger(),
             }
             final_filename = filename + '.mp3'
             mime_type = 'audio/mpeg'
@@ -2122,7 +2130,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 'progress_hooks': [progress_hook],
                 'quiet': False,
                 'no_warnings': False,
-                'logger': type('L', (), {'warning': warning_hook, 'error': lambda s,m: None, 'debug': lambda s,m: None})(),
+                'logger': YtdlLogger(),
             }
             final_filename = filename + '.mp4'
             mime_type = 'video/mp4'
