@@ -181,14 +181,9 @@ ADMIN_PASSWORD_HASH = hashlib.sha256(os.environ.get('ADMIN_PASSWORD', 'admin123'
 
 # ===== INVIDIOUS PROXY INSTANCES (Fallback when cookies fail) =====
 INVIDIOUS_INSTANCES = [
-    'https://invidious.privacydev.net',
-    'https://inv.tux.pizza',
+    'https://inv.nadeko.net',
+    'https://yewtu.be',
     'https://invidious.nerdvpn.de',
-    'https://invidious.perennialte.ch',
-    'https://invidious.lunar.icu',
-    'https://invidious.private.coffee',
-    'https://iv.ggtyler.dev',
-    'https://invidious.asir.dev',
 ]
 
 # ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
@@ -1909,92 +1904,162 @@ def try_rapidapi_youtube(video_id, format_type, quality, download_id, temp_dir, 
 
 
 def _try_invidious_fallback(url, format_type, quality, download_id, temp_dir, filename):
-    """Fallback: dùng Invidious public API khi yt-dlp bị bot detection"""
+    """Fallback: retry yt-dlp cookieless trước, sau đó thử Invidious API"""
     import re as _re
-    
-    # Extract video ID
+
+    # ── Bước 1: Retry yt-dlp hoàn toàn không cookies ──────────────────────────
+    print(f"[FALLBACK] Retrying yt-dlp without cookies...")
+    try:
+        import yt_dlp as _yt_dlp
+
+        ext = 'mp3' if format_type == 'mp3' else 'mp4'
+        final_filename = filename + f'.{ext}'
+        filepath = os.path.join(temp_dir, final_filename)
+        output_path = os.path.join(temp_dir, filename)
+
+        if format_type == 'mp3':
+            audio_bitrate = quality if quality in ['320', '192', '128'] else '192'
+            retry_opts = {
+                'format': 'bestaudio/best',
+                'outtmpl': output_path,
+                'noplaylist': True,
+                'quiet': True,
+                'no_warnings': True,
+                'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': audio_bitrate}],
+            }
+        else:
+            qs = quality if quality and quality.isdigit() else '720'
+            retry_opts = {
+                'format': f'bestvideo[ext=mp4][height<={qs}]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                'outtmpl': output_path + '.%(ext)s',
+                'noplaylist': True,
+                'merge_output_format': 'mp4',
+                'quiet': True,
+                'no_warnings': True,
+            }
+
+        retry_opts['extractor_args'] = {
+            'youtube': {
+                'player_client': ['mweb', 'tv_embedded', 'ios'],
+                'skip': ['translated_subs'],
+            }
+        }
+        retry_opts['http_headers'] = {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        }
+        retry_opts['sleep_interval'] = 2
+        retry_opts['max_sleep_interval'] = 5
+
+        def _retry_progress(d):
+            if d['status'] == 'downloading':
+                download_progress[download_id]['status'] = 'downloading'
+                if 'downloaded_bytes' in d and 'total_bytes' in d and d['total_bytes']:
+                    pct = (d['downloaded_bytes'] / d['total_bytes']) * 100
+                    download_progress[download_id]['progress'] = round(pct, 1)
+            elif d['status'] == 'finished':
+                download_progress[download_id]['progress'] = 100
+                download_progress[download_id]['status'] = 'processing'
+
+        retry_opts['progress_hooks'] = [_retry_progress]
+
+        with _yt_dlp.YoutubeDL(retry_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            title = info.get('title', 'video')
+
+        mime_type = 'audio/mpeg' if format_type == 'mp3' else 'video/mp4'
+        download_data[download_id] = {
+            'filepath': filepath,
+            'title': title,
+            'mime_type': mime_type,
+            'ext': ext,
+            'timestamp': time.time(),
+            'platform': 'youtube',
+            'format': format_type,
+            'quality': quality
+        }
+        download_progress[download_id]['status'] = 'completed'
+        download_progress[download_id]['filename'] = final_filename
+        download_progress[download_id]['title'] = title
+        print(f"[FALLBACK] yt-dlp retry succeeded: {title}")
+        return True
+
+    except Exception as e:
+        print(f"[FALLBACK] yt-dlp retry failed: {e}")
+
+    # ── Bước 2: Thử Invidious API ──────────────────────────────────────────────
     vid_match = _re.search(r'(?:v=|youtu\.be/|/v/|/embed/)([a-zA-Z0-9_-]{11})', url)
     if not vid_match:
         return False
-    
+
     video_id = vid_match.group(1)
     print(f"[INVIDIOUS] Trying fallback for video: {video_id}")
-    
+
     for instance in INVIDIOUS_INSTANCES:
         try:
             api_url = f"{instance}/api/v1/videos/{video_id}"
             resp = http_requests.get(api_url, timeout=10)
             if resp.status_code != 200:
+                print(f"[INVIDIOUS] {instance} returned {resp.status_code}")
                 continue
-            
+
             data = resp.json()
             title = data.get('title', 'video')
-            
-            # Find best stream URL
             adaptive_formats = data.get('adaptiveFormats', [])
             format_streams = data.get('formatStreams', [])
-            
             download_url = None
-            
+
             if format_type == 'mp3':
-                # Find best audio
                 audio_formats = [f for f in adaptive_formats if f.get('type', '').startswith('audio/')]
                 if audio_formats:
                     audio_formats.sort(key=lambda x: x.get('bitrate', 0), reverse=True)
                     download_url = audio_formats[0].get('url')
             else:
-                # Find best video quality
                 target_height = int(quality) if quality and quality.isdigit() else 720
                 video_formats = [f for f in format_streams if 'video/mp4' in f.get('type', '')]
                 if not video_formats:
                     video_formats = format_streams
-                
-                # Sort by quality, pick closest to target
+
                 def get_height(f):
                     res = f.get('resolution', '0p')
                     try:
                         return int(res.replace('p', ''))
                     except:
                         return 0
-                
+
                 video_formats.sort(key=get_height, reverse=True)
                 for fmt in video_formats:
-                    h = get_height(fmt)
-                    if h <= target_height:
+                    if get_height(fmt) <= target_height:
                         download_url = fmt.get('url')
                         break
                 if not download_url and video_formats:
                     download_url = video_formats[-1].get('url')
-            
+
             if not download_url:
                 continue
-            
-            # Download the file
+
             print(f"[INVIDIOUS] Downloading from {instance}...")
             download_progress[download_id]['status'] = 'downloading'
             download_progress[download_id]['progress'] = 10
-            
+
             ext = 'mp3' if format_type == 'mp3' else 'mp4'
             final_filename = filename + f'.{ext}'
             filepath = os.path.join(temp_dir, final_filename)
             mime_type = 'audio/mpeg' if format_type == 'mp3' else 'video/mp4'
-            
+
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
             r = http_requests.get(download_url, headers=headers, stream=True, timeout=60)
             r.raise_for_status()
-            
+
             total = int(r.headers.get('content-length', 0))
             downloaded = 0
-            
             with open(filepath, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=65536):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
                         if total > 0:
-                            pct = round((downloaded / total) * 100, 1)
-                            download_progress[download_id]['progress'] = pct
-            
+                            download_progress[download_id]['progress'] = round((downloaded / total) * 100, 1)
+
             download_data[download_id] = {
                 'filepath': filepath,
                 'title': title,
@@ -2008,16 +2073,16 @@ def _try_invidious_fallback(url, format_type, quality, download_id, temp_dir, fi
             download_progress[download_id]['status'] = 'completed'
             download_progress[download_id]['filename'] = final_filename
             download_progress[download_id]['title'] = title
-            
             print(f"[INVIDIOUS] Success via {instance}: {title}")
             return True
-            
+
         except Exception as e:
             print(f"[INVIDIOUS] Failed {instance}: {e}")
             continue
-    
+
     print(f"[INVIDIOUS] All instances failed")
     return False
+
 
 
 def download_youtube_video(url, format_type, quality, download_id):
