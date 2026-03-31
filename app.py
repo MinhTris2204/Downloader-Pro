@@ -285,6 +285,9 @@ else:
 last_youtube_download = {}  # IP -> timestamp
 YOUTUBE_COOLDOWN = 20  # seconds between downloads per IP (increased for Railway)
 
+# Flag: tự động disable cookies khi YouTube báo hết hạn
+COOKIES_INVALID = False
+
 
 # Add security headers
 @app.after_request
@@ -2074,6 +2077,13 @@ def download_youtube_video(url, format_type, quality, download_id):
                 download_progress[download_id]['progress'] = 100
                 download_progress[download_id]['status'] = 'processing'
 
+        def warning_hook(msg):
+            """Detect expired cookies warning và tự disable"""
+            global COOKIES_INVALID
+            if 'cookies are no longer valid' in msg or 'cookies have been rotated' in msg.lower():
+                COOKIES_INVALID = True
+                print(f"[WARNING] Cookies expired - auto-disabled for future requests")
+
         # Configure yt-dlp options based on format
         if format_type == 'mp3':
             # Audio download - extract best audio and convert to MP3
@@ -2092,6 +2102,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 }],
                 'quiet': False,
                 'no_warnings': False,
+                'logger': type('L', (), {'warning': warning_hook, 'error': lambda s,m: None, 'debug': lambda s,m: None})(),
             }
             final_filename = filename + '.mp3'
             mime_type = 'audio/mpeg'
@@ -2111,6 +2122,7 @@ def download_youtube_video(url, format_type, quality, download_id):
                 'progress_hooks': [progress_hook],
                 'quiet': False,
                 'no_warnings': False,
+                'logger': type('L', (), {'warning': warning_hook, 'error': lambda s,m: None, 'debug': lambda s,m: None})(),
             }
             final_filename = filename + '.mp4'
             mime_type = 'video/mp4'
@@ -2177,13 +2189,15 @@ def download_youtube_video(url, format_type, quality, download_id):
             print(f"[INFO] bgutil not running - using ios/mweb client (no PO token needed)")
 
         # Cookies: kiểm tra hợp lệ trước khi dùng
-        if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
+        if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH) and not COOKIES_INVALID:
             cookies_size = os.path.getsize(COOKIES_FILE_PATH)
             if cookies_size > 100:
                 ydl_opts['cookiefile'] = COOKIES_FILE_PATH
                 print(f"[INFO] Using cookies from: {COOKIES_FILE_PATH} ({cookies_size} bytes)")
             else:
                 print(f"[WARNING] Cookies file too small ({cookies_size} bytes), skipping")
+        elif COOKIES_INVALID:
+            print(f"[WARNING] Cookies marked invalid (expired) - running cookieless mode")
         else:
             print(f"[INFO] No cookies - cookieless mode")
 
