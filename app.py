@@ -181,14 +181,14 @@ ADMIN_PASSWORD_HASH = hashlib.sha256(os.environ.get('ADMIN_PASSWORD', 'admin123'
 
 # ===== INVIDIOUS PROXY INSTANCES (Fallback when cookies fail) =====
 INVIDIOUS_INSTANCES = [
-    'https://invidious.asir.dev',
-    'https://inv.nndhc.top',
-    'https://invidious.namazso.eu',
-    'https://inv.riverside.rocks',
+    'https://invidious.privacydev.net',
+    'https://inv.tux.pizza',
+    'https://invidious.nerdvpn.de',
+    'https://invidious.perennialte.ch',
     'https://invidious.lunar.icu',
-    'https://yt.drnd.rd',
     'https://invidious.private.coffee',
     'https://iv.ggtyler.dev',
+    'https://invidious.asir.dev',
 ]
 
 # ===== YOUTUBE AUTHENTICATION FOR RAILWAY =====
@@ -2130,10 +2130,13 @@ def download_youtube_video(url, format_type, quality, download_id):
             print(f"[INFO] Using SOCKS proxy")
 
         # Configure extractor_args to bypass bot detection
-        # tv_embedded + android: không cần n-challenge solving, không cần JS runtime
+        # ios + mweb: không cần PO token, hoạt động tốt nhất hiện tại
         extractor_args = {
             'youtube': {
-                'player_client': ['tv_embedded', 'android', 'web_embedded'],
+                # ios + mweb: không cần PO token, bypass bot detection tốt nhất hiện tại
+                # android_vr: fallback thứ 2, không cần JS runtime
+                # web_creator: fallback cuối, ít bị chặn hơn web thường
+                'player_client': ['ios', 'mweb', 'android_vr', 'web_creator'],
                 'skip': ['translated_subs'],
             }
         }
@@ -2150,9 +2153,9 @@ def download_youtube_video(url, format_type, quality, download_id):
         ydl_opts['extractor_args'] = extractor_args
         ydl_opts['sleep_interval'] = 1
         ydl_opts['max_sleep_interval'] = 5
-        # Android TV User-Agent - bypasses n-challenge requirement
+        # iOS User-Agent - khớp với ios player_client
         ydl_opts['http_headers'] = {
-            'User-Agent': 'Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/538.1 (KHTML, like Gecko) Version/6.0 TV Safari/538.1',
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
         }
 
         # Check if bgutil provider is running (port 4416)
@@ -2171,7 +2174,7 @@ def download_youtube_video(url, format_type, quality, download_id):
             ydl_opts['extractor_args']['youtube']['pot_provider'] = ['bgutil']
             print(f"[INFO] bgutil POT provider active on port 4416")
         else:
-            print(f"[INFO] bgutil not running - using tv_embedded client (no JS needed)")
+            print(f"[INFO] bgutil not running - using ios/mweb client (no PO token needed)")
 
         # Cookies: kiểm tra hợp lệ trước khi dùng
         if COOKIES_FILE_PATH and os.path.exists(COOKIES_FILE_PATH):
